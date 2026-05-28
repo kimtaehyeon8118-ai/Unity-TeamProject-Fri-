@@ -234,6 +234,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(clearDelay);
 
         Time.timeScale = 1f;
+        GameFlowState.MarkReturnedFromNight();
         int daySceneIndex = SceneFlowUtility.FindSceneIndexByName(daySceneName);
         int nextSceneIndex = daySceneIndex >= 0
             ? daySceneIndex

@@ -266,32 +266,146 @@ public class DayUIManager : MonoBehaviour
     private static readonly Vector2 ButtonShadowOffset = new Vector2(1.25f, -1.25f);
     private static readonly Vector2 TextShadowOffset = new Vector2(1f, -1f);
 
-    private readonly DialogueLine[] dialogueLines =
+    private readonly DialogueLine[] dayOneDialogueLines =
     {
         new DialogueLine
         {
             isCustomer = false,
-            text = "어서 오세요. 오늘은 어떤 느낌의 한식이 당기세요?"
+            text = "어서 오세요. 괜찮으세요? 얼굴이 많이 지쳐 보이세요."
         },
         new DialogueLine
         {
             isCustomer = true,
-            text = "어제부터 속이 조금 허해요. 따뜻한 국물이면 좋겠는데, 너무 무겁진 않았으면 해요."
+            text = "...불 냄새만 맡으면 아직도 그날이 떠올라."
         },
         new DialogueLine
         {
             isCustomer = false,
-            text = "그럼 맛의 방향을 먼저 짚어볼게요. 손님 말에서 어떤 단서가 가장 중요할까요?"
+            text = "천천히 말씀하셔도 괜찮아요. 여기서는 잠깐 쉬어가셔도 됩니다."
         },
         new DialogueLine
         {
             isCustomer = true,
-            text = "맞아요. 속이 편하면서도 한 끼 먹는 느낌은 있었으면 좋겠어요."
+            text = "사람들이 비명을 지르며 타는 그 냄새... 아직도 코끝에서 안 떠나."
         },
         new DialogueLine
         {
             isCustomer = false,
-            text = "알겠어요. 단서에 맞춰 재료를 골라 조리해볼게요."
+            text = "그날의 냄새가 계속 따라오고 있는 거군요. 지금은 다른 냄새로 숨을 돌려보죠."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "사람을 살리던 손이... 결국 아무도 못 살렸어."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "그 손으로 지금도 버티고 계시잖아요. 오늘은 손님을 위한 따뜻한 한 끼부터 만들게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "내 딸도... 아내도... 난 왜 살아있지..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "살아남은 이유를 오늘 다 설명하지 않아도 괜찮아요. 그래도 지금은 드셔야 해요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "매콤한 냄새가 그리워... 쉬는 날마다 집에서 나던 그 냄새가."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "그 기억에 가까운 음식이라면, 김치찌개가 좋겠네요. 매콤하고 뜨거운 국물로요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "어이 주인장. 날 위해서 매콤한 음식 만들어줄 수 있나?"
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "알겠습니다. 그날의 냄새가 아니라 집의 냄새가 떠오르도록 끓여볼게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "혹시 김치찌개에서 어떤 식재료를 좋아하세요?"
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "두부가 좋더군. 매운 국물 사이에서 부드럽게 풀리는 게... 그 사람도 꼭 넣었어."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "좋아요. 김치와 돼지고기에 두부를 넉넉히 넣어서, 그 기억에 가까운 맛으로 끓여볼게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "그래.. 맛있는 한 끼 부탁하마.."
+        }
+    };
+
+    private readonly DialogueLine[] dayTwoDialogueLines =
+    {
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "어서 오세요. 많이 지쳐 보이세요. 잠시 앉아서 숨부터 고르셔도 괜찮아요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "괜찮다고... 환자들과 그 가족들에게 거짓말 하는 것도... 이제 너무 지쳤어요.."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "계속 버티느라 마음이 많이 닳으셨겠어요. 여기서는 괜찮은 척하지 않으셔도 됩니다."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "살려달라는 말을 너무 많이 들었어요..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "그 말들이 아직도 마음에 남아 있는 거군요. 오늘은 자극적이지 않고 속을 감싸주는 음식이 좋겠어요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "혹시 따뜻하고 부드러운 음식... 만들어 주실 수 있으신가요?"
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "그럼 순두부찌개로 따뜻하게 끓여볼게요. 순두부찌개에서 특히 좋아하는 재료가 있으세요?"
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "순두부요. 부드럽게 넘어가는 게 좋고, 고춧가루가 적당히 들어갔으면 좋겠어요. 참고로 전 매운 걸 잘 못 먹어요. 그리고 완전히 안 익은 계란을 먹으면 마음이 조금 가라앉아요."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "좋아요. 순두부와 적당한 고춧가루, 계란을 적당히 풀어 따뜻하게 끓여볼게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "부탁드릴게요. 오늘은 조용히 속을 데우고 싶어요."
         }
     };
 
@@ -309,6 +423,8 @@ public class DayUIManager : MonoBehaviour
 
     private int dialogueIndex;
     private bool choiceAnswered;
+    private int currentDayNumber = 1;
+    private DialogueLine[] currentDialogueLines;
     private MenuId selectedRecipeId = MenuId.None;
     private CustomerPreference selectedPreference = CustomerPreference.Unknown;
 
@@ -354,8 +470,8 @@ public class DayUIManager : MonoBehaviour
         Bind(choiceButtonA, () => OnChoiceSelected(CustomerPreference.MildSoup));
         Bind(choiceButtonB, () => OnChoiceSelected(CustomerPreference.SpicySoup));
 
-        Bind(recipeButton1, () => SelectRecipe(MenuId.DoenjangJjigae));
-        Bind(recipeButton2, () => SelectRecipe(MenuId.KimchiJjigae));
+        Bind(recipeButton1, () => SelectRecipe(MenuId.KimchiJjigae));
+        Bind(recipeButton2, () => SelectRecipe(MenuId.DoenjangJjigae));
         Bind(recipeButton3, () => SelectRecipe(MenuId.SoondubuJjigae));
 
         Bind(cookButton, CookSelectedRecipe);
@@ -365,8 +481,8 @@ public class DayUIManager : MonoBehaviour
         Bind(menuOpenButton, OpenMenuBoard);
         Bind(closeButton, CloseMenuBoard);
 
-        Bind(menuButtonBibimbap, () => ShowRecipeDetail(MenuId.DoenjangJjigae));
-        Bind(menuButtonKimchiJjigae, () => ShowRecipeDetail(MenuId.KimchiJjigae));
+        Bind(menuButtonBibimbap, () => ShowRecipeDetail(MenuId.KimchiJjigae));
+        Bind(menuButtonKimchiJjigae, () => ShowRecipeDetail(MenuId.DoenjangJjigae));
         Bind(menuButtonJeyuk, () => ShowRecipeDetail(MenuId.SoondubuJjigae));
     }
 
@@ -457,7 +573,7 @@ public class DayUIManager : MonoBehaviour
         ingredientTags.Add("김치", new[] { "매움", "발효", "해장", "국물" });
         ingredientTags.Add("돼지고기", new[] { "든든함", "기름짐", "고기" });
         ingredientTags.Add("대파", new[] { "향", "시원함" });
-        ingredientTags.Add("순두부", new[] { "부드러움", "담백함", "국물" });
+        ingredientTags.Add("순두부", new[] { "부드러움", "따뜻함", "담백함", "국물" });
         ingredientTags.Add("고춧가루", new[] { "매움", "칼칼함", "자극적" });
         ingredientTags.Add("계란", new[] { "부드러움", "고소함" });
     }
@@ -492,21 +608,26 @@ public class DayUIManager : MonoBehaviour
             new RecipeDefinition(
                 MenuId.SoondubuJjigae,
                 "순두부찌개",
-                "순두부와 고춧가루, 대파를 넣어 부드럽지만 칼칼한 찌개를 만든다.",
-                new[] { "순두부", "고춧가루", "대파", "계란" },
-                new[] { "순두부", "고춧가루", "대파" },
-                new[] { "부드러움", "매움", "국물" },
-                new[] { "기름짐" }));
+                "순두부와 적당한 고춧가루, 계란을 넣어 따뜻하고 부드러운 국물 요리를 만든다.",
+                new[] { "순두부", "고춧가루", "계란", "두부" },
+                new[] { "순두부", "고춧가루", "계란" },
+                new[] { "부드러움", "따뜻함", "담백함", "국물", "칼칼함" },
+                new[] { "매우매움", "기름짐" }));
     }
 
     private void LoadCustomerScene()
     {
+        if (!GameFlowState.ConsumeReturnedFromNight())
+            GameProgression.ResetProgress();
+
         RefreshUnlockedIngredients();
+        currentDayNumber = GameProgression.GetCurrentDayNumber();
+        currentDialogueLines = GetDialogueLinesForCurrentDay();
         dialogueIndex = 0;
-        choiceAnswered = false;
+        choiceAnswered = true;
         lastCustomerSpeech = string.Empty;
         selectedRecipeId = MenuId.None;
-        selectedPreference = CustomerPreference.Unknown;
+        selectedPreference = GetPreferenceForCurrentDay();
         selectedIngredients.Clear();
         ClearIngredientOptions();
 
@@ -518,10 +639,13 @@ public class DayUIManager : MonoBehaviour
         SetInteractable(nextButton, true);
         SetInteractable(cookButton, false);
 
-        SetText(nameText, "손님");
+        SetText(nameText, GetCustomerNameForCurrentDay());
         SetText(customerSpeechText, string.Empty);
         SetText(dialogueText, string.Empty);
-        SetText(customerInfoText, "단서: 따뜻한 국물, 속편함, 너무 무겁지 않음");
+        SetText(customerInfoText, GetCustomerInfoForCurrentDay());
+        SetPanelHeaderTitle(customerPanel, currentDayNumber + "일차 오늘의 한식");
+        SetPanelHeaderTitle(kitchenPanel, currentDayNumber + "일차 주방 조리대");
+        SetPanelHeaderTitle(resultPanel, currentDayNumber + "일차 식사 평가");
         SetText(choiceButtonAText, MildChoiceText);
         SetText(choiceButtonBText, SpicyChoiceText);
         SetText(selectedRecipeText, "선택한 메뉴\n없음");
@@ -541,10 +665,13 @@ public class DayUIManager : MonoBehaviour
 
     private void ShowCurrentDialogue()
     {
-        if (dialogueIndex < 0 || dialogueIndex >= dialogueLines.Length)
+        if (currentDialogueLines == null)
+            currentDialogueLines = GetDialogueLinesForCurrentDay();
+
+        if (dialogueIndex < 0 || dialogueIndex >= currentDialogueLines.Length)
             return;
 
-        DialogueLine line = dialogueLines[dialogueIndex];
+        DialogueLine line = currentDialogueLines[dialogueIndex];
 
         if (line.isCustomer)
         {
@@ -559,15 +686,9 @@ public class DayUIManager : MonoBehaviour
 
     private void OnClickNextDialogue()
     {
-        if (dialogueIndex == ChoiceDialogueIndex && !choiceAnswered)
-        {
-            ShowChoice();
-            return;
-        }
-
         dialogueIndex++;
 
-        if (dialogueIndex < dialogueLines.Length)
+        if (dialogueIndex < currentDialogueLines.Length)
         {
             ShowCurrentDialogue();
             return;
@@ -575,7 +696,7 @@ public class DayUIManager : MonoBehaviour
 
         SetActive(nextButton, false);
         SetActive(goKitchenButton, true);
-        SetText(dialogueText, "단서를 바탕으로 주방으로 이동해 음식을 준비해요.");
+        SetText(dialogueText, GetKitchenMoveTextForCurrentDay());
     }
 
     private void ShowChoice()
@@ -583,14 +704,17 @@ public class DayUIManager : MonoBehaviour
         SetActive(choiceGroup, true);
         SetInteractable(nextButton, false);
         EnsureCustomerSpeechVisible();
-        SetText(dialogueText, "손님의 말에서 가장 중요한 맛의 방향을 고르세요.");
+        SetText(dialogueText, "강태수씨가 붙잡고 있는 음식의 기억을 짚어보세요.");
     }
 
     private void EnsureCustomerSpeechVisible()
     {
+        if (currentDialogueLines == null)
+            currentDialogueLines = GetDialogueLinesForCurrentDay();
+
         if (string.IsNullOrWhiteSpace(lastCustomerSpeech))
         {
-            DialogueLine customerLine = dialogueLines.FirstOrDefault(line => line.isCustomer);
+            DialogueLine customerLine = currentDialogueLines.FirstOrDefault(line => line.isCustomer);
             if (customerLine != null)
                 lastCustomerSpeech = customerLine.text;
         }
@@ -617,17 +741,80 @@ public class DayUIManager : MonoBehaviour
 
     private string GetCustomerReplyForChoice(CustomerPreference preference)
     {
+        if (currentDayNumber >= 2)
+        {
+            switch (preference)
+            {
+                case CustomerPreference.MildSoup:
+                    return "맞아요. 오늘은 구수하고 따뜻한 된장 국물이 좋겠어요.";
+
+                case CustomerPreference.SpicySoup:
+                    return "오늘은 매운 냄새보다 속이 편한 국물이 더 필요해요.";
+
+                default:
+                    return "맞아요. 오늘은 구수하고 따뜻한 된장 국물이 좋겠어요.";
+            }
+        }
+
         switch (preference)
         {
             case CustomerPreference.MildSoup:
-                return "맞아요. 속이 편하면서도 한 끼 먹는 느낌은 있었으면 좋겠어요.";
+                return "오늘은 담백한 음식으론 안 될 것 같아. 매콤한 김치 냄새가 필요해.";
 
             case CustomerPreference.SpicySoup:
-                return "오늘은 매운 게 땡기지는 않네요..";
+                return "...그래. 김치찌개 냄새면 그날이 아니라, 집에서 먹던 저녁이 떠오를 것 같아.";
 
             default:
-                return "맞아요. 속이 편하면서도 한 끼 먹는 느낌은 있었으면 좋겠어요.";
+                return "...그래. 김치찌개 냄새면 그날이 아니라, 집에서 먹던 저녁이 떠오를 것 같아.";
         }
+    }
+
+    private DialogueLine[] GetDialogueLinesForCurrentDay()
+    {
+        return currentDayNumber >= 2 ? dayTwoDialogueLines : dayOneDialogueLines;
+    }
+
+    private string GetCustomerNameForCurrentDay()
+    {
+        return currentDayNumber >= 2 ? "윤서아" : "강태수";
+    }
+
+    private string GetCustomerInfoForCurrentDay()
+    {
+        return currentDayNumber >= 2
+            ? "2일차 단서: 따뜻함, 부드러운 순두부, 적당한 고춧가루"
+            : "1일차 단서: 매콤한 냄새, 김치찌개, 가족의 기억";
+    }
+
+    private string GetKitchenMoveTextForCurrentDay()
+    {
+        return currentDayNumber >= 2
+            ? "2일차 손님의 단서에 맞춰 주방으로 이동해 조리해요."
+            : "강태수씨의 기억에 맞춰 주방으로 이동해 조리해요.";
+    }
+
+    private CustomerPreference GetPreferenceForCurrentDay()
+    {
+        return currentDayNumber >= 2 ? CustomerPreference.MildSoup : CustomerPreference.SpicySoup;
+    }
+
+    private MenuId GetTargetRecipeForCurrentDay()
+    {
+        return currentDayNumber >= 2 ? MenuId.SoondubuJjigae : MenuId.KimchiJjigae;
+    }
+
+    private string GetWrongRecipeReactionForCurrentDay()
+    {
+        return currentDayNumber >= 2
+            ? "손님 반응: 맛은 있지만 오늘 제 속에는 조금 강하게 느껴져요."
+            : "손님 반응: 하... 역시. 내가 떠올리고 싶던 냄새는 이게 아니었어.";
+    }
+
+    private string GetWrongRecipeClueForCurrentDay()
+    {
+        return currentDayNumber >= 2
+            ? "다음 단서: 2일차 손님은 따뜻하고 부드러운 순두부찌개를 원했습니다."
+            : "다음 단서: 강태수씨는 담백한 국물이 아니라 가족과 먹던 매콤한 김치찌개의 냄새를 찾고 있었습니다.";
     }
 
     public void OpenMenuBoard()
@@ -711,8 +898,9 @@ public class DayUIManager : MonoBehaviour
 
     private MenuId GetDefaultRecipeForCurrentClue()
     {
-        if (selectedPreference == CustomerPreference.SpicySoup && CanUseRecipe(MenuId.KimchiJjigae))
-            return MenuId.KimchiJjigae;
+        MenuId targetRecipe = GetTargetRecipeForCurrentDay();
+        if (CanUseRecipe(targetRecipe))
+            return targetRecipe;
 
         if (CanUseRecipe(MenuId.DoenjangJjigae))
             return MenuId.DoenjangJjigae;
@@ -728,11 +916,11 @@ public class DayUIManager : MonoBehaviour
 
     private MenuId GetFirstUnlockedRecipe()
     {
-        if (CanUseRecipe(MenuId.DoenjangJjigae))
-            return MenuId.DoenjangJjigae;
-
         if (CanUseRecipe(MenuId.KimchiJjigae))
             return MenuId.KimchiJjigae;
+
+        if (CanUseRecipe(MenuId.DoenjangJjigae))
+            return MenuId.DoenjangJjigae;
 
         if (CanUseRecipe(MenuId.SoondubuJjigae))
             return MenuId.SoondubuJjigae;
@@ -899,8 +1087,33 @@ public class DayUIManager : MonoBehaviour
         SetText(resultText, cookedFoodName + "\n" + GetGradeBadge(evaluation.Grade));
         SetText(reactionText, evaluation.Reaction);
         SetText(clueText, evaluation.Clue);
-        SetText(unlockTitleText, "새로 해금된 메뉴");
-        SetText(unlockMenuText, "해금 없음");
+        SetResultClueLabel("플레이어 대화");
+
+        if (evaluation.Grade == EvaluationGrade.Perfect)
+        {
+            if (currentDayNumber == 1)
+            {
+                GameProgression.UnlockIngredients("순두부", "고춧가루", "계란");
+                RefreshUnlockedIngredients();
+                SetText(unlockTitleText, "새로 해금된 메뉴");
+                SetText(unlockMenuText, "순두부찌개");
+            }
+            else
+            {
+                SetText(unlockTitleText, "2일차 완료");
+                SetText(unlockMenuText, "다음 손님은 준비 중입니다.");
+            }
+
+            SetButtonLabel(nextDayButton, "밤 파트 시작");
+            Bind(nextDayButton, StartNightFlow);
+        }
+        else
+        {
+            SetText(unlockTitleText, "요리 재도전");
+            SetText(unlockMenuText, "평가가 완벽해야 순두부찌개가 해금됩니다.");
+            SetButtonLabel(nextDayButton, "다시 요리하기");
+            Bind(nextDayButton, OpenKitchen);
+        }
 
         UpdateMenuButtons();
     }
@@ -933,15 +1146,54 @@ public class DayUIManager : MonoBehaviour
             "이 손님은 메뉴명을 직접 말하지 않으므로 레시피 암기보다 단서 해석이 중요합니다.");
     }
 
+    private void SetResultClueLabel(string label)
+    {
+        Transform labelTransform = FindChildRecursive(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultClue");
+        TMP_Text labelText = labelTransform != null ? labelTransform.GetComponent<TMP_Text>() : null;
+        SetText(labelText, label);
+    }
+
     private EvaluationResult EvaluateCustomerMatch()
     {
-        if (selectedRecipeId == MenuId.KimchiJjigae)
+        MenuId targetRecipe = GetTargetRecipeForCurrentDay();
+
+        if (selectedRecipeId != targetRecipe)
         {
             return new EvaluationResult(
                 EvaluationGrade.Poor,
                 0,
-                "손님 반응: 제가 원하던 건 이런 음식이 아니었어요. 오늘은 김치찌개가 땡기지 않았네요.",
-                "다음 단서: 이 손님은 따뜻하고 속이 편한 국물을 원했지, 얼큰한 김치찌개를 원한 건 아니었습니다.");
+                GetWrongRecipeReactionForCurrentDay(),
+                GetWrongRecipeClueForCurrentDay());
+        }
+
+        if (currentDayNumber == 1 && selectedRecipeId == MenuId.KimchiJjigae)
+        {
+            string[] requiredKimchiJjigaeIngredients = { "김치", "두부", "돼지고기" };
+            bool hasAllRequiredIngredients = requiredKimchiJjigaeIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
+
+            if (!hasAllRequiredIngredients)
+            {
+                return new EvaluationResult(
+                    EvaluationGrade.Poor,
+                    0,
+                    "하.. 역시. 난 살아있는 자체가 죄야.",
+                    "문 뒤에서 소리 지르던 그 비명들... 죄송합니다..");
+            }
+        }
+
+        if (currentDayNumber >= 2 && selectedRecipeId == MenuId.SoondubuJjigae)
+        {
+            string[] requiredSoondubuJjigaeIngredients = { "순두부", "고춧가루", "계란" };
+            bool hasAllRequiredIngredients = requiredSoondubuJjigaeIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
+
+            if (!hasAllRequiredIngredients)
+            {
+                return new EvaluationResult(
+                    EvaluationGrade.Poor,
+                    0,
+                    "심정지.... 사망... 변이.... 내가 조금만 더 빨랐다면.... 열이 오르면.... 또 그것처럼 변할 거야..",
+                    ".......");
+            }
         }
 
         string[] foodTags = GetCurrentFoodTags();
@@ -954,7 +1206,7 @@ public class DayUIManager : MonoBehaviour
         score -= foodTags.Count(tag => avoidedTags.Contains(tag)) * 2;
         score -= selectedIngredients.Count(ingredient => forbiddenIngredients.Contains(ingredient)) * 5;
 
-        if (selectedIngredients.Contains("된장") || selectedIngredients.Contains("김치"))
+        if (selectedIngredients.Contains("된장") || selectedIngredients.Contains("김치") || selectedIngredients.Contains("순두부"))
             score += 1;
 
         if (selectedIngredients.Contains("두부"))
@@ -980,15 +1232,15 @@ public class DayUIManager : MonoBehaviour
     private string[] GetDesiredTagsForCurrentCustomer()
     {
         if (selectedPreference == CustomerPreference.SpicySoup)
-            return new[] { "매움", "해장", "국물", "시원함" };
+            return new[] { "매움", "발효", "해장", "국물", "따뜻함", "든든함", "시원함" };
 
-        return new[] { "따뜻함", "담백함", "깊은맛", "구수함", "국물" };
+        return new[] { "따뜻함", "부드러움", "담백함", "국물", "칼칼함", "고소함" };
     }
 
     private string[] GetAvoidedTagsForCurrentCustomer()
     {
         if (selectedPreference == CustomerPreference.SpicySoup)
-            return new[] { "기름짐" };
+            return Array.Empty<string>();
 
         return new[] { "매우매움", "자극적", "기름짐" };
     }
@@ -998,7 +1250,7 @@ public class DayUIManager : MonoBehaviour
         if (selectedPreference == CustomerPreference.SpicySoup)
             return Array.Empty<string>();
 
-        return new[] { "고춧가루" };
+        return Array.Empty<string>();
     }
 
     private string ResolveCookedFoodName()
@@ -1041,24 +1293,49 @@ public class DayUIManager : MonoBehaviour
         string forbidden = string.Join(", ", selectedIngredients.Where(ingredient => forbiddenIngredients.Contains(ingredient)));
 
         if (!string.IsNullOrEmpty(forbidden))
-            return "손님 반응: " + forbidden + "은 지금 컨디션에 너무 부담스러웠어요.";
+        {
+            return currentDayNumber >= 2
+                ? "손님 반응: " + forbidden + " 때문에 오늘은 속이 조금 부담스러워요."
+                : "손님 반응: " + forbidden + " 때문에 찾던 기억에서 멀어진 것 같아.";
+        }
+
+        if (currentDayNumber >= 2)
+        {
+            if (!string.IsNullOrEmpty(riskyTags) && grade <= EvaluationGrade.Okay)
+                return "손님 반응: 맛은 있지만 " + riskyTags + " 쪽이 강해서 속이 편한 느낌은 덜하네요.";
+
+            switch (grade)
+            {
+                case EvaluationGrade.Perfect:
+                    return "\"흐으.... 너무 따뜻해요....\"\n\n(울먹이며 손가락을 놓는다.)\n\n\"사장님 정말 감사해요..\n오랜만에 따뜻한 음식을... 먹었네요..\n너무 많은 환자들을 보고 치료하고 죽음을 바라보고...\n제 마음이 너무 차가웠는데...\n이제 좀 따뜻한 것 같아요.\"";
+
+                case EvaluationGrade.Good:
+                    return "손님 반응: 좋아요. 따뜻하고 부드러운 국물 덕분에 몸이 조금 풀리는 것 같아요.";
+
+                case EvaluationGrade.Okay:
+                    return "손님 반응: 괜찮지만 제가 원한 편안한 맛과는 조금 달라요.";
+
+                default:
+                    return "손님 반응: 오늘 제 컨디션에는 이 조합이 조금 부담스러워요.";
+            }
+        }
 
         if (!string.IsNullOrEmpty(riskyTags) && grade <= EvaluationGrade.Okay)
-            return "손님 반응: 맛은 있지만 " + riskyTags + " 쪽이 강해서 제가 말한 단서와는 조금 달랐어요.";
+            return "손님 반응: 맛은 있지만 " + riskyTags + " 쪽이 강해서 내가 찾던 김치찌개와는 조금 달라.";
 
         switch (grade)
         {
             case EvaluationGrade.Perfect:
-                return "손님 반응: 딱 이런 음식이었어요. " + matchedTags + " 느낌이 정말 잘 살아 있네요.";
+                return "울음을 참고 한 입 먹는다.\n(흐느끼는 소리)\n\n\"그래... 이 맛이야.\n쉬는 날마다 아내가 끓여줬어.\n다시는 못 먹을 줄 알았는데...\"\n\n\"고마워, 주인장.\n아직 끝난 건 아니지.\n앞으로도 와도 될까?..\"";
 
             case EvaluationGrade.Good:
-                return "손님 반응: 좋았어요. 제 말을 듣고 재료를 고른 게 느껴졌어요.";
+                return "손님 반응: 좋아. 매콤한 김치 국물 덕분에 조금은 정신이 돌아오는 것 같아.";
 
             case EvaluationGrade.Okay:
-                return "손님 반응: 먹을 만하지만 단서에 꼭 맞는 조합은 아니었어요.";
+                return "손님 반응: 먹을 만하지만 내가 붙잡고 있던 그 집 냄새와는 조금 달라.";
 
             default:
-                return "손님 반응: 제가 말한 상태와 음식의 방향이 많이 달랐어요.";
+                return "손님 반응: 미안하네. 지금 내겐 다른 음식이 들어올 자리가 없어.";
         }
     }
 
@@ -1070,17 +1347,31 @@ public class DayUIManager : MonoBehaviour
         string[] forbiddenIngredients)
     {
         if (grade == EvaluationGrade.Perfect)
-            return "단서 해석 성공: " + string.Join(", ", foodTags.Intersect(desiredTags)) + " 속성이 손님 말과 잘 맞았습니다.";
+        {
+            return currentDayNumber >= 2
+                ? "그래요... 어쩔 수 없이 돌아가시는 분들도 많이 계시죠..\n하지만 그 중에서 서아씨 덕분에 다시 일어나신 분들을 생각하고,\n앞으로도 사람들을 위해서 노력하셨으면 좋을 것 같아요."
+                : "당연하죠. 언제든지 오세요.\n그때도 김치찌개 끓이고 기다릴게요.\n다치지 마시고, 삶을 포기하지 마세요.";
+        }
 
         string forbidden = string.Join(", ", selectedIngredients.Where(ingredient => forbiddenIngredients.Contains(ingredient)));
         if (!string.IsNullOrEmpty(forbidden))
-            return "다음 단서: 손님이 속이 편한 걸 원했을 때는 " + forbidden + " 같은 강한 재료를 피하는 편이 좋아요.";
+        {
+            return currentDayNumber >= 2
+                ? "다음 단서: 속이 편한 국물을 원하는 손님에게는 " + forbidden + " 같은 강한 재료를 피하세요."
+                : "다음 단서: 강태수씨에게 중요한 건 재료보다도 김치찌개 특유의 매콤한 냄새였습니다.";
+        }
 
         string riskyTags = string.Join(", ", foodTags.Intersect(avoidedTags));
         if (!string.IsNullOrEmpty(riskyTags))
-            return "다음 단서: " + riskyTags + " 속성은 이번 손님에게 감점 요소였습니다.";
+        {
+            return currentDayNumber >= 2
+                ? "다음 단서: " + riskyTags + " 속성이 강하면 2일차 손님이 원한 편안한 맛에서 멀어집니다."
+                : "다음 단서: " + riskyTags + " 속성이 강하면 강태수씨가 찾던 가족의 맛에서 멀어집니다.";
+        }
 
-        return "다음 단서: 손님이 원한 속성은 " + string.Join(", ", desiredTags) + " 쪽이었습니다.";
+        return currentDayNumber >= 2
+            ? "다음 단서: 2일차 손님은 따뜻함, 부드러움, 깊은맛을 원했습니다."
+            : "다음 단서: 강태수씨는 매움, 김치, 뜨거운 국물에서 버틸 힘을 찾고 있었습니다.";
     }
 
     private EvaluationResult EvaluateRecipeCombination(RecipeDefinition recipe)
@@ -1122,8 +1413,9 @@ public class DayUIManager : MonoBehaviour
         switch (selectedPreference)
         {
             case CustomerPreference.MildSoup:
-                return (menuId == MenuId.DoenjangJjigae ? 3 : 0)
+                return (menuId == MenuId.SoondubuJjigae ? 3 : 0)
                     + (foodTags.Contains("담백함") ? 2 : 0)
+                    + (foodTags.Contains("부드러움") ? 2 : 0)
                     - (foodTags.Contains("자극적") ? 3 : 0)
                     - (foodTags.Contains("매우매움") ? 4 : 0);
 
@@ -1206,8 +1498,8 @@ public class DayUIManager : MonoBehaviour
         List<string> lines = new List<string>
         {
             "오늘의 메뉴",
-            FormatMenuLine(MenuId.DoenjangJjigae),
-            FormatMenuLine(MenuId.KimchiJjigae)
+            FormatMenuLine(MenuId.KimchiJjigae),
+            FormatMenuLine(MenuId.DoenjangJjigae)
         };
 
         lines.Add(FormatMenuLine(MenuId.SoondubuJjigae));
@@ -1225,7 +1517,7 @@ public class DayUIManager : MonoBehaviour
 
     private bool IsRecommended(MenuId menuId)
     {
-        return (selectedPreference == CustomerPreference.MildSoup && menuId == MenuId.DoenjangJjigae)
+        return (selectedPreference == CustomerPreference.MildSoup && menuId == MenuId.SoondubuJjigae)
             || (selectedPreference == CustomerPreference.SpicySoup && menuId == MenuId.KimchiJjigae);
     }
 
@@ -1241,32 +1533,50 @@ public class DayUIManager : MonoBehaviour
 
     private string BuildCustomerClueGuide()
     {
+        if (currentDayNumber >= 2)
+        {
+            return "손님 단서\n"
+                + "2일차 손님\n"
+                + "따뜻하고 부드러운 순두부찌개와 적당한 고춧가루, 계란을 찾고 있음\n\n"
+                + "목표\n"
+                + "순두부의 부드러움이 살아나도록 조리하세요.";
+        }
+
         return "손님 단서\n"
-            + "따뜻한 국물 / 속이 편한 음식\n"
-            + "너무 무겁지 않은 한 끼\n\n"
+            + "지친 소방관 강태수\n"
+            + "매콤한 김치찌개 냄새를 찾고 있음\n\n"
             + "목표\n"
-            + "단서를 재료 속성으로 해석해 조리하세요.";
+            + "김치찌개의 맛과 냄새가 살아나도록 조리하세요.";
     }
 
     private void UpdateMenuButtons()
     {
-        UpdateRecipeButton(recipeButton1, recipeButton1Text, MenuId.DoenjangJjigae);
-        UpdateRecipeButton(recipeButton2, recipeButton2Text, MenuId.KimchiJjigae);
+        UpdateRecipeButton(recipeButton1, recipeButton1Text, MenuId.KimchiJjigae);
+        UpdateRecipeButton(recipeButton2, recipeButton2Text, MenuId.DoenjangJjigae);
         UpdateRecipeButton(recipeButton3, recipeButton3Text, MenuId.SoondubuJjigae);
 
         SetActive(menuButtonBibimbap, true);
         SetActive(menuButtonKimchiJjigae, true);
         SetActive(menuButtonJeyuk, true);
-        SetInteractable(menuButtonBibimbap, CanUseRecipe(MenuId.DoenjangJjigae));
-        SetInteractable(menuButtonKimchiJjigae, CanUseRecipe(MenuId.KimchiJjigae));
+        SetInteractable(menuButtonBibimbap, CanUseRecipe(MenuId.KimchiJjigae));
+        SetInteractable(menuButtonKimchiJjigae, CanUseRecipe(MenuId.DoenjangJjigae));
         SetInteractable(menuButtonJeyuk, CanUseRecipe(MenuId.SoondubuJjigae));
-        SetButtonLabel(menuButtonBibimbap, FormatMenuButtonLabel(MenuId.DoenjangJjigae));
-        SetButtonLabel(menuButtonKimchiJjigae, FormatMenuButtonLabel(MenuId.KimchiJjigae));
+        SetButtonLabel(menuButtonBibimbap, FormatMenuButtonLabel(MenuId.KimchiJjigae));
+        SetButtonLabel(menuButtonKimchiJjigae, FormatMenuButtonLabel(MenuId.DoenjangJjigae));
         SetButtonLabel(menuButtonJeyuk, FormatMenuButtonLabel(MenuId.SoondubuJjigae));
     }
 
     private bool CanUseRecipe(MenuId menuId)
     {
+        if (menuId == MenuId.KimchiJjigae)
+            return true;
+
+        if (menuId == MenuId.DoenjangJjigae)
+            return true;
+
+        if (menuId == MenuId.SoondubuJjigae)
+            return IsSoondubuJjigaeUnlocked();
+
         return menuId != MenuId.None
             && recipes.ContainsKey(menuId)
             && recipes[menuId].RequiredIngredients.All(IsIngredientUnlocked);
@@ -1348,7 +1658,44 @@ public class DayUIManager : MonoBehaviour
 
     private bool IsIngredientUnlocked(string ingredientName)
     {
-        return !string.IsNullOrEmpty(ingredientName) && unlockedIngredients.Contains(ingredientName);
+        return !string.IsNullOrEmpty(ingredientName)
+            && (IsKimchiJjigaeStarterIngredient(ingredientName)
+                || IsDoenjangJjigaeIngredientUnlocked(ingredientName)
+                || IsSoondubuJjigaeIngredientUnlocked(ingredientName)
+                || unlockedIngredients.Contains(ingredientName));
+    }
+
+    private bool IsKimchiJjigaeStarterIngredient(string ingredientName)
+    {
+        return ingredientName == "김치"
+            || ingredientName == "돼지고기"
+            || ingredientName == "두부"
+            || ingredientName == "대파";
+    }
+
+    private bool IsDoenjangJjigaeUnlocked()
+    {
+        return unlockedIngredients.Contains("된장");
+    }
+
+    private bool IsDoenjangJjigaeIngredientUnlocked(string ingredientName)
+    {
+        return ingredientName == "된장"
+            || ingredientName == "버섯"
+            || ingredientName == "애호박";
+    }
+
+    private bool IsSoondubuJjigaeUnlocked()
+    {
+        return unlockedIngredients.Contains("순두부");
+    }
+
+    private bool IsSoondubuJjigaeIngredientUnlocked(string ingredientName)
+    {
+        return IsSoondubuJjigaeUnlocked()
+            && (ingredientName == "순두부"
+                || ingredientName == "고춧가루"
+                || ingredientName == "계란");
     }
 
     private string FormatMenuButtonLabel(MenuId menuId)
@@ -1365,10 +1712,10 @@ public class DayUIManager : MonoBehaviour
         switch (menuId)
         {
             case MenuId.DoenjangJjigae:
-                return 1;
+                return 2;
 
             case MenuId.KimchiJjigae:
-                return 2;
+                return 1;
 
             case MenuId.SoondubuJjigae:
                 return 3;
@@ -1380,8 +1727,12 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateRecipeButton(Button button, TMP_Text label, MenuId menuId)
     {
+        string buttonLabel = FormatMenuButtonLabel(menuId);
+
         if (label != null)
-            label.text = FormatMenuButtonLabel(menuId);
+            label.text = buttonLabel;
+
+        SetButtonLabel(button, buttonLabel);
 
         SetInteractable(button, CanUseRecipe(menuId));
     }
@@ -1507,18 +1858,18 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyResultLayout()
     {
-        SetRelativeRect(foodImage, new Vector2(0.07f, 0.48f), new Vector2(0.37f, 0.78f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(resultText, new Vector2(0.41f, 0.61f), new Vector2(0.91f, 0.78f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(reactionText, new Vector2(0.08f, 0.31f), new Vector2(0.56f, 0.45f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(clueText, new Vector2(0.08f, 0.17f), new Vector2(0.56f, 0.29f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockTitleText, new Vector2(0.61f, 0.34f), new Vector2(0.91f, 0.45f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.61f, 0.23f), new Vector2(0.91f, 0.32f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(nextDayButton, new Vector2(0.41f, 0.08f), new Vector2(0.59f, 0.16f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(foodImage, new Vector2(0.08f, 0.58f), new Vector2(0.34f, 0.78f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(resultText, new Vector2(0.39f, 0.62f), new Vector2(0.91f, 0.78f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(reactionText, new Vector2(0.08f, 0.23f), new Vector2(0.51f, 0.54f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(clueText, new Vector2(0.56f, 0.34f), new Vector2(0.91f, 0.54f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockTitleText, new Vector2(0.56f, 0.25f), new Vector2(0.91f, 0.31f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockMenuText, new Vector2(0.56f, 0.18f), new Vector2(0.91f, 0.24f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(nextDayButton, new Vector2(0.41f, 0.06f), new Vector2(0.59f, 0.14f), Vector2.zero, Vector2.zero);
 
         ApplyPanelTint(foodImage != null ? foodImage.gameObject : null, new Color32(255, 248, 228, 255));
         ApplyTextBoxPadding(resultText, new Vector4(8f, 4f, 8f, 4f));
-        ApplyTextBoxPadding(reactionText, new Vector4(10f, 6f, 10f, 6f));
-        ApplyTextBoxPadding(clueText, new Vector4(10f, 6f, 10f, 6f));
+        ApplyTextBoxPadding(reactionText, new Vector4(12f, 8f, 12f, 8f));
+        ApplyTextBoxPadding(clueText, new Vector4(12f, 8f, 12f, 8f));
         SetTextAlignment(resultText, TextAlignmentOptions.MidlineLeft);
         SetTextAlignment(reactionText, TextAlignmentOptions.TopLeft);
         SetTextAlignment(clueText, TextAlignmentOptions.TopLeft);
@@ -1581,8 +1932,8 @@ public class DayUIManager : MonoBehaviour
         ApplyTextRhythm(ingredientGuideText, -1.5f, 4f, 2f);
         ApplyTextRhythm(cookingPotHintText, -1f, 3f, 0f);
         ApplyTextRhythm(resultText, -1f, 4f, 2f);
-        ApplyTextRhythm(reactionText, -1.5f, 6f, 4f);
-        ApplyTextRhythm(clueText, -1.5f, 6f, 4f);
+        ApplyTextRhythm(reactionText, -1f, 3f, 2f);
+        ApplyTextRhythm(clueText, -1f, 3f, 1f);
 
         ApplyButtonRhythm(choiceButtonAText);
         ApplyButtonRhythm(choiceButtonBText);
@@ -1609,11 +1960,11 @@ public class DayUIManager : MonoBehaviour
         AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Shelf", "재료 선반", new Vector2(0.71f, 0.71f), new Vector2(0.93f, 0.76f), font, 16f, SecondaryTextTint);
 
         AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultFood", "완성 음식", new Vector2(0.07f, 0.79f), new Vector2(0.37f, 0.84f), font, 15f, MutedTextTint);
-        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultReaction", "손님 반응", new Vector2(0.08f, 0.45f), new Vector2(0.56f, 0.50f), font, 15f, MutedTextTint);
-        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultClue", "단서 기록", new Vector2(0.08f, 0.29f), new Vector2(0.56f, 0.34f), font, 15f, MutedTextTint);
-        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultUnlock", "해금 기록", new Vector2(0.61f, 0.45f), new Vector2(0.91f, 0.50f), font, 15f, MutedTextTint);
-        AddUiDivider(resultPanel != null ? resultPanel.transform : null, "SectionRule_ResultLeft", new Vector2(0.08f, 0.445f), new Vector2(0.56f, 0.455f));
-        AddUiDivider(resultPanel != null ? resultPanel.transform : null, "SectionRule_ResultRight", new Vector2(0.61f, 0.445f), new Vector2(0.91f, 0.455f));
+        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultReaction", "손님 반응", new Vector2(0.08f, 0.54f), new Vector2(0.51f, 0.59f), font, 15f, MutedTextTint);
+        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultClue", "플레이어 대화", new Vector2(0.56f, 0.54f), new Vector2(0.91f, 0.59f), font, 15f, MutedTextTint);
+        AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultUnlock", "해금 기록", new Vector2(0.56f, 0.31f), new Vector2(0.91f, 0.36f), font, 15f, MutedTextTint);
+        AddUiDivider(resultPanel != null ? resultPanel.transform : null, "SectionRule_ResultLeft", new Vector2(0.08f, 0.535f), new Vector2(0.51f, 0.545f));
+        AddUiDivider(resultPanel != null ? resultPanel.transform : null, "SectionRule_ResultRight", new Vector2(0.56f, 0.535f), new Vector2(0.91f, 0.545f));
 
         ApplyTextBlockBackdrop(reactionText);
         ApplyTextBlockBackdrop(clueText);
@@ -1650,13 +2001,13 @@ public class DayUIManager : MonoBehaviour
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
         SetTextAlignment(cookingPotHintText, TextAlignmentOptions.Center);
 
-        SetRelativeRect(resultText, new Vector2(0.41f, 0.59f), new Vector2(0.91f, 0.76f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(reactionText, new Vector2(0.08f, 0.32f), new Vector2(0.56f, 0.43f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(clueText, new Vector2(0.08f, 0.18f), new Vector2(0.56f, 0.27f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockTitleText, new Vector2(0.61f, 0.35f), new Vector2(0.91f, 0.42f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.61f, 0.24f), new Vector2(0.91f, 0.31f), Vector2.zero, Vector2.zero);
-        ApplyTextBoxPadding(reactionText, new Vector4(6f, 4f, 6f, 4f));
-        ApplyTextBoxPadding(clueText, new Vector4(6f, 4f, 6f, 4f));
+        SetRelativeRect(resultText, new Vector2(0.39f, 0.60f), new Vector2(0.91f, 0.76f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(reactionText, new Vector2(0.08f, 0.23f), new Vector2(0.51f, 0.54f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(clueText, new Vector2(0.56f, 0.34f), new Vector2(0.91f, 0.54f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockTitleText, new Vector2(0.56f, 0.25f), new Vector2(0.91f, 0.31f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockMenuText, new Vector2(0.56f, 0.18f), new Vector2(0.91f, 0.24f), Vector2.zero, Vector2.zero);
+        ApplyTextBoxPadding(reactionText, new Vector4(10f, 6f, 10f, 6f));
+        ApplyTextBoxPadding(clueText, new Vector4(10f, 6f, 10f, 6f));
         SetTextAlignment(resultText, TextAlignmentOptions.MidlineLeft);
         SetTextAlignment(reactionText, TextAlignmentOptions.TopLeft);
         SetTextAlignment(clueText, TextAlignmentOptions.TopLeft);
@@ -1782,8 +2133,8 @@ public class DayUIManager : MonoBehaviour
         ApplyTextStyle(slot3Text, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
 
         ApplyTextStyle(resultText, bodyFont, 28f, FontStyles.Bold, PrimaryTextTint);
-        ApplyTextStyle(reactionText, bodyFont, 20f, FontStyles.Normal, SecondaryTextTint);
-        ApplyTextStyle(clueText, bodyFont, 18f, FontStyles.Normal, MutedTextTint);
+        ApplyTextStyle(reactionText, bodyFont, 17f, FontStyles.Normal, SecondaryTextTint);
+        ApplyTextStyle(clueText, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
         ApplyTextStyle(unlockTitleText, bodyFont, 24f, FontStyles.Bold, WarningTextTint);
         ApplyTextStyle(unlockMenuText, bodyFont, 20f, FontStyles.Normal, PrimaryTextTint);
 
@@ -2384,5 +2735,16 @@ public class DayUIManager : MonoBehaviour
 
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
         SetText(label, text);
+    }
+
+    private static void SetPanelHeaderTitle(GameObject panel, string title)
+    {
+        if (panel == null)
+            return;
+
+        Transform header = panel.transform.Find("PaperFrameHeader");
+        Transform label = header != null ? header.Find("PaperFrameHeaderText") : null;
+        TMP_Text labelText = label != null ? label.GetComponent<TMP_Text>() : null;
+        SetText(labelText, title);
     }
 }

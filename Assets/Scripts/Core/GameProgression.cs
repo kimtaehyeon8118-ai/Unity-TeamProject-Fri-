@@ -8,23 +8,25 @@ public static class GameProgression
     private const string UnlockedIngredientsKey = "Taehyeon2NE.UnlockedIngredients";
     private const string PendingIngredientsKey = "Taehyeon2NE.PendingIngredients";
     private const string NightClearCountKey = "Taehyeon2NE.NightClearCount";
+    private const string ProgressVersionKey = "Taehyeon2NE.ProgressVersion";
+    private const int CurrentProgressVersion = 5;
 
     private static readonly string[] StartingIngredients =
     {
-        "된장",
+        "김치",
+        "돼지고기",
         "두부",
-        "버섯",
-        "애호박"
+        "대파"
     };
 
     private static readonly string[] NightRewardSequence =
     {
-        "김치",
-        "돼지고기",
-        "대파",
         "순두부",
         "고춧가루",
-        "계란"
+        "계란",
+        "된장",
+        "버섯",
+        "애호박"
     };
 
     public static IReadOnlyList<string> GetUnlockedIngredients()
@@ -40,6 +42,12 @@ public static class GameProgression
 
         EnsureInitialized();
         return LoadList(UnlockedIngredientsKey).Contains(ingredientName);
+    }
+
+    public static int GetCurrentDayNumber()
+    {
+        EnsureInitialized();
+        return PlayerPrefs.GetInt(NightClearCountKey, 0) + 1;
     }
 
     public static string GrantNightReward()
@@ -68,6 +76,22 @@ public static class GameProgression
         return reward;
     }
 
+    public static void UnlockIngredients(params string[] ingredients)
+    {
+        EnsureInitialized();
+
+        List<string> unlockedIngredients = LoadList(UnlockedIngredientsKey).ToList();
+
+        foreach (string ingredient in ingredients)
+        {
+            if (!string.IsNullOrWhiteSpace(ingredient) && !unlockedIngredients.Contains(ingredient))
+                unlockedIngredients.Add(ingredient);
+        }
+
+        SaveList(UnlockedIngredientsKey, unlockedIngredients);
+        PlayerPrefs.Save();
+    }
+
     public static string[] ConsumePendingIngredients()
     {
         EnsureInitialized();
@@ -83,12 +107,23 @@ public static class GameProgression
         SaveList(UnlockedIngredientsKey, StartingIngredients);
         SaveList(PendingIngredientsKey, Array.Empty<string>());
         PlayerPrefs.SetInt(NightClearCountKey, 0);
+        PlayerPrefs.SetInt(ProgressVersionKey, CurrentProgressVersion);
         PlayerPrefs.Save();
     }
 
     private static void EnsureInitialized()
     {
         bool changed = false;
+
+        if (PlayerPrefs.GetInt(ProgressVersionKey, 0) != CurrentProgressVersion)
+        {
+            SaveList(UnlockedIngredientsKey, StartingIngredients);
+            SaveList(PendingIngredientsKey, Array.Empty<string>());
+            PlayerPrefs.SetInt(NightClearCountKey, 0);
+            PlayerPrefs.SetInt(ProgressVersionKey, CurrentProgressVersion);
+            PlayerPrefs.Save();
+            return;
+        }
 
         if (!PlayerPrefs.HasKey(UnlockedIngredientsKey))
         {
@@ -105,6 +140,12 @@ public static class GameProgression
         if (!PlayerPrefs.HasKey(NightClearCountKey))
         {
             PlayerPrefs.SetInt(NightClearCountKey, 0);
+            changed = true;
+        }
+
+        if (!PlayerPrefs.HasKey(ProgressVersionKey))
+        {
+            PlayerPrefs.SetInt(ProgressVersionKey, CurrentProgressVersion);
             changed = true;
         }
 
