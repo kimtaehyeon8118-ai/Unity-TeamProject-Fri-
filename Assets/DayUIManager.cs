@@ -235,6 +235,10 @@ public class DayUIManager : MonoBehaviour
     [SerializeField] private bool startFromPreviewDayInEditor = false;
     [SerializeField, Range(1, 3)] private int editorPreviewDayNumber = 1;
 
+    [Header("Day Art Layout")]
+    [SerializeField] private bool useDayArtLayout = true;
+    [SerializeField] private DayResponseArtView dayResponseArtView;
+
     [Header("Test Data")]
     public Sprite customerPortrait;
     public Sprite bibimbapSprite;
@@ -500,6 +504,7 @@ public class DayUIManager : MonoBehaviour
     private void Start()
     {
         rootCanvas = GetComponentInParent<Canvas>();
+        BindDayResponseArtView();
         InitUI();
         ApplyLayoutPreset();
         ApplyColorPreset();
@@ -511,6 +516,7 @@ public class DayUIManager : MonoBehaviour
         ApplyMenuBoardLayout();
         ApplyIndieUiPolish();
         ApplyTextPlacementPolish();
+        ApplyDayArtSceneLayout();
         BindButtons();
         EnsureCookingPotDropZone();
         ConfigureIngredientDragSources();
@@ -2221,6 +2227,78 @@ public class DayUIManager : MonoBehaviour
         SetTextAlignment(unlockMenuText, TextAlignmentOptions.MidlineLeft);
     }
 
+    private void ApplyDayArtSceneLayout()
+    {
+        if (!useDayArtLayout)
+            return;
+
+        StretchPanel(customerPanel, Vector2.zero, Vector2.one);
+
+        Transform portraitPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerPortraitPanel");
+        Transform bottomPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel");
+        Transform dialogueBox = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "DialogueBox");
+        Transform speechPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel");
+
+        MakeImagesTransparentInChildren(customerPanel);
+        MakeLegacyTextsTransparentInChildren(customerPanel);
+
+        SetActive(menuBoardPanel, false);
+        SetActive(speechPanel, false);
+        SetActive(customerSpeechText, false);
+        SetActive(customerInfoText, false);
+        SetActive(menuListText, false);
+        SetActive(nameText, false);
+        SetActive(dialogueText, false);
+
+        SetRelativeRect(portraitPanel, new Vector2(0.155f, 0.455f), new Vector2(0.365f, 0.825f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(portraitImage, new Vector2(0.05f, 0.02f), new Vector2(0.95f, 0.98f), Vector2.zero, Vector2.zero);
+
+        SetRelativeRect(bottomPanel, new Vector2(0.027f, 0.045f), new Vector2(0.973f, 0.345f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(dialogueBox, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        SetRelativeRect(dialogueText, new Vector2(0.035f, 0.12f), new Vector2(0.965f, 0.80f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(choiceGroup, new Vector2(0.04f, 0.04f), new Vector2(0.50f, 0.23f), Vector2.zero, Vector2.zero);
+
+        SetRelativeRect(menuOpenButton, new Vector2(0.903f, 0.625f), new Vector2(0.974f, 0.790f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(nextButton, new Vector2(0.027f, 0.045f), new Vector2(0.973f, 0.345f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(goKitchenButton, new Vector2(0.903f, 0.625f), new Vector2(0.974f, 0.790f), Vector2.zero, Vector2.zero);
+
+        SetButtonImageColor(menuOpenButton, Color.white);
+        MakeButtonTransparent(nextButton);
+        MakeButtonTransparent(goKitchenButton);
+        ApplyTextBoxPadding(dialogueText, new Vector4(22f, 16f, 22f, 16f));
+        SetTextAlignment(dialogueText, TextAlignmentOptions.TopLeft);
+
+        if (portraitImage != null)
+        {
+            portraitImage.preserveAspect = true;
+            portraitImage.raycastTarget = false;
+        }
+    }
+
+    private void BindDayResponseArtView()
+    {
+        if (!useDayArtLayout)
+            return;
+
+        if (dayResponseArtView == null)
+            dayResponseArtView = FindAnyObjectByType<DayResponseArtView>();
+
+        if (dayResponseArtView == null)
+            return;
+
+        if (dayResponseArtView.npcImage != null)
+            portraitImage = dayResponseArtView.npcImage;
+
+        if (dayResponseArtView.recipeButton != null)
+            menuOpenButton = dayResponseArtView.recipeButton;
+
+        if (dayResponseArtView.dialogueAdvanceButton != null)
+            nextButton = dayResponseArtView.dialogueAdvanceButton;
+
+        if (portraitImage != null && customerPortrait == null)
+            customerPortrait = portraitImage.sprite;
+    }
+
     private void ApplyColorPreset()
     {
         if (colorApplied)
@@ -2873,7 +2951,12 @@ public class DayUIManager : MonoBehaviour
     private void ApplyActivePanelLayout(bool showCustomer, bool showKitchen, bool showResult)
     {
         if (showCustomer)
-            StretchPanel(customerPanel, new Vector2(0.18f, 0.07f), new Vector2(0.82f, 0.93f));
+        {
+            if (useDayArtLayout)
+                StretchPanel(customerPanel, Vector2.zero, Vector2.one);
+            else
+                StretchPanel(customerPanel, new Vector2(0.18f, 0.07f), new Vector2(0.82f, 0.93f));
+        }
 
         if (showKitchen)
             StretchPanel(kitchenPanel, new Vector2(0.12f, 0.07f), new Vector2(0.88f, 0.93f));
@@ -2932,6 +3015,98 @@ public class DayUIManager : MonoBehaviour
     {
         if (target != null)
             target.interactable = isInteractable;
+    }
+
+    private static void MakeImageTransparent(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        MakeImageTransparent(target.transform);
+    }
+
+    private static void MakeImageTransparent(Transform target)
+    {
+        if (target == null)
+            return;
+
+        Image image = target.GetComponent<Image>();
+        if (image == null)
+            return;
+
+        Color color = image.color;
+        color.a = 0f;
+        image.color = color;
+        image.raycastTarget = false;
+    }
+
+    private static void MakeImagesTransparentInChildren(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        Image[] images = target.GetComponentsInChildren<Image>(true);
+        foreach (Image image in images)
+        {
+            if (image == null)
+                continue;
+
+            Color color = image.color;
+            color.a = 0f;
+            image.color = color;
+            image.raycastTarget = false;
+        }
+    }
+
+    private void MakeLegacyTextsTransparentInChildren(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        TMP_Text[] texts = target.GetComponentsInChildren<TMP_Text>(true);
+        foreach (TMP_Text text in texts)
+        {
+            if (text == null || text == dialogueText || text == nameText)
+                continue;
+
+            Color color = text.color;
+            color.a = 0f;
+            text.color = color;
+            text.raycastTarget = false;
+        }
+    }
+
+    private static void MakeButtonTransparent(Button button)
+    {
+        if (button == null)
+            return;
+
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+        {
+            Color color = image.color;
+            color.a = 0f;
+            image.color = color;
+            image.raycastTarget = true;
+        }
+
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            Color color = label.color;
+            color.a = 0f;
+            label.color = color;
+        }
+    }
+
+    private static void SetButtonImageColor(Button button, Color color)
+    {
+        if (button == null)
+            return;
+
+        Image image = button.GetComponent<Image>();
+        if (image != null)
+            image.color = color;
     }
 
     private static void SetButtonLabel(Button button, string text)
