@@ -231,6 +231,10 @@ public class DayUIManager : MonoBehaviour
     [Header("Scene Flow")]
     [SerializeField] private string nightSceneName = "Stage01_CyberStreet";
 
+    [Header("Editor Preview")]
+    [SerializeField] private bool startFromPreviewDayInEditor = false;
+    [SerializeField, Range(1, 3)] private int editorPreviewDayNumber = 1;
+
     [Header("Test Data")]
     public Sprite customerPortrait;
     public Sprite bibimbapSprite;
@@ -406,6 +410,65 @@ public class DayUIManager : MonoBehaviour
         {
             isCustomer = true,
             text = "부탁드릴게요. 오늘은 조용히 속을 데우고 싶어요."
+        }
+    };
+
+    private readonly DialogueLine[] dayThreeDialogueLines =
+    {
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "어서 와요. 여기엔 안전하게 쉬어갈 수 있어요. 천천히 앉아도 괜찮아요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "저기... 여기엔 좀비들 없죠?..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "없어요. 지금은 문도 닫혀 있고, 제가 곁에 있어요. 배부터 조금 채워볼까요?"
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "솔직히 배고픈 건 참을 수 있는데,... 혼자 사는 건... 무서워요..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "혼자 버틴 시간이 너무 길었겠네요. 여기서는 밝은 척하지 않아도 괜찮아요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "혹시... 된장찌개... 가능할까요?..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "가능해요. 그런데 민준이가 떠올리는 집밥의 안전한 맛을 조금 더 따라가볼게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "엄마가 시험날에 먹고 가라고 하셨는데 안 먹은 게 후회가..."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "그 기억이라면 따뜻한 된장찌개가 잘 맞을 것 같아요. 엄마가 차려준 밥상처럼 끓여볼게요."
+        },
+        new DialogueLine
+        {
+            isCustomer = true,
+            text = "엄마의 손 맛을 느끼고 싶어요."
+        },
+        new DialogueLine
+        {
+            isCustomer = false,
+            text = "좋아요. 된장과 두부, 버섯을 넣어서 집밥처럼 따뜻하게 끓여볼게요."
         }
     };
 
@@ -617,11 +680,19 @@ public class DayUIManager : MonoBehaviour
 
     private void LoadCustomerScene()
     {
-        if (!GameFlowState.ConsumeReturnedFromNight())
+        bool returnedFromNight = GameFlowState.ConsumeReturnedFromNight();
+        if (!returnedFromNight)
             GameProgression.ResetProgress();
 
         RefreshUnlockedIngredients();
         currentDayNumber = GameProgression.GetCurrentDayNumber();
+#if UNITY_EDITOR
+        if (startFromPreviewDayInEditor && !returnedFromNight)
+        {
+            currentDayNumber = Mathf.Clamp(editorPreviewDayNumber, 1, 3);
+            ApplyEditorPreviewUnlocks();
+        }
+#endif
         currentDialogueLines = GetDialogueLinesForCurrentDay();
         dialogueIndex = 0;
         choiceAnswered = true;
@@ -741,6 +812,21 @@ public class DayUIManager : MonoBehaviour
 
     private string GetCustomerReplyForChoice(CustomerPreference preference)
     {
+        if (currentDayNumber >= 3)
+        {
+            switch (preference)
+            {
+                case CustomerPreference.MildSoup:
+                    return "네... 엄마가 끓여주던 따뜻한 된장 냄새가 생각나요.";
+
+                case CustomerPreference.SpicySoup:
+                    return "매운 것보단... 집에서 먹던 따뜻한 국물 냄새가 더 그리운 것 같아요.";
+
+                default:
+                    return "네... 엄마가 끓여주던 따뜻한 된장 냄새가 생각나요.";
+            }
+        }
+
         if (currentDayNumber >= 2)
         {
             switch (preference)
@@ -771,16 +857,25 @@ public class DayUIManager : MonoBehaviour
 
     private DialogueLine[] GetDialogueLinesForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return dayThreeDialogueLines;
+
         return currentDayNumber >= 2 ? dayTwoDialogueLines : dayOneDialogueLines;
     }
 
     private string GetCustomerNameForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return "민준";
+
         return currentDayNumber >= 2 ? "윤서아" : "강태수";
     }
 
     private string GetCustomerInfoForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return "3일차 단서: 혼자 남은 학생, 엄마의 손맛, 집밥 같은 된장찌개";
+
         return currentDayNumber >= 2
             ? "2일차 단서: 따뜻함, 부드러운 순두부, 적당한 고춧가루"
             : "1일차 단서: 매콤한 냄새, 김치찌개, 가족의 기억";
@@ -788,6 +883,9 @@ public class DayUIManager : MonoBehaviour
 
     private string GetKitchenMoveTextForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return "민준이가 떠올리는 엄마의 집밥 기억에 맞춰 주방으로 이동해 조리해요.";
+
         return currentDayNumber >= 2
             ? "2일차 손님의 단서에 맞춰 주방으로 이동해 조리해요."
             : "강태수씨의 기억에 맞춰 주방으로 이동해 조리해요.";
@@ -795,16 +893,25 @@ public class DayUIManager : MonoBehaviour
 
     private CustomerPreference GetPreferenceForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return CustomerPreference.MildSoup;
+
         return currentDayNumber >= 2 ? CustomerPreference.MildSoup : CustomerPreference.SpicySoup;
     }
 
     private MenuId GetTargetRecipeForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return MenuId.DoenjangJjigae;
+
         return currentDayNumber >= 2 ? MenuId.SoondubuJjigae : MenuId.KimchiJjigae;
     }
 
     private string GetWrongRecipeReactionForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return "손님 반응: 맛있지만... 엄마가 차려주던 그 안전한 냄새와는 조금 달라요.";
+
         return currentDayNumber >= 2
             ? "손님 반응: 맛은 있지만 오늘 제 속에는 조금 강하게 느껴져요."
             : "손님 반응: 하... 역시. 내가 떠올리고 싶던 냄새는 이게 아니었어.";
@@ -812,6 +919,9 @@ public class DayUIManager : MonoBehaviour
 
     private string GetWrongRecipeClueForCurrentDay()
     {
+        if (currentDayNumber >= 3)
+            return "다음 단서: 민준이는 매운 기억보다 엄마가 차려주던 집밥 같은 된장찌개를 찾고 있습니다.";
+
         return currentDayNumber >= 2
             ? "다음 단서: 2일차 손님은 따뜻하고 부드러운 순두부찌개를 원했습니다."
             : "다음 단서: 강태수씨는 담백한 국물이 아니라 가족과 먹던 매콤한 김치찌개의 냄새를 찾고 있었습니다.";
@@ -1100,8 +1210,8 @@ public class DayUIManager : MonoBehaviour
             }
             else
             {
-                SetText(unlockTitleText, "2일차 완료");
-                SetText(unlockMenuText, "다음 손님은 준비 중입니다.");
+                SetText(unlockTitleText, currentDayNumber + "일차 완료");
+                SetText(unlockMenuText, currentDayNumber >= 3 ? "다음 이야기는 준비 중입니다." : "다음 손님은 준비 중입니다.");
             }
 
             SetButtonLabel(nextDayButton, "밤 파트 시작");
@@ -1109,13 +1219,19 @@ public class DayUIManager : MonoBehaviour
         }
         else
         {
-            SetText(unlockTitleText, "요리 재도전");
-            SetText(unlockMenuText, "평가가 완벽해야 순두부찌개가 해금됩니다.");
-            SetButtonLabel(nextDayButton, "다시 요리하기");
-            Bind(nextDayButton, OpenKitchen);
+            SetText(unlockTitleText, "Game Over");
+            SetText(unlockMenuText, "손님이 원하던 음식이나 식재료를 놓쳤습니다.\n1일차 낮 파트부터 다시 시작합니다.");
+            SetButtonLabel(nextDayButton, "처음부터 다시 시작");
+            Bind(nextDayButton, RestartFromFirstDay);
         }
 
         UpdateMenuButtons();
+    }
+
+    private void RestartFromFirstDay()
+    {
+        GameProgression.ResetProgress();
+        LoadCustomerScene();
     }
 
     private void ShowCustomerClueGuide()
@@ -1181,7 +1297,7 @@ public class DayUIManager : MonoBehaviour
             }
         }
 
-        if (currentDayNumber >= 2 && selectedRecipeId == MenuId.SoondubuJjigae)
+        if (currentDayNumber == 2 && selectedRecipeId == MenuId.SoondubuJjigae)
         {
             string[] requiredSoondubuJjigaeIngredients = { "순두부", "고춧가루", "계란" };
             bool hasAllRequiredIngredients = requiredSoondubuJjigaeIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
@@ -1193,6 +1309,21 @@ public class DayUIManager : MonoBehaviour
                     0,
                     "심정지.... 사망... 변이.... 내가 조금만 더 빨랐다면.... 열이 오르면.... 또 그것처럼 변할 거야..",
                     ".......");
+            }
+        }
+
+        if (currentDayNumber >= 3 && selectedRecipeId == MenuId.DoenjangJjigae)
+        {
+            string[] requiredMinjunIngredients = { "된장", "두부", "버섯" };
+            bool hasAllRequiredIngredients = requiredMinjunIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
+
+            if (!hasAllRequiredIngredients)
+            {
+                return new EvaluationResult(
+                    EvaluationGrade.Poor,
+                    0,
+                    "\"역시.... 너무 큰 욕심인가...\"\n\n\"엄마... 어디에 있어요?\"\n\n\"아빠... 회사에 가신거죠?...\"",
+                    "(뒤틀리는 소리)\n변이 후 주인공 사망");
             }
         }
 
@@ -1233,6 +1364,9 @@ public class DayUIManager : MonoBehaviour
     {
         if (selectedPreference == CustomerPreference.SpicySoup)
             return new[] { "매움", "발효", "해장", "국물", "따뜻함", "든든함", "시원함" };
+
+        if (currentDayNumber >= 3)
+            return new[] { "따뜻함", "구수함", "깊은맛", "담백함", "국물" };
 
         return new[] { "따뜻함", "부드러움", "담백함", "국물", "칼칼함", "고소함" };
     }
@@ -1299,6 +1433,27 @@ public class DayUIManager : MonoBehaviour
                 : "손님 반응: " + forbidden + " 때문에 찾던 기억에서 멀어진 것 같아.";
         }
 
+        if (currentDayNumber >= 3)
+        {
+            if (!string.IsNullOrEmpty(riskyTags) && grade <= EvaluationGrade.Okay)
+                return "손님 반응: 맛있지만 " + riskyTags + " 느낌이 강해서 엄마가 차려주던 밥상과는 조금 멀어요.";
+
+            switch (grade)
+            {
+                case EvaluationGrade.Perfect:
+                    return "\"흑... 와 이거... 엄마가 시험 끝나면 꼭 해줬는데...\"\n\n\"진짜 이상하네요... 뭔가 울 것 같아요...\"\n\n\"마음이 강해진 게 아니었네요.\"\n\n\"형.. 아니 사장님... 자주 와서 먹어도 될까요?...\"\n\n\"정말 감사해요. 엄마가 정말 그리워요... 잘 지내고 있으실까요?..\"\n\n\"아빠도 드시면 좋을텐데...\"\n\n\"나중에 모든 게 괜찮아지면 집에 가서 엄마가 해주는 된장찌개 꼭 먹을거에요.\"\n\n\"그러기 위해선 오늘도 살아야겠죠..\"";
+
+                case EvaluationGrade.Good:
+                    return "손님 반응: 좋아요. 따뜻한 국물 덕분에 조금 안심되는 것 같아요.";
+
+                case EvaluationGrade.Okay:
+                    return "손님 반응: 괜찮지만 엄마가 끓여주던 그 맛에는 아직 조금 멀어요.";
+
+                default:
+                    return "손님 반응: 먹을 수는 있지만... 제가 찾던 집밥의 느낌은 아니에요.";
+            }
+        }
+
         if (currentDayNumber >= 2)
         {
             if (!string.IsNullOrEmpty(riskyTags) && grade <= EvaluationGrade.Okay)
@@ -1348,6 +1503,9 @@ public class DayUIManager : MonoBehaviour
     {
         if (grade == EvaluationGrade.Perfect)
         {
+            if (currentDayNumber >= 3)
+                return "민준아, 여기서는 혼자 버티지 않아도 돼요.\n오늘은 엄마가 차려준 밥상처럼 따뜻한 한 끼부터 천천히 먹어봐요.";
+
             return currentDayNumber >= 2
                 ? "그래요... 어쩔 수 없이 돌아가시는 분들도 많이 계시죠..\n하지만 그 중에서 서아씨 덕분에 다시 일어나신 분들을 생각하고,\n앞으로도 사람들을 위해서 노력하셨으면 좋을 것 같아요."
                 : "당연하죠. 언제든지 오세요.\n그때도 김치찌개 끓이고 기다릴게요.\n다치지 마시고, 삶을 포기하지 마세요.";
@@ -1356,6 +1514,9 @@ public class DayUIManager : MonoBehaviour
         string forbidden = string.Join(", ", selectedIngredients.Where(ingredient => forbiddenIngredients.Contains(ingredient)));
         if (!string.IsNullOrEmpty(forbidden))
         {
+            if (currentDayNumber >= 3)
+                return "다음 단서: 민준이에게는 엄마가 차려주던 된장찌개의 따뜻한 맛이 중요했습니다.";
+
             return currentDayNumber >= 2
                 ? "다음 단서: 속이 편한 국물을 원하는 손님에게는 " + forbidden + " 같은 강한 재료를 피하세요."
                 : "다음 단서: 강태수씨에게 중요한 건 재료보다도 김치찌개 특유의 매콤한 냄새였습니다.";
@@ -1364,10 +1525,16 @@ public class DayUIManager : MonoBehaviour
         string riskyTags = string.Join(", ", foodTags.Intersect(avoidedTags));
         if (!string.IsNullOrEmpty(riskyTags))
         {
+            if (currentDayNumber >= 3)
+                return "다음 단서: " + riskyTags + " 속성이 강하면 민준이가 찾는 집밥의 안정감에서 멀어집니다.";
+
             return currentDayNumber >= 2
                 ? "다음 단서: " + riskyTags + " 속성이 강하면 2일차 손님이 원한 편안한 맛에서 멀어집니다."
                 : "다음 단서: " + riskyTags + " 속성이 강하면 강태수씨가 찾던 가족의 맛에서 멀어집니다.";
         }
+
+        if (currentDayNumber >= 3)
+            return "다음 단서: 민준이는 엄마의 손맛과 집밥 같은 된장찌개를 찾고 있었습니다.";
 
         return currentDayNumber >= 2
             ? "다음 단서: 2일차 손님은 따뜻함, 부드러움, 깊은맛을 원했습니다."
@@ -1413,9 +1580,10 @@ public class DayUIManager : MonoBehaviour
         switch (selectedPreference)
         {
             case CustomerPreference.MildSoup:
-                return (menuId == MenuId.SoondubuJjigae ? 3 : 0)
+                return (menuId == GetTargetRecipeForCurrentDay() ? 3 : 0)
                     + (foodTags.Contains("담백함") ? 2 : 0)
                     + (foodTags.Contains("부드러움") ? 2 : 0)
+                    + (foodTags.Contains("구수함") ? 2 : 0)
                     - (foodTags.Contains("자극적") ? 3 : 0)
                     - (foodTags.Contains("매우매움") ? 4 : 0);
 
@@ -1517,7 +1685,7 @@ public class DayUIManager : MonoBehaviour
 
     private bool IsRecommended(MenuId menuId)
     {
-        return (selectedPreference == CustomerPreference.MildSoup && menuId == MenuId.SoondubuJjigae)
+        return (selectedPreference == CustomerPreference.MildSoup && menuId == GetTargetRecipeForCurrentDay())
             || (selectedPreference == CustomerPreference.SpicySoup && menuId == MenuId.KimchiJjigae);
     }
 
@@ -1533,6 +1701,15 @@ public class DayUIManager : MonoBehaviour
 
     private string BuildCustomerClueGuide()
     {
+        if (currentDayNumber >= 3)
+        {
+            return "손님 단서\n"
+                + "혼자 살아남은 학생 민준\n"
+                + "엄마가 차려주던 집밥 같은 된장찌개를 떠올리고 있음\n\n"
+                + "목표\n"
+                + "구수하고 따뜻한 된장찌개가 안전한 기억을 떠올리도록 조리하세요.";
+        }
+
         if (currentDayNumber >= 2)
         {
             return "손님 단서\n"
@@ -1655,6 +1832,18 @@ public class DayUIManager : MonoBehaviour
     {
         unlockedIngredients = new HashSet<string>(GameProgression.GetUnlockedIngredients());
     }
+
+#if UNITY_EDITOR
+    private void ApplyEditorPreviewUnlocks()
+    {
+        if (currentDayNumber >= 2)
+        {
+            unlockedIngredients.Add("순두부");
+            unlockedIngredients.Add("고춧가루");
+            unlockedIngredients.Add("계란");
+        }
+    }
+#endif
 
     private bool IsIngredientUnlocked(string ingredientName)
     {
