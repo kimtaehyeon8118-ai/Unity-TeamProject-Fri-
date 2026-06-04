@@ -713,6 +713,7 @@ public class DayUIManager : MonoBehaviour
         SetText(nameText, GetCustomerNameForCurrentDay());
         SetText(customerSpeechText, string.Empty);
         SetText(dialogueText, string.Empty);
+        SetActive(customerSpeechText, false);
         SetText(customerInfoText, GetCustomerInfoForCurrentDay());
         SetPanelHeaderTitle(customerPanel, currentDayNumber + "일차 오늘의 한식");
         SetPanelHeaderTitle(kitchenPanel, currentDayNumber + "일차 주방 조리대");
@@ -747,11 +748,11 @@ public class DayUIManager : MonoBehaviour
         if (line.isCustomer)
         {
             lastCustomerSpeech = line.text;
-            SetText(customerSpeechText, line.text);
+            SetText(dialogueText, FormatCustomerDialogue(line.text));
         }
         else
         {
-            SetText(dialogueText, line.text);
+            SetText(dialogueText, FormatPlayerDialogue(line.text));
         }
     }
 
@@ -767,15 +768,14 @@ public class DayUIManager : MonoBehaviour
 
         SetActive(nextButton, false);
         SetActive(goKitchenButton, true);
-        SetText(dialogueText, GetKitchenMoveTextForCurrentDay());
+        SetText(dialogueText, FormatPlayerDialogue(GetKitchenMoveTextForCurrentDay()));
     }
 
     private void ShowChoice()
     {
         SetActive(choiceGroup, true);
         SetInteractable(nextButton, false);
-        EnsureCustomerSpeechVisible();
-        SetText(dialogueText, "강태수씨가 붙잡고 있는 음식의 기억을 짚어보세요.");
+        SetText(dialogueText, FormatPlayerDialogue("강태수씨가 붙잡고 있는 음식의 기억을 짚어보세요."));
     }
 
     private void EnsureCustomerSpeechVisible()
@@ -790,7 +790,7 @@ public class DayUIManager : MonoBehaviour
                 lastCustomerSpeech = customerLine.text;
         }
 
-        SetText(customerSpeechText, lastCustomerSpeech);
+        SetText(dialogueText, FormatCustomerDialogue(lastCustomerSpeech));
     }
 
     private void OnChoiceSelected(CustomerPreference preference)
@@ -807,7 +807,17 @@ public class DayUIManager : MonoBehaviour
         dialogueIndex++;
         ShowCurrentDialogue();
         lastCustomerSpeech = GetCustomerReplyForChoice(preference);
-        SetText(customerSpeechText, lastCustomerSpeech);
+        SetText(dialogueText, FormatCustomerDialogue(lastCustomerSpeech));
+    }
+
+    private string FormatCustomerDialogue(string text)
+    {
+        return "[" + GetCustomerNameForCurrentDay() + "]\n" + text;
+    }
+
+    private string FormatPlayerDialogue(string text)
+    {
+        return "[플레이어]\n" + text;
     }
 
     private string GetCustomerReplyForChoice(CustomerPreference preference)
@@ -1973,6 +1983,9 @@ public class DayUIManager : MonoBehaviour
         Transform speechPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel");
         Transform bottomPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel");
 
+        SetActive(speechPanel, false);
+        SetActive(customerSpeechText, false);
+
         SetRelativeRect(portraitPanel, new Vector2(0.06f, 0.53f), new Vector2(0.33f, 0.84f), Vector2.zero, Vector2.zero);
         SetRelativeRect(speechPanel, new Vector2(0.36f, 0.53f), new Vector2(0.94f, 0.84f), Vector2.zero, Vector2.zero);
         SetRelativeRect(bottomPanel, new Vector2(0.06f, 0.09f), new Vector2(0.94f, 0.46f), Vector2.zero, Vector2.zero);
@@ -1981,7 +1994,7 @@ public class DayUIManager : MonoBehaviour
         ApplyPanelTint(bottomPanel != null ? bottomPanel.gameObject : null, new Color32(232, 216, 187, 255));
 
         Transform dialogueBox = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "DialogueBox");
-        SetRelativeRect(dialogueBox, new Vector2(0.04f, 0.25f), new Vector2(0.70f, 0.86f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(dialogueBox, new Vector2(0.04f, 0.22f), new Vector2(0.70f, 0.88f), Vector2.zero, Vector2.zero);
         ApplyPanelTint(dialogueBox != null ? dialogueBox.gameObject : null, new Color32(255, 248, 226, 255));
 
         SetRelativeRect(menuOpenButton, new Vector2(0.76f, 0.66f), new Vector2(0.96f, 0.86f), Vector2.zero, Vector2.zero);
@@ -1992,12 +2005,12 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(choiceButtonA, new Vector2(0f, 0f), new Vector2(0.48f, 1f), Vector2.zero, Vector2.zero);
         SetRelativeRect(choiceButtonB, new Vector2(0.52f, 0f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(dialogueText, new Vector2(0.06f, 0.12f), new Vector2(0.94f, 0.88f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(dialogueText, new Vector2(0.06f, 0.10f), new Vector2(0.94f, 0.90f), Vector2.zero, Vector2.zero);
         SetRelativeRect(customerSpeechText, new Vector2(0.08f, 0.12f), new Vector2(0.92f, 0.88f), Vector2.zero, Vector2.zero);
-        ApplyTextBoxPadding(dialogueText, Vector4.zero);
-        ApplyTextBoxPadding(customerSpeechText, Vector4.zero);
-        SetTextAlignment(dialogueText, TextAlignmentOptions.Center);
-        SetTextAlignment(customerSpeechText, TextAlignmentOptions.Center);
+        ApplyTextBoxPadding(dialogueText, new Vector4(10f, 8f, 10f, 8f));
+        ApplyTextBoxPadding(customerSpeechText, new Vector4(10f, 8f, 10f, 8f));
+        SetTextAlignment(dialogueText, TextAlignmentOptions.TopLeft);
+        SetTextAlignment(customerSpeechText, TextAlignmentOptions.TopLeft);
         ApplyButtonLabelPadding(menuOpenButton);
         ApplyButtonLabelPadding(nextButton);
         ApplyButtonLabelPadding(goKitchenButton);
@@ -2163,20 +2176,24 @@ public class DayUIManager : MonoBehaviour
     private void ApplyTextPlacementPolish()
     {
         Transform bottomPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel");
+        Transform speechPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel");
+
+        SetActive(speechPanel, false);
+        SetActive(customerSpeechText, false);
 
         SetRelativeRect(portraitImage, new Vector2(0.24f, 0.35f), new Vector2(0.76f, 0.74f), Vector2.zero, Vector2.zero);
         SetRelativeRect(nameText, new Vector2(0.12f, 0.10f), new Vector2(0.88f, 0.25f), Vector2.zero, Vector2.zero);
         SetTextAlignment(nameText, TextAlignmentOptions.Center);
 
         SetRelativeRect(customerSpeechText, new Vector2(0.09f, 0.16f), new Vector2(0.91f, 0.74f), Vector2.zero, Vector2.zero);
-        ApplyTextBoxPadding(customerSpeechText, Vector4.zero);
-        SetTextAlignment(customerSpeechText, TextAlignmentOptions.Center);
+        ApplyTextBoxPadding(customerSpeechText, new Vector4(10f, 8f, 10f, 8f));
+        SetTextAlignment(customerSpeechText, TextAlignmentOptions.TopLeft);
 
         Transform dialogueBox = FindChildRecursive(bottomPanel, "DialogueBox");
-        SetRelativeRect(dialogueBox, new Vector2(0.04f, 0.24f), new Vector2(0.70f, 0.80f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(dialogueText, new Vector2(0.07f, 0.16f), new Vector2(0.93f, 0.84f), Vector2.zero, Vector2.zero);
-        ApplyTextBoxPadding(dialogueText, Vector4.zero);
-        SetTextAlignment(dialogueText, TextAlignmentOptions.Center);
+        SetRelativeRect(dialogueBox, new Vector2(0.04f, 0.22f), new Vector2(0.70f, 0.88f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(dialogueText, new Vector2(0.06f, 0.10f), new Vector2(0.94f, 0.90f), Vector2.zero, Vector2.zero);
+        ApplyTextBoxPadding(dialogueText, new Vector4(10f, 8f, 10f, 8f));
+        SetTextAlignment(dialogueText, TextAlignmentOptions.TopLeft);
 
         SetRelativeRect(choiceGroup, new Vector2(0.04f, 0.06f), new Vector2(0.70f, 0.18f), Vector2.zero, Vector2.zero);
         SetRelativeRect(menuOpenButton, new Vector2(0.77f, 0.65f), new Vector2(0.95f, 0.82f), Vector2.zero, Vector2.zero);
