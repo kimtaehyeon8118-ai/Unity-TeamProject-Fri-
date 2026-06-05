@@ -34,9 +34,7 @@ public sealed class DialogueView : MonoBehaviour
     public void SetLines(IList<DialogueLine> dialogueLines)
     {
         lines = dialogueLines;
-        currentIndex = 0;
-        SetKitchenButtonVisible(false);
-        ShowCurrentLine();
+        StartDialogue();
     }
 
     public void BindActions(Action kitchenAction)
@@ -52,43 +50,64 @@ public sealed class DialogueView : MonoBehaviour
             goToKitchenButton.onClick.RemoveAllListeners();
             goToKitchenButton.onClick.AddListener(() => kitchenAction());
         }
+
+        ValidateReferences();
+    }
+
+    public void StartDialogue()
+    {
+        currentIndex = 0;
+        RefreshDialogue();
     }
 
     public void Advance()
     {
-        if (lines == null || lines.Count == 0)
-            return;
+        AdvanceDialogue();
+    }
 
-        if (currentIndex < lines.Count - 1)
+    public void AdvanceDialogue()
+    {
+        if (lines == null || lines.Count == 0)
         {
-            currentIndex++;
-            ShowCurrentLine();
+            SetKitchenButtonVisible(false);
             return;
         }
 
-        SetKitchenButtonVisible(true);
-        if (advanceButton != null)
-            advanceButton.interactable = false;
+        if (currentIndex >= lines.Count - 1)
+        {
+            currentIndex = lines.Count - 1;
+            SetKitchenButtonVisible(true);
+            return;
+        }
 
-        if (Finished != null)
-            Finished.Invoke();
+        currentIndex++;
+        RefreshDialogue();
     }
 
-    private void ShowCurrentLine()
+    private void RefreshDialogue()
     {
         if (lines == null || lines.Count == 0)
         {
             SetText(speakerText, string.Empty);
             SetText(dialogueText, string.Empty);
+            SetKitchenButtonVisible(false);
             return;
         }
 
-        DialogueLine line = lines[Mathf.Clamp(currentIndex, 0, lines.Count - 1)];
-        SetText(speakerText, line.speakerName);
+        currentIndex = Mathf.Clamp(currentIndex, 0, lines.Count - 1);
+
+        DialogueLine line = lines[currentIndex];
+        SetText(speakerText, line.DisplaySpeakerName);
         SetText(dialogueText, line.dialogueText);
 
         if (advanceButton != null)
             advanceButton.interactable = true;
+
+        bool isLastLine = currentIndex >= lines.Count - 1;
+        SetKitchenButtonVisible(isLastLine);
+
+        if (isLastLine && Finished != null)
+            Finished.Invoke();
     }
 
     private void SetKitchenButtonVisible(bool visible)
@@ -103,5 +122,23 @@ public sealed class DialogueView : MonoBehaviour
     {
         if (target != null)
             target.text = value;
+    }
+
+    private void ValidateReferences()
+    {
+        if (speakerText == null)
+            Debug.LogWarning("[DialogueView] Speaker text reference is missing.", this);
+
+        if (dialogueText == null)
+            Debug.LogWarning("[DialogueView] Dialogue body text reference is missing.", this);
+
+        if (advanceButton == null)
+            Debug.LogWarning("[DialogueView] Dialogue click button reference is missing.", this);
+
+        if (goToKitchenButton == null)
+            Debug.LogWarning("[DialogueView] GoToKitchenButton reference is missing.", this);
+
+        if (lines == null || lines.Count == 0)
+            Debug.LogWarning("[DialogueView] Dialogue lines are empty.", this);
     }
 }

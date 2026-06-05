@@ -60,13 +60,15 @@ public static class DaySceneUiLayoutBuilder
         Button recipeButton = CreateButton(artRoot, "DayArt_RecipeButton", "Assets/UI/day_menu.png", new Vector2(0.903f, 0.625f), new Vector2(0.974f, 0.790f));
         Button noteButton = CreateButton(artRoot, "DayArt_NoteButton", "Assets/UI/day_note.png", new Vector2(0.903f, 0.430f), new Vector2(0.974f, 0.595f));
         Button dialogueAdvanceButton = CreateTransparentButton(artRoot, "DayArt_DialogueAdvanceButton", new Vector2(0.027f, 0.045f), new Vector2(0.973f, 0.345f));
+        TMP_Text recipeButtonLabel = CreateText(recipeButton.transform, "LabelText", new Vector2(0.08f, 0.08f), new Vector2(0.92f, 0.30f), "레시피", 20f, TextAlignmentOptions.Midline, Color.white, koreanFont);
+        TMP_Text noteButtonLabel = CreateText(noteButton.transform, "LabelText", new Vector2(0.08f, 0.08f), new Vector2(0.92f, 0.30f), "메모장", 20f, TextAlignmentOptions.Midline, Color.white, koreanFont);
 
         TMP_Text timeText = CreateText(artRoot, "TimeText", new Vector2(0.063f, 0.904f), new Vector2(0.175f, 0.970f), "12:00", 34f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
         TMP_Text dayText = CreateText(artRoot, "DayText", new Vector2(0.265f, 0.905f), new Vector2(0.625f, 0.970f), "1일차", 34f, TextAlignmentOptions.Midline, Color.white, koreanFont);
         TMP_Text npcInfoTitleText = CreateText(artRoot, "NpcInfoTitleText", new Vector2(0.175f, 0.745f), new Vector2(0.345f, 0.795f), "정보", 26f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
         TMP_Text npcInfoText = CreateText(artRoot, "NpcInfoText", new Vector2(0.175f, 0.565f), new Vector2(0.345f, 0.735f), "이름: 강태수\n성별: 남성\n직업: 손님\n특징: 얼큰한 국물 요리를 좋아함", 26f, TextAlignmentOptions.TopLeft, Color.white, koreanFont);
         TMP_Text speakerText = CreateText(artRoot, "SpeakerText", new Vector2(0.068f, 0.250f), new Vector2(0.310f, 0.305f), "강태수 [NPC]", 28f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
-        TMP_Text dialogueText = CreateText(artRoot, "DialogueText", new Vector2(0.068f, 0.120f), new Vector2(0.915f, 0.242f), "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요.", 29f, TextAlignmentOptions.TopLeft, new Color32(30, 27, 25, 255), koreanFont);
+        TMP_Text dialogueText = CreateText(artRoot, "DialogueText", new Vector2(0.068f, 0.120f), new Vector2(0.915f, 0.242f), "안녕하세요. 오늘은 얼큰한 찌개가 먹고 싶네요.", 29f, TextAlignmentOptions.TopLeft, new Color32(30, 27, 25, 255), koreanFont);
         Button goToKitchenButton = CreateTextButton(artRoot, "GoToKitchenButton", new Vector2(0.795f, 0.080f), new Vector2(0.945f, 0.150f), "주방으로 이동", koreanFont);
 
         PopupObjects popupObjects = CreatePopupRoot(canvas.transform, koreanFont);
@@ -78,7 +80,9 @@ public static class DaySceneUiLayoutBuilder
         artView.mainOverlay = mainOverlay;
         artView.optionButton = optionButton;
         artView.recipeButton = recipeButton;
+        artView.recipeButtonLabelText = recipeButtonLabel;
         artView.noteButton = noteButton;
+        artView.noteButtonLabelText = noteButtonLabel;
         artView.dialogueAdvanceButton = dialogueAdvanceButton;
         artView.timeText = timeText;
         artView.dayText = dayText;
@@ -90,6 +94,9 @@ public static class DaySceneUiLayoutBuilder
         artView.goToKitchenButtonText = goToKitchenButton.GetComponentInChildren<TMP_Text>(true);
         artView.dimButton = popupObjects.dimButton;
         artView.recipePopup = popupObjects.recipePopup;
+        artView.recipePopupButtons = popupObjects.recipeButtons;
+        artView.recipePopupButtonTexts = popupObjects.recipeButtonTexts;
+        artView.recipePopupTitleText = popupObjects.recipeTitleText;
         artView.recipePopupText = popupObjects.recipePopupText;
         artView.memoPopup = popupObjects.memoPopup;
         artView.memoInputField = popupObjects.memoInputField;
@@ -115,7 +122,8 @@ public static class DaySceneUiLayoutBuilder
         dialogueView.Bind(speakerText, dialogueText, dialogueAdvanceButton, goToKitchenButton, artView.goToKitchenButtonText);
 
         RecipePopupView recipePopupView = EnsureComponent<RecipePopupView>(popupObjects.recipePopup);
-        recipePopupView.Bind(popupObjects.recipePopupText);
+        recipePopupView.Bind(popupObjects.recipeButtons, popupObjects.recipeButtonTexts, popupObjects.recipeTitleText, popupObjects.recipePopupText);
+        recipePopupView.SetRecipes(1, CreateDefaultRecipeEntries());
 
         MemoPopupView memoPopupView = EnsureComponent<MemoPopupView>(popupObjects.memoPopup);
         memoPopupView.Bind(popupObjects.memoInputField);
@@ -140,6 +148,7 @@ public static class DaySceneUiLayoutBuilder
         SetPrivateObjectReference(sceneController, "settingsButton", optionButton);
 
         MakeCurrentCustomerPanelArtFriendly(manager);
+        DisableKitchenBackButtons(manager.kitchenPanel);
         ApplyFontToSceneText(koreanFont);
 
         artRoot.SetAsFirstSibling();
@@ -249,7 +258,7 @@ public static class DaySceneUiLayoutBuilder
         if (font == null)
             return;
 
-        TMP_Text[] texts = Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        TMP_Text[] texts = Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include);
         foreach (TMP_Text text in texts)
         {
             if (text == null)
@@ -409,6 +418,24 @@ public static class DaySceneUiLayoutBuilder
         return button;
     }
 
+    private static Button CreatePopupRecipeButton(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string label, TMP_FontAsset font, out TMP_Text labelText)
+    {
+        GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        buttonObject.transform.SetParent(parent, false);
+
+        RectTransform rect = buttonObject.GetComponent<RectTransform>();
+        Stretch(rect, anchorMin, anchorMax);
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.color = new Color32(209, 188, 151, 245);
+        image.raycastTarget = true;
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.targetGraphic = image;
+        labelText = CreateText(buttonObject.transform, "Label", Vector2.zero, Vector2.one, label, 20f, TextAlignmentOptions.Midline, new Color32(58, 48, 39, 255), font);
+        return button;
+    }
+
     private static TMP_Text CreateText(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string text, float fontSize, TextAlignmentOptions alignment, Color color, TMP_FontAsset font)
     {
         GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
@@ -422,7 +449,7 @@ public static class DaySceneUiLayoutBuilder
         label.fontSize = fontSize;
         label.color = color;
         label.alignment = alignment;
-        label.enableWordWrapping = true;
+        label.textWrappingMode = TextWrappingModes.Normal;
         label.raycastTarget = false;
         if (font != null)
             label.font = font;
@@ -437,7 +464,19 @@ public static class DaySceneUiLayoutBuilder
 
         Button dimButton = CreateDimButton(root.transform);
         GameObject recipePopup = CreatePopupImage(root.transform, "RecipePopup", "Assets/UI/day_menu_popup.png", new Vector2(0.34f, 0.20f), new Vector2(0.66f, 0.86f));
-        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipePopupText", new Vector2(0.11f, 0.13f), new Vector2(0.89f, 0.73f), "김치찌개: 김치 + 돼지고기 + 물\n된장찌개: 된장 + 두부 + 애호박\n순두부찌개: 2일차 이후 잠김", 27f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255), font);
+        GameObject recipeButtonRoot = new GameObject("RecipeButtonRoot", typeof(RectTransform));
+        recipeButtonRoot.transform.SetParent(recipePopup.transform, false);
+        Stretch(recipeButtonRoot.GetComponent<RectTransform>(), new Vector2(0.10f, 0.66f), new Vector2(0.90f, 0.82f));
+
+        TMP_Text kimchiButtonText;
+        TMP_Text doenjangButtonText;
+        TMP_Text softTofuButtonText;
+        Button kimchiButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "KimchiStewButton", new Vector2(0.00f, 0.52f), new Vector2(0.48f, 1.00f), "김치찌개", font, out kimchiButtonText);
+        Button doenjangButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "DoenjangStewButton", new Vector2(0.52f, 0.52f), new Vector2(1.00f, 1.00f), "된장찌개", font, out doenjangButtonText);
+        Button softTofuButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "SoftTofuStewButton", new Vector2(0.00f, 0.00f), new Vector2(0.48f, 0.45f), "순두부찌개\n잠김", font, out softTofuButtonText);
+
+        TMP_Text recipeTitleText = CreateText(recipePopup.transform, "RecipeTitleText", new Vector2(0.11f, 0.55f), new Vector2(0.89f, 0.64f), "김치찌개 레시피", 27f, TextAlignmentOptions.MidlineLeft, new Color32(55, 48, 42, 255), font);
+        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipeContentText", new Vector2(0.11f, 0.16f), new Vector2(0.89f, 0.54f), "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)", 25f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255), font);
 
         GameObject memoPopup = CreatePopupImage(root.transform, "MemoPopup", "Assets/UI/day_memo_popup.png", new Vector2(0.32f, 0.16f), new Vector2(0.68f, 0.88f));
         TMP_InputField memoInput = CreateMemoInput(memoPopup.transform, font);
@@ -450,6 +489,9 @@ public static class DaySceneUiLayoutBuilder
         objects.root = root;
         objects.dimButton = dimButton;
         objects.recipePopup = recipePopup;
+        objects.recipeButtons = new[] { kimchiButton, doenjangButton, softTofuButton };
+        objects.recipeButtonTexts = new[] { kimchiButtonText, doenjangButtonText, softTofuButtonText };
+        objects.recipeTitleText = recipeTitleText;
         objects.recipePopupText = recipeText;
         objects.memoPopup = memoPopup;
         objects.memoInputField = memoInput;
@@ -518,6 +560,9 @@ public static class DaySceneUiLayoutBuilder
         public GameObject root;
         public Button dimButton;
         public GameObject recipePopup;
+        public Button[] recipeButtons;
+        public TMP_Text[] recipeButtonTexts;
+        public TMP_Text recipeTitleText;
         public TMP_Text recipePopupText;
         public GameObject memoPopup;
         public TMP_InputField memoInputField;
@@ -547,6 +592,46 @@ public static class DaySceneUiLayoutBuilder
             manager.nameText.gameObject.SetActive(false);
         if (manager.dialogueText != null)
             manager.dialogueText.gameObject.SetActive(false);
+    }
+
+    private static RecipePopupEntry[] CreateDefaultRecipeEntries()
+    {
+        return new[]
+        {
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
+        };
+    }
+
+    private static void DisableKitchenBackButtons(GameObject kitchenPanel)
+    {
+        if (kitchenPanel == null)
+            return;
+
+        Button[] buttons = kitchenPanel.GetComponentsInChildren<Button>(true);
+        foreach (Button button in buttons)
+        {
+            if (button == null)
+                continue;
+
+            if (IsBackButton(button.transform))
+                button.gameObject.SetActive(false);
+        }
+    }
+
+    private static bool IsBackButton(Transform target)
+    {
+        string name = target.name.ToLowerInvariant();
+        if (name.Contains("back") || name.Contains("return") || name.Contains("close"))
+            return true;
+
+        TMP_Text label = target.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+            return false;
+
+        string text = label.text;
+        return text.Contains("뒤로") || text.Contains("돌아") || text.Contains("Back") || text.Contains("Return");
     }
 
     private static void MakeImagesTransparentInChildren(GameObject target)

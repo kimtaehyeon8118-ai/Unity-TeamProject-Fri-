@@ -13,14 +13,17 @@ public sealed class CustomerDaySceneController : MonoBehaviour
     [SerializeField] private CustomerNpcData npcData = new CustomerNpcData();
     [SerializeField] private DialogueLine[] dialogueLines =
     {
-        new DialogueLine { speakerName = "강태수 [NPC]", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요." },
-        new DialogueLine { speakerName = "김태현 [플레이어]", dialogueText = "어떤 맛을 좋아하시나요?" }
+        new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개가 먹고 싶네요." },
+        new DialogueLine { speakerName = "김태현", speakerRoleLabel = "플레이어", dialogueText = "어서 오세요. 어떤 맛을 좋아하시나요?" },
+        new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "너무 맵지는 않고, 국물이 깊은 음식이면 좋겠습니다." },
+        new DialogueLine { speakerName = "김태현", speakerRoleLabel = "플레이어", dialogueText = "알겠습니다. 어울리는 음식을 준비해보겠습니다." },
+        new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "기대하겠습니다." }
     };
     [SerializeField] private RecipePopupEntry[] recipes =
     {
-        new RecipePopupEntry { recipeName = "김치찌개", recipeDetail = "김치 + 돼지고기 + 물", unlockDay = 1 },
-        new RecipePopupEntry { recipeName = "된장찌개", recipeDetail = "된장 + 두부 + 애호박", unlockDay = 1 },
-        new RecipePopupEntry { recipeName = "순두부찌개", recipeDetail = "순두부 + 고춧가루 + 달걀", unlockDay = 2 }
+        new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
+        new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
+        new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
     };
 
     [Header("Scene Panels")]
@@ -98,14 +101,17 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         };
         dialogueLines = new[]
         {
-            new DialogueLine { speakerName = "강태수 [NPC]", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요." },
-            new DialogueLine { speakerName = "김태현 [플레이어]", dialogueText = "어떤 맛을 좋아하시나요?" }
+            new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개가 먹고 싶네요." },
+            new DialogueLine { speakerName = "김태현", speakerRoleLabel = "플레이어", dialogueText = "어서 오세요. 어떤 맛을 좋아하시나요?" },
+            new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "너무 맵지는 않고, 국물이 깊은 음식이면 좋겠습니다." },
+            new DialogueLine { speakerName = "김태현", speakerRoleLabel = "플레이어", dialogueText = "알겠습니다. 어울리는 음식을 준비해보겠습니다." },
+            new DialogueLine { speakerName = "강태수", speakerRoleLabel = "NPC", dialogueText = "기대하겠습니다." }
         };
         recipes = new[]
         {
-            new RecipePopupEntry { recipeName = "김치찌개", recipeDetail = "김치 + 돼지고기 + 물", unlockDay = 1 },
-            new RecipePopupEntry { recipeName = "된장찌개", recipeDetail = "된장 + 두부 + 애호박", unlockDay = 1 },
-            new RecipePopupEntry { recipeName = "순두부찌개", recipeDetail = "순두부 + 고춧가루 + 달걀", unlockDay = 2 }
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
         };
     }
 
@@ -225,9 +231,12 @@ public sealed class CustomerDaySceneController : MonoBehaviour
             dayArtLayer.SetActive(false);
 
         if (kitchenPanel != null)
+        {
             kitchenPanel.SetActive(true);
+            DisableKitchenBackButtons(kitchenPanel.transform);
+        }
 
-        Debug.Log("주방으로 이동: CustomerPanel off, DayArtLayer off, KitchenPanel on.");
+        Debug.Log("[CustomerDaySceneController] Switched to KitchenPanel.");
     }
 
     private void OnClickSettings()
@@ -245,5 +254,35 @@ public sealed class CustomerDaySceneController : MonoBehaviour
     {
         if (target == null)
             Debug.LogWarning("[CustomerDaySceneController] Missing reference: " + referenceName);
+    }
+
+    private static void DisableKitchenBackButtons(Transform root)
+    {
+        if (root == null)
+            return;
+
+        Button[] buttons = root.GetComponentsInChildren<Button>(true);
+        foreach (Button button in buttons)
+        {
+            if (button == null)
+                continue;
+
+            if (IsBackButton(button.transform))
+                button.gameObject.SetActive(false);
+        }
+    }
+
+    private static bool IsBackButton(Transform target)
+    {
+        string name = target.name.ToLowerInvariant();
+        if (name.Contains("back") || name.Contains("return") || name.Contains("close"))
+            return true;
+
+        TMP_Text label = target.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+            return false;
+
+        string text = label.text;
+        return text.Contains("뒤로") || text.Contains("돌아") || text.Contains("Back") || text.Contains("Return");
     }
 }

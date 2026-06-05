@@ -13,7 +13,9 @@ public sealed class DayResponseArtView : MonoBehaviour
     [Header("Buttons")]
     public Button optionButton;
     public Button recipeButton;
+    public TMP_Text recipeButtonLabelText;
     public Button noteButton;
+    public TMP_Text noteButtonLabelText;
     public Button dialogueAdvanceButton;
 
     [Header("HUD Texts")]
@@ -33,6 +35,9 @@ public sealed class DayResponseArtView : MonoBehaviour
     [Header("Popups")]
     public Button dimButton;
     public GameObject recipePopup;
+    public Button[] recipePopupButtons;
+    public TMP_Text[] recipePopupButtonTexts;
+    public TMP_Text recipePopupTitleText;
     public TMP_Text recipePopupText;
     public GameObject memoPopup;
     public TMP_InputField memoInputField;
