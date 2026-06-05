@@ -5,15 +5,18 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.TextCore.LowLevel;
 using UnityEngine.UI;
 
 public static class DaySceneUiLayoutBuilder
 {
     private const string DayScenePath = "Assets/Scenes/DayScene.unity";
     private const string UiRootName = "DayArtLayer";
+    private const string PopupRootName = "PopupRoot";
     private const string GeneratedFolder = "Assets/UI/Generated";
     private const string Background2AlphaPath = GeneratedFolder + "/day_background2_alpha.png";
     private const string MainOverlayAlphaPath = GeneratedFolder + "/day_main_alpha.png";
+    private const string KoreanFontPath = "Assets/Fonts/Korean_Full_TMP.asset";
 
     [MenuItem("Tools/Day UI/Apply Provided Art Layout")]
     public static void ApplyProvidedArtLayout()
@@ -42,8 +45,10 @@ public static class DaySceneUiLayoutBuilder
         }
 
         EnsureSpriteImportSettings();
+        TMP_FontAsset koreanFont = ResolveKoreanFont();
+        EnsureKoreanFontFallback(koreanFont);
 
-        RectTransform artRoot = EnsureRoot(canvas.transform);
+        RectTransform artRoot = EnsureRoot(canvas.transform, UiRootName);
         ClearChildren(artRoot);
 
         Image background1 = CreateImage(artRoot, "DayArt_Background1", "Assets/UI/day_background1.png", Vector2.zero, Vector2.one);
@@ -56,19 +61,17 @@ public static class DaySceneUiLayoutBuilder
         Button noteButton = CreateButton(artRoot, "DayArt_NoteButton", "Assets/UI/day_note.png", new Vector2(0.903f, 0.430f), new Vector2(0.974f, 0.595f));
         Button dialogueAdvanceButton = CreateTransparentButton(artRoot, "DayArt_DialogueAdvanceButton", new Vector2(0.027f, 0.045f), new Vector2(0.973f, 0.345f));
 
-        TMP_Text timeText = CreateText(artRoot, "TimeText", new Vector2(0.063f, 0.904f), new Vector2(0.175f, 0.970f), "12:00", 30f, TextAlignmentOptions.MidlineLeft, Color.white);
-        TMP_Text dayText = CreateText(artRoot, "DayText", new Vector2(0.265f, 0.905f), new Vector2(0.625f, 0.970f), "1일차", 30f, TextAlignmentOptions.Midline, Color.white);
-        TMP_Text npcInfoText = CreateText(artRoot, "NpcInfoText", new Vector2(0.175f, 0.565f), new Vector2(0.345f, 0.755f), "이름: 강태수\n성별: 남성\n직업: 손님\n특징: 얼큰한 국물 요리를 좋아함", 22f, TextAlignmentOptions.TopLeft, Color.white);
-        TMP_Text speakerText = CreateText(artRoot, "SpeakerText", new Vector2(0.068f, 0.255f), new Vector2(0.240f, 0.305f), "손님", 24f, TextAlignmentOptions.MidlineLeft, Color.white);
-        TMP_Text dialogueText = CreateText(artRoot, "DialogueText", new Vector2(0.068f, 0.135f), new Vector2(0.915f, 0.255f), "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요.", 25f, TextAlignmentOptions.TopLeft, new Color32(30, 27, 25, 255));
-        Button goToKitchenButton = CreateTextButton(artRoot, "GoToKitchenButton", new Vector2(0.795f, 0.080f), new Vector2(0.945f, 0.150f), "주방으로 이동");
+        TMP_Text timeText = CreateText(artRoot, "TimeText", new Vector2(0.063f, 0.904f), new Vector2(0.175f, 0.970f), "12:00", 34f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
+        TMP_Text dayText = CreateText(artRoot, "DayText", new Vector2(0.265f, 0.905f), new Vector2(0.625f, 0.970f), "1일차", 34f, TextAlignmentOptions.Midline, Color.white, koreanFont);
+        TMP_Text npcInfoTitleText = CreateText(artRoot, "NpcInfoTitleText", new Vector2(0.175f, 0.745f), new Vector2(0.345f, 0.795f), "정보", 26f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
+        TMP_Text npcInfoText = CreateText(artRoot, "NpcInfoText", new Vector2(0.175f, 0.565f), new Vector2(0.345f, 0.735f), "이름: 강태수\n성별: 남성\n직업: 손님\n특징: 얼큰한 국물 요리를 좋아함", 26f, TextAlignmentOptions.TopLeft, Color.white, koreanFont);
+        TMP_Text speakerText = CreateText(artRoot, "SpeakerText", new Vector2(0.068f, 0.250f), new Vector2(0.310f, 0.305f), "강태수 [NPC]", 28f, TextAlignmentOptions.MidlineLeft, Color.white, koreanFont);
+        TMP_Text dialogueText = CreateText(artRoot, "DialogueText", new Vector2(0.068f, 0.120f), new Vector2(0.915f, 0.242f), "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요.", 29f, TextAlignmentOptions.TopLeft, new Color32(30, 27, 25, 255), koreanFont);
+        Button goToKitchenButton = CreateTextButton(artRoot, "GoToKitchenButton", new Vector2(0.795f, 0.080f), new Vector2(0.945f, 0.150f), "주방으로 이동", koreanFont);
 
-        PopupObjects popupObjects = CreatePopupRoot(canvas.transform);
+        PopupObjects popupObjects = CreatePopupRoot(canvas.transform, koreanFont);
 
-        DayResponseArtView artView = artRoot.GetComponent<DayResponseArtView>();
-        if (artView == null)
-            artView = artRoot.gameObject.AddComponent<DayResponseArtView>();
-
+        DayResponseArtView artView = EnsureComponent<DayResponseArtView>(artRoot.gameObject);
         artView.backgroundBack = background1;
         artView.npcImage = npcSlot;
         artView.backgroundFrame = background2;
@@ -79,6 +82,7 @@ public static class DaySceneUiLayoutBuilder
         artView.dialogueAdvanceButton = dialogueAdvanceButton;
         artView.timeText = timeText;
         artView.dayText = dayText;
+        artView.npcInfoTitleText = npcInfoTitleText;
         artView.npcInfoText = npcInfoText;
         artView.speakerText = speakerText;
         artView.dialogueText = dialogueText;
@@ -105,7 +109,7 @@ public static class DaySceneUiLayoutBuilder
         SetPrivateObjectReference(manager, "dayResponseArtView", artView);
 
         NpcInfoView npcInfoView = EnsureComponent<NpcInfoView>(artRoot.gameObject);
-        npcInfoView.Bind(npcInfoText);
+        npcInfoView.Bind(npcInfoTitleText, npcInfoText);
 
         DialogueView dialogueView = EnsureComponent<DialogueView>(artRoot.gameObject);
         dialogueView.Bind(speakerText, dialogueText, dialogueAdvanceButton, goToKitchenButton, artView.goToKitchenButtonText);
@@ -121,6 +125,8 @@ public static class DaySceneUiLayoutBuilder
         popupRoot.Initialize();
 
         CustomerDaySceneController sceneController = EnsureComponent<CustomerDaySceneController>(artRoot.gameObject);
+        sceneController.ConfigureDefaultContent();
+        sceneController.ConfigureSceneReferences(manager.customerPanel, manager.kitchenPanel, artRoot.gameObject);
         SetPrivateObjectReference(sceneController, "artView", artView);
         SetPrivateObjectReference(sceneController, "npcInfoView", npcInfoView);
         SetPrivateObjectReference(sceneController, "dialogueView", dialogueView);
@@ -134,6 +140,7 @@ public static class DaySceneUiLayoutBuilder
         SetPrivateObjectReference(sceneController, "settingsButton", optionButton);
 
         MakeCurrentCustomerPanelArtFriendly(manager);
+        ApplyFontToSceneText(koreanFont);
 
         artRoot.SetAsFirstSibling();
         popupObjects.root.transform.SetAsLastSibling();
@@ -151,7 +158,7 @@ public static class DaySceneUiLayoutBuilder
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("DayScene UI art layout applied.");
+        Debug.Log("DayScene UI art layout applied with Korean TMP font.");
     }
 
     private static void EnsureSpriteImportSettings()
@@ -194,6 +201,63 @@ public static class DaySceneUiLayoutBuilder
 
             if (changed)
                 importer.SaveAndReimport();
+        }
+    }
+
+    private static TMP_FontAsset ResolveKoreanFont()
+    {
+        TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
+        if (font == null)
+        {
+            Debug.LogWarning("Korean TMP font asset was not found at " + KoreanFontPath + ". Korean text may render as missing glyphs.");
+            return null;
+        }
+
+        font.atlasPopulationMode = AtlasPopulationMode.Static;
+        EditorUtility.SetDirty(font);
+        return font;
+    }
+
+    private static void EnsureKoreanFontFallback(TMP_FontAsset font)
+    {
+        if (font == null)
+            return;
+
+        TMP_Settings settings = TMP_Settings.instance;
+        if (settings == null)
+            return;
+
+        SerializedObject serializedSettings = new SerializedObject(settings);
+        SerializedProperty fallbacks = serializedSettings.FindProperty("m_fallbackFontAssets");
+        if (fallbacks == null || !fallbacks.isArray)
+            return;
+
+        for (int i = 0; i < fallbacks.arraySize; i++)
+        {
+            if (fallbacks.GetArrayElementAtIndex(i).objectReferenceValue == font)
+                return;
+        }
+
+        fallbacks.InsertArrayElementAtIndex(fallbacks.arraySize);
+        fallbacks.GetArrayElementAtIndex(fallbacks.arraySize - 1).objectReferenceValue = font;
+        serializedSettings.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(settings);
+    }
+
+    private static void ApplyFontToSceneText(TMP_FontAsset font)
+    {
+        if (font == null)
+            return;
+
+        TMP_Text[] texts = Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (TMP_Text text in texts)
+        {
+            if (text == null)
+                continue;
+
+            text.font = font;
+            text.fontSize += 0f;
+            EditorUtility.SetDirty(text);
         }
     }
 
@@ -254,12 +318,12 @@ public static class DaySceneUiLayoutBuilder
         return pixel.r >= 250 && pixel.g >= 250 && pixel.b >= 250;
     }
 
-    private static RectTransform EnsureRoot(Transform canvasTransform)
+    private static RectTransform EnsureRoot(Transform canvasTransform, string rootName)
     {
-        Transform existing = canvasTransform.Find(UiRootName);
+        Transform existing = canvasTransform.Find(rootName);
         GameObject rootObject = existing != null
             ? existing.gameObject
-            : new GameObject(UiRootName, typeof(RectTransform));
+            : new GameObject(rootName, typeof(RectTransform));
 
         rootObject.transform.SetParent(canvasTransform, false);
         RectTransform rect = rootObject.GetComponent<RectTransform>();
@@ -325,7 +389,7 @@ public static class DaySceneUiLayoutBuilder
         return button;
     }
 
-    private static Button CreateTextButton(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string label)
+    private static Button CreateTextButton(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string label, TMP_FontAsset font)
     {
         GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         buttonObject.transform.SetParent(parent, false);
@@ -340,12 +404,12 @@ public static class DaySceneUiLayoutBuilder
         Button button = buttonObject.GetComponent<Button>();
         button.targetGraphic = image;
 
-        CreateText(buttonObject.transform, "Label", Vector2.zero, Vector2.one, label, 22f, TextAlignmentOptions.Midline, Color.white);
+        CreateText(buttonObject.transform, "Label", Vector2.zero, Vector2.one, label, 26f, TextAlignmentOptions.Midline, Color.white, font);
         buttonObject.SetActive(false);
         return button;
     }
 
-    private static TMP_Text CreateText(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string text, float fontSize, TextAlignmentOptions alignment, Color color)
+    private static TMP_Text CreateText(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, string text, float fontSize, TextAlignmentOptions alignment, Color color, TMP_FontAsset font)
     {
         GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(parent, false);
@@ -360,27 +424,23 @@ public static class DaySceneUiLayoutBuilder
         label.alignment = alignment;
         label.enableWordWrapping = true;
         label.raycastTarget = false;
+        if (font != null)
+            label.font = font;
         return label;
     }
 
-    private static PopupObjects CreatePopupRoot(Transform canvasTransform)
+    private static PopupObjects CreatePopupRoot(Transform canvasTransform, TMP_FontAsset font)
     {
-        Transform existing = canvasTransform.Find("PopupRoot");
-        GameObject root = existing != null
-            ? existing.gameObject
-            : new GameObject("PopupRoot", typeof(RectTransform));
-
-        root.transform.SetParent(canvasTransform, false);
-        RectTransform rootRect = root.GetComponent<RectTransform>();
-        Stretch(rootRect, Vector2.zero, Vector2.one);
+        RectTransform rootRect = EnsureRoot(canvasTransform, PopupRootName);
+        GameObject root = rootRect.gameObject;
         ClearChildren(root.transform);
 
         Button dimButton = CreateDimButton(root.transform);
         GameObject recipePopup = CreatePopupImage(root.transform, "RecipePopup", "Assets/UI/day_menu_popup.png", new Vector2(0.34f, 0.20f), new Vector2(0.66f, 0.86f));
-        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipePopupText", new Vector2(0.11f, 0.13f), new Vector2(0.89f, 0.73f), "김치찌개: 김치 + 돼지고기 + 물\n된장찌개: 된장 + 두부 + 애호박\n순두부찌개: 2일차 이후 잠김", 23f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255));
+        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipePopupText", new Vector2(0.11f, 0.13f), new Vector2(0.89f, 0.73f), "김치찌개: 김치 + 돼지고기 + 물\n된장찌개: 된장 + 두부 + 애호박\n순두부찌개: 2일차 이후 잠김", 27f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255), font);
 
         GameObject memoPopup = CreatePopupImage(root.transform, "MemoPopup", "Assets/UI/day_memo_popup.png", new Vector2(0.32f, 0.16f), new Vector2(0.68f, 0.88f));
-        TMP_InputField memoInput = CreateMemoInput(memoPopup.transform);
+        TMP_InputField memoInput = CreateMemoInput(memoPopup.transform, font);
 
         recipePopup.SetActive(false);
         memoPopup.SetActive(false);
@@ -426,7 +486,7 @@ public static class DaySceneUiLayoutBuilder
         return popupObject;
     }
 
-    private static TMP_InputField CreateMemoInput(Transform parent)
+    private static TMP_InputField CreateMemoInput(Transform parent, TMP_FontAsset font)
     {
         GameObject inputObject = new GameObject("MemoInputField", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(TMP_InputField));
         inputObject.transform.SetParent(parent, false);
@@ -438,15 +498,14 @@ public static class DaySceneUiLayoutBuilder
 
         GameObject viewportObject = new GameObject("TextArea", typeof(RectTransform), typeof(RectMask2D));
         viewportObject.transform.SetParent(inputObject.transform, false);
-        RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
-        Stretch(viewportRect, Vector2.zero, Vector2.one);
+        Stretch(viewportObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
 
-        TMP_Text placeholder = CreateText(viewportObject.transform, "Placeholder", Vector2.zero, Vector2.one, "손님의 취향이나 주문 힌트를 적어두세요.", 22f, TextAlignmentOptions.TopLeft, new Color32(95, 101, 110, 150));
-        TMP_Text text = CreateText(viewportObject.transform, "Text", Vector2.zero, Vector2.one, string.Empty, 22f, TextAlignmentOptions.TopLeft, new Color32(45, 50, 58, 255));
+        TMP_Text placeholder = CreateText(viewportObject.transform, "Placeholder", Vector2.zero, Vector2.one, "손님의 취향이나 주문 힌트를 적어두세요.", 26f, TextAlignmentOptions.TopLeft, new Color32(95, 101, 110, 150), font);
+        TMP_Text text = CreateText(viewportObject.transform, "Text", Vector2.zero, Vector2.one, string.Empty, 26f, TextAlignmentOptions.TopLeft, new Color32(45, 50, 58, 255), font);
         text.raycastTarget = true;
 
         TMP_InputField input = inputObject.GetComponent<TMP_InputField>();
-        input.textViewport = viewportRect;
+        input.textViewport = viewportObject.GetComponent<RectTransform>();
         input.textComponent = text;
         input.placeholder = placeholder;
         input.lineType = TMP_InputField.LineType.MultiLineNewline;
@@ -488,27 +547,6 @@ public static class DaySceneUiLayoutBuilder
             manager.nameText.gameObject.SetActive(false);
         if (manager.dialogueText != null)
             manager.dialogueText.gameObject.SetActive(false);
-
-        TMP_Text dialogueText = manager.dialogueText;
-        if (dialogueText != null)
-        {
-            RectTransform rect = dialogueText.GetComponent<RectTransform>();
-            if (rect != null)
-                Stretch(rect, new Vector2(0.035f, 0.12f), new Vector2(0.965f, 0.80f));
-        }
-    }
-
-    private static void MakeImageTransparent(Transform target)
-    {
-        if (target == null)
-            return;
-
-        Image image = target.GetComponent<Image>();
-        if (image == null)
-            return;
-
-        image.color = new Color(image.color.r, image.color.g, image.color.b, 0f);
-        image.raycastTarget = false;
     }
 
     private static void MakeImagesTransparentInChildren(GameObject target)

@@ -3,15 +3,20 @@ using UnityEngine;
 
 public sealed class NpcInfoView : MonoBehaviour
 {
+    [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text infoText;
 
-    public void Bind(TMP_Text targetText)
+    public void Bind(TMP_Text title, TMP_Text info)
     {
-        infoText = targetText;
+        titleText = title;
+        infoText = info;
     }
 
     public void SetNpc(CustomerNpcData npcData)
     {
+        if (titleText != null)
+            titleText.text = "정보";
+
         if (infoText == null || npcData == null)
             return;
 

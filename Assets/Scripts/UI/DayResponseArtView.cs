@@ -21,6 +21,7 @@ public sealed class DayResponseArtView : MonoBehaviour
     public TMP_Text dayText;
 
     [Header("Customer Info")]
+    public TMP_Text npcInfoTitleText;
     public TMP_Text npcInfoText;
 
     [Header("Dialogue")]

@@ -13,8 +13,8 @@ public sealed class CustomerDaySceneController : MonoBehaviour
     [SerializeField] private CustomerNpcData npcData = new CustomerNpcData();
     [SerializeField] private DialogueLine[] dialogueLines =
     {
-        new DialogueLine { speakerName = "손님", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요." },
-        new DialogueLine { speakerName = "플레이어", dialogueText = "어떤 맛을 좋아하시나요?" }
+        new DialogueLine { speakerName = "강태수 [NPC]", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요." },
+        new DialogueLine { speakerName = "김태현 [플레이어]", dialogueText = "어떤 맛을 좋아하시나요?" }
     };
     [SerializeField] private RecipePopupEntry[] recipes =
     {
@@ -22,6 +22,11 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         new RecipePopupEntry { recipeName = "된장찌개", recipeDetail = "된장 + 두부 + 애호박", unlockDay = 1 },
         new RecipePopupEntry { recipeName = "순두부찌개", recipeDetail = "순두부 + 고춧가루 + 달걀", unlockDay = 2 }
     };
+
+    [Header("Scene Panels")]
+    [SerializeField] private GameObject customerPanel;
+    [SerializeField] private GameObject kitchenPanel;
+    [SerializeField] private GameObject dayArtLayer;
 
     [Header("HUD")]
     [SerializeField] private TMP_Text timeText;
@@ -40,10 +45,17 @@ public sealed class CustomerDaySceneController : MonoBehaviour
     [SerializeField] private Button memoButton;
     [SerializeField] private Button settingsButton;
 
-    private IEnumerator Start()
+    private void OnEnable()
+    {
+        StartCoroutine(InitializeAfterLegacyUi());
+    }
+
+    private IEnumerator InitializeAfterLegacyUi()
     {
         yield return null;
-        AutoBindFromArtView();
+        yield return new WaitForEndOfFrame();
+        AutoBindSceneReferences();
+        ValidateRequiredReferences();
         RefreshAll();
         BindButtons();
     }
@@ -64,6 +76,37 @@ public sealed class CustomerDaySceneController : MonoBehaviour
 
         if (popupRoot != null)
             popupRoot.Initialize();
+    }
+
+    public void ConfigureSceneReferences(GameObject customer, GameObject kitchen, GameObject artLayer)
+    {
+        customerPanel = customer;
+        kitchenPanel = kitchen;
+        dayArtLayer = artLayer;
+    }
+
+    public void ConfigureDefaultContent()
+    {
+        currentDay = 1;
+        fixedTimeText = "12:00";
+        npcData = new CustomerNpcData
+        {
+            npcName = "강태수",
+            gender = "남성",
+            job = "손님",
+            trait = "얼큰한 국물 요리를 좋아함"
+        };
+        dialogueLines = new[]
+        {
+            new DialogueLine { speakerName = "강태수 [NPC]", dialogueText = "안녕하세요. 오늘은 얼큰한 찌개를 먹고 싶어요." },
+            new DialogueLine { speakerName = "김태현 [플레이어]", dialogueText = "어떤 맛을 좋아하시나요?" }
+        };
+        recipes = new[]
+        {
+            new RecipePopupEntry { recipeName = "김치찌개", recipeDetail = "김치 + 돼지고기 + 물", unlockDay = 1 },
+            new RecipePopupEntry { recipeName = "된장찌개", recipeDetail = "된장 + 두부 + 애호박", unlockDay = 1 },
+            new RecipePopupEntry { recipeName = "순두부찌개", recipeDetail = "순두부 + 고춧가루 + 달걀", unlockDay = 2 }
+        };
     }
 
     private void BindButtons()
@@ -87,10 +130,10 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         }
 
         if (dialogueView != null)
-            dialogueView.BindActions(dialogueView.Advance, GoToKitchen);
+            dialogueView.BindActions(GoToKitchen);
     }
 
-    private void AutoBindFromArtView()
+    private void AutoBindSceneReferences()
     {
         if (artView == null)
             artView = GetComponent<DayResponseArtView>();
@@ -98,23 +141,62 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         if (artView == null)
             artView = FindAnyObjectByType<DayResponseArtView>();
 
-        if (artView == null)
+        if (artView != null)
+        {
+            if (timeText == null)
+                timeText = artView.timeText;
+
+            if (dayText == null)
+                dayText = artView.dayText;
+
+            if (recipeButton == null)
+                recipeButton = artView.recipeButton;
+
+            if (memoButton == null)
+                memoButton = artView.noteButton;
+
+            if (settingsButton == null)
+                settingsButton = artView.optionButton;
+
+            if (dayArtLayer == null)
+                dayArtLayer = artView.gameObject;
+        }
+
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas == null)
             return;
 
-        if (timeText == null)
-            timeText = artView.timeText;
+        if (customerPanel == null)
+        {
+            Transform target = canvas.transform.Find("CustomerPanel");
+            customerPanel = target != null ? target.gameObject : null;
+        }
 
-        if (dayText == null)
-            dayText = artView.dayText;
+        if (kitchenPanel == null)
+        {
+            Transform target = canvas.transform.Find("KitchenPanel");
+            kitchenPanel = target != null ? target.gameObject : null;
+        }
 
-        if (recipeButton == null)
-            recipeButton = artView.recipeButton;
+        if (dayArtLayer == null)
+        {
+            Transform target = canvas.transform.Find("DayArtLayer");
+            dayArtLayer = target != null ? target.gameObject : null;
+        }
+    }
 
-        if (memoButton == null)
-            memoButton = artView.noteButton;
-
-        if (settingsButton == null)
-            settingsButton = artView.optionButton;
+    private void ValidateRequiredReferences()
+    {
+        LogMissing(customerPanel, "CustomerPanel");
+        LogMissing(kitchenPanel, "KitchenPanel");
+        LogMissing(dayArtLayer, "DayArtLayer");
+        LogMissing(timeText, "TimeText");
+        LogMissing(dayText, "DayText");
+        LogMissing(npcInfoView, "NpcInfoView");
+        LogMissing(dialogueView, "DialogueView");
+        LogMissing(recipePopupView, "RecipePopupView");
+        LogMissing(memoPopupView, "MemoPopupView");
+        LogMissing(popupRoot, "PopupRootController");
     }
 
     public void OpenRecipePopup()
@@ -134,17 +216,34 @@ public sealed class CustomerDaySceneController : MonoBehaviour
 
     public void GoToKitchen()
     {
-        Debug.Log("GoToKitchen requested. Connect this to the kitchen scene later.");
+        AutoBindSceneReferences();
+
+        if (customerPanel != null)
+            customerPanel.SetActive(false);
+
+        if (dayArtLayer != null)
+            dayArtLayer.SetActive(false);
+
+        if (kitchenPanel != null)
+            kitchenPanel.SetActive(true);
+
+        Debug.Log("주방으로 이동: CustomerPanel off, DayArtLayer off, KitchenPanel on.");
     }
 
     private void OnClickSettings()
     {
-        Debug.Log("Settings button clicked. No settings popup is connected yet.");
+        Debug.Log("설정 버튼 클릭: 아직 연결된 설정 기능은 없습니다.");
     }
 
     private static void SetText(TMP_Text target, string value)
     {
         if (target != null)
             target.text = value;
+    }
+
+    private static void LogMissing(Object target, string referenceName)
+    {
+        if (target == null)
+            Debug.LogWarning("[CustomerDaySceneController] Missing reference: " + referenceName);
     }
 }

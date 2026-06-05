@@ -39,12 +39,12 @@ public sealed class DialogueView : MonoBehaviour
         ShowCurrentLine();
     }
 
-    public void BindActions(Action advanceAction, Action kitchenAction)
+    public void BindActions(Action kitchenAction)
     {
         if (advanceButton != null)
         {
             advanceButton.onClick.RemoveAllListeners();
-            advanceButton.onClick.AddListener(() => advanceAction());
+            advanceButton.onClick.AddListener(Advance);
         }
 
         if (goToKitchenButton != null)
