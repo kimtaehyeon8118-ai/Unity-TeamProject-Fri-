@@ -209,6 +209,7 @@ public class DayUIManager : MonoBehaviour
     public TMP_Text slot1Text;
     public TMP_Text slot2Text;
     public TMP_Text slot3Text;
+    private TMP_Text slot4Text;
 
     public Button cookButton;
     public Button backButton;
@@ -246,7 +247,8 @@ public class DayUIManager : MonoBehaviour
     public Sprite jeyukSprite;
 
     private const int ChoiceDialogueIndex = 2;
-    private const int MaxIngredientSlots = 3;
+    private const int MinIngredientSlots = 3;
+    private const int MaxIngredientSlots = 4;
     private const string MildChoiceText = "담백한 국물";
     private const string SpicyChoiceText = "얼큰한 국물";
 
@@ -479,8 +481,31 @@ public class DayUIManager : MonoBehaviour
     private readonly Dictionary<MenuId, RecipeDefinition> recipes = new Dictionary<MenuId, RecipeDefinition>();
     private readonly Dictionary<string, string[]> ingredientTags = new Dictionary<string, string[]>();
     private readonly List<string> selectedIngredients = new List<string>(MaxIngredientSlots);
-    private readonly string[] currentIngredientOptions = new string[4];
+    private readonly string[] currentIngredientOptions = new string[9];
+    private readonly List<Button> ingredientListButtons = new List<Button>();
+    private readonly List<TMP_Text> ingredientListButtonTexts = new List<TMP_Text>();
+    private RectTransform ingredientScrollView;
+    private RectTransform ingredientScrollContent;
+    private ScrollRect ingredientScrollRect;
     private HashSet<string> unlockedIngredients = new HashSet<string>();
+    private bool cookingGaugeActive;
+    private bool lastCookingGaugeSuccess = true;
+    private float cookingGaugeValue;
+    private const float CookingGaugeSpeed = 0.85f;
+    private const float CookingGaugeGoodMin = 0.55f;
+    private const float CookingGaugeGoodMax = 0.75f;
+    private static readonly string[] KitchenIngredientList =
+    {
+        "김치",
+        "돼지고기",
+        "버섯",
+        "두부",
+        "된장",
+        "애호박",
+        "순두부",
+        "고춧가루",
+        "조개"
+    };
     private Canvas rootCanvas;
     private bool layoutApplied;
     private bool typographyApplied;
@@ -517,10 +542,26 @@ public class DayUIManager : MonoBehaviour
         ApplyIndieUiPolish();
         ApplyTextPlacementPolish();
         ApplyDayArtSceneLayout();
+        EnsureIngredientListButtons();
         BindButtons();
         EnsureCookingPotDropZone();
         ConfigureIngredientDragSources();
         LoadCustomerScene();
+    }
+
+    private void Update()
+    {
+        if (!cookingGaugeActive)
+            return;
+
+        cookingGaugeValue += Time.deltaTime * CookingGaugeSpeed;
+        if (cookingGaugeValue >= 1f)
+            cookingGaugeValue -= 1f;
+
+        UpdateCookingGaugeView();
+
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+            FinishCookingGauge();
     }
 
     private void InitUI()
@@ -539,9 +580,10 @@ public class DayUIManager : MonoBehaviour
         Bind(choiceButtonA, () => OnChoiceSelected(CustomerPreference.MildSoup));
         Bind(choiceButtonB, () => OnChoiceSelected(CustomerPreference.SpicySoup));
 
-        Bind(recipeButton1, () => SelectRecipe(MenuId.KimchiJjigae));
-        Bind(recipeButton2, () => SelectRecipe(MenuId.DoenjangJjigae));
-        Bind(recipeButton3, () => SelectRecipe(MenuId.SoondubuJjigae));
+        Bind(recipeButton1, () => ShowPotHint("환경설정은 아직 준비 중입니다."));
+        Bind(recipeButton2, OpenMenuBoard);
+        Bind(recipeButton3, OpenMemoPopup);
+        BindIngredientListButtons();
 
         Bind(cookButton, CookSelectedRecipe);
         Bind(backButton, BackToCustomer);
@@ -614,10 +656,10 @@ public class DayUIManager : MonoBehaviour
 
     private void ConfigureIngredientDragSources()
     {
-        ConfigureIngredientDragSource(ingredientButton1, 0);
-        ConfigureIngredientDragSource(ingredientButton2, 1);
-        ConfigureIngredientDragSource(ingredientButton3, 2);
-        ConfigureIngredientDragSource(ingredientButton4, 3);
+        EnsureIngredientListButtons();
+
+        for (int i = 0; i < ingredientListButtons.Count; i++)
+            ConfigureIngredientDragSource(ingredientListButtons[i], i);
     }
 
     private void ConfigureIngredientDragSource(Button button, int index)
@@ -630,6 +672,166 @@ public class DayUIManager : MonoBehaviour
             dragSource = button.gameObject.AddComponent<DraggableIngredientUI>();
 
         dragSource.Initialize(this, index, rootCanvas);
+        dragSource.enabled = false;
+    }
+
+    private void EnsureIngredientListButtons()
+    {
+        if (ingredientListButtons.Count == 0)
+        {
+            RegisterIngredientButton(ingredientButton1, ingredientButton1Text);
+            RegisterIngredientButton(ingredientButton2, ingredientButton2Text);
+            RegisterIngredientButton(ingredientButton3, ingredientButton3Text);
+            RegisterIngredientButton(ingredientButton4, ingredientButton4Text);
+        }
+
+        if (kitchenPanel == null || ingredientButton4 == null)
+            return;
+
+        EnsureIngredientScrollView();
+
+        if (ingredientScrollContent != null)
+        {
+            foreach (Button button in ingredientListButtons)
+            {
+                if (button != null && button.transform.parent != ingredientScrollContent)
+                    button.transform.SetParent(ingredientScrollContent, false);
+            }
+        }
+
+        Transform parent = ingredientScrollContent != null ? ingredientScrollContent : ingredientButton4.transform.parent;
+        for (int i = ingredientListButtons.Count; i < KitchenIngredientList.Length; i++)
+        {
+            Button clone = Instantiate(ingredientButton4, parent);
+            clone.name = "IngredientButton" + (i + 1);
+
+            TMP_Text cloneText = clone.GetComponentInChildren<TMP_Text>(true);
+            if (cloneText != null)
+                cloneText.name = "IngredientButton" + (i + 1) + "Text";
+
+            RegisterIngredientButton(clone, cloneText);
+        }
+
+        ApplyIngredientListButtonLayout();
+    }
+
+    private void EnsureIngredientScrollView()
+    {
+        if (kitchenPanel == null)
+            return;
+
+        if (ingredientScrollView == null)
+        {
+            Transform existing = kitchenPanel.transform.Find("IngredientListScrollView");
+            if (existing != null)
+            {
+                ingredientScrollView = existing.GetComponent<RectTransform>();
+                ingredientScrollRect = existing.GetComponent<ScrollRect>();
+
+                Transform content = FindChildRecursive(existing, "Content");
+                ingredientScrollContent = content != null ? content.GetComponent<RectTransform>() : null;
+            }
+        }
+
+        if (ingredientScrollView == null)
+        {
+            GameObject scrollObject = new GameObject("IngredientListScrollView", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(ScrollRect));
+            scrollObject.transform.SetParent(kitchenPanel.transform, false);
+            ingredientScrollView = scrollObject.GetComponent<RectTransform>();
+
+            Image scrollImage = scrollObject.GetComponent<Image>();
+            scrollImage.color = new Color32(245, 232, 199, 70);
+
+            GameObject viewportObject = new GameObject("Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(RectMask2D));
+            viewportObject.transform.SetParent(scrollObject.transform, false);
+            RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+
+            Image viewportImage = viewportObject.GetComponent<Image>();
+            viewportImage.color = new Color32(255, 255, 255, 1);
+
+            GameObject contentObject = new GameObject("Content", typeof(RectTransform));
+            contentObject.transform.SetParent(viewportObject.transform, false);
+            ingredientScrollContent = contentObject.GetComponent<RectTransform>();
+            ingredientScrollContent.anchorMin = new Vector2(0f, 1f);
+            ingredientScrollContent.anchorMax = new Vector2(1f, 1f);
+            ingredientScrollContent.pivot = new Vector2(0.5f, 1f);
+            ingredientScrollContent.anchoredPosition = Vector2.zero;
+
+            ingredientScrollRect = scrollObject.GetComponent<ScrollRect>();
+            ingredientScrollRect.viewport = viewportRect;
+            ingredientScrollRect.content = ingredientScrollContent;
+            ingredientScrollRect.horizontal = false;
+            ingredientScrollRect.vertical = true;
+            ingredientScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            ingredientScrollRect.inertia = true;
+            ingredientScrollRect.scrollSensitivity = 32f;
+        }
+
+        SetRelativeRect(ingredientScrollView, new Vector2(0.05f, 0.25f), new Vector2(0.28f, 0.78f), Vector2.zero, Vector2.zero);
+    }
+
+    private void RegisterIngredientButton(Button button, TMP_Text label)
+    {
+        if (button == null || ingredientListButtons.Contains(button))
+            return;
+
+        ingredientListButtons.Add(button);
+        ingredientListButtonTexts.Add(label != null ? label : button.GetComponentInChildren<TMP_Text>(true));
+    }
+
+    private void BindIngredientListButtons()
+    {
+        EnsureIngredientListButtons();
+
+        for (int i = 0; i < ingredientListButtons.Count; i++)
+        {
+            int index = i;
+            Bind(ingredientListButtons[i], () => AddIngredientFromList(index));
+        }
+    }
+
+    private void ApplyIngredientListButtonLayout()
+    {
+        EnsureIngredientScrollView();
+
+        if (ingredientScrollContent == null)
+            return;
+
+        const float buttonHeight = 58f;
+        const float gap = 10f;
+        const float topPadding = 8f;
+        const float bottomPadding = 8f;
+        float contentHeight = topPadding + ingredientListButtons.Count * buttonHeight + Mathf.Max(0, ingredientListButtons.Count - 1) * gap + bottomPadding;
+
+        ingredientScrollContent.sizeDelta = new Vector2(0f, contentHeight);
+
+        for (int i = 0; i < ingredientListButtons.Count; i++)
+        {
+            Button button = ingredientListButtons[i];
+            if (button == null)
+                continue;
+
+            RectTransform buttonRect = button.GetComponent<RectTransform>();
+            buttonRect.SetParent(ingredientScrollContent, false);
+            buttonRect.anchorMin = new Vector2(0f, 1f);
+            buttonRect.anchorMax = new Vector2(1f, 1f);
+            buttonRect.pivot = new Vector2(0.5f, 1f);
+            buttonRect.offsetMin = new Vector2(0f, 0f);
+            buttonRect.offsetMax = new Vector2(0f, 0f);
+            buttonRect.sizeDelta = new Vector2(0f, buttonHeight);
+            buttonRect.anchoredPosition = new Vector2(0f, -(topPadding + i * (buttonHeight + gap)));
+            ApplyButtonLabelPadding(button);
+
+            TMP_Text label = i < ingredientListButtonTexts.Count ? ingredientListButtonTexts[i] : null;
+            SetTextAlignment(label, TextAlignmentOptions.MidlineLeft);
+        }
+
+        if (ingredientScrollRect != null)
+            ingredientScrollRect.verticalNormalizedPosition = 1f;
     }
 
     private void BuildIngredientTags()
@@ -645,6 +847,7 @@ public class DayUIManager : MonoBehaviour
         ingredientTags.Add("순두부", new[] { "부드러움", "따뜻함", "담백함", "국물" });
         ingredientTags.Add("고춧가루", new[] { "매움", "칼칼함", "자극적" });
         ingredientTags.Add("계란", new[] { "부드러움", "고소함" });
+        ingredientTags.Add("조개", new[] { "시원함", "바다향", "감칠맛" });
     }
 
     private void BuildRecipes()
@@ -687,8 +890,6 @@ public class DayUIManager : MonoBehaviour
     private void LoadCustomerScene()
     {
         bool returnedFromNight = GameFlowState.ConsumeReturnedFromNight();
-        if (!returnedFromNight)
-            GameProgression.ResetProgress();
 
         RefreshUnlockedIngredients();
         currentDayNumber = GameProgression.GetCurrentDayNumber();
@@ -918,9 +1119,9 @@ public class DayUIManager : MonoBehaviour
     private MenuId GetTargetRecipeForCurrentDay()
     {
         if (currentDayNumber >= 3)
-            return MenuId.DoenjangJjigae;
+            return MenuId.SoondubuJjigae;
 
-        return currentDayNumber >= 2 ? MenuId.SoondubuJjigae : MenuId.KimchiJjigae;
+        return currentDayNumber >= 2 ? MenuId.DoenjangJjigae : MenuId.KimchiJjigae;
     }
 
     private string GetWrongRecipeReactionForCurrentDay()
@@ -945,10 +1146,36 @@ public class DayUIManager : MonoBehaviour
 
     public void OpenMenuBoard()
     {
+        PopupRootController popupRoot = FindAnyObjectByType<PopupRootController>();
+        if (popupRoot != null)
+        {
+            popupRoot.ShowRecipe();
+            return;
+        }
+
         SetActive(menuBoardPanel, true);
         ApplyMenuBoardLayout();
         if (menuBoardPanel != null)
             menuBoardPanel.transform.SetAsLastSibling();
+    }
+
+    public void OpenMemoPopup()
+    {
+        PopupRootController popupRoot = FindAnyObjectByType<PopupRootController>();
+        if (popupRoot != null)
+        {
+            popupRoot.ShowMemo();
+            return;
+        }
+
+        if (dayResponseArtView != null && dayResponseArtView.memoPopup != null)
+        {
+            SetActive(dayResponseArtView.memoPopup, true);
+            dayResponseArtView.memoPopup.transform.SetAsLastSibling();
+            return;
+        }
+
+        ShowPotHint("메모장을 찾을 수 없습니다.");
     }
 
     public void CloseMenuBoard()
@@ -973,6 +1200,8 @@ public class DayUIManager : MonoBehaviour
     {
         if (!CanUseRecipe(menuId))
         {
+            PopulateKitchenIngredientOptions();
+            UpdateIngredientButtonTexts();
             ShowPotHint("이 메뉴는 아직 잠겨 있어요. 밤 파트를 먼저 진행해보세요.");
             return;
         }
@@ -1001,20 +1230,23 @@ public class DayUIManager : MonoBehaviour
 
     private void SetupIngredientsForRecipe(RecipeDefinition recipe)
     {
-        ClearIngredientOptions();
+        PopulateKitchenIngredientOptions();
 
-        for (int i = 0; i < recipe.IngredientOptions.Length && i < currentIngredientOptions.Length; i++)
-            currentIngredientOptions[i] = recipe.IngredientOptions[i];
-
-        SetText(ingredientGuideText, "필수 재료 " + recipe.RequiredIngredients.Length + "개 선택");
+        cookingGaugeActive = false;
+        lastCookingGaugeSuccess = true;
+        cookingGaugeValue = 0f;
+        SetButtonLabel(cookButton, "조리하기");
+        SetText(ingredientGuideText, "재료 목록");
         UpdateIngredientButtonTexts();
         UpdateIngredientSlots();
-        ShowPotHint("재료를 뚝배기에 넣어 조리 준비를 하세요.");
+        ShowPotHint("왼쪽 재료 목록에서\n재료를 선택하세요.");
         UpdateCookButtonState();
     }
 
     private void SetupIngredientsForCurrentCustomer()
     {
+        PopulateKitchenIngredientOptions();
+
         MenuId defaultRecipe = GetDefaultRecipeForCurrentClue();
         if (!CanUseRecipe(defaultRecipe))
             defaultRecipe = GetFirstUnlockedRecipe();
@@ -1056,10 +1288,11 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateIngredientButtonTexts()
     {
-        UpdateSingleIngredientButtonText(ingredientButton1Text, currentIngredientOptions[0], 1);
-        UpdateSingleIngredientButtonText(ingredientButton2Text, currentIngredientOptions[1], 2);
-        UpdateSingleIngredientButtonText(ingredientButton3Text, currentIngredientOptions[2], 3);
-        UpdateSingleIngredientButtonText(ingredientButton4Text, currentIngredientOptions[3], 4);
+        EnsureIngredientListButtons();
+        PopulateKitchenIngredientOptionsIfEmpty();
+
+        for (int i = 0; i < ingredientListButtonTexts.Count && i < currentIngredientOptions.Length; i++)
+            UpdateSingleIngredientButtonText(ingredientListButtonTexts[i], currentIngredientOptions[i], i + 1);
     }
 
     private void UpdateSingleIngredientButtonText(TMP_Text targetText, string ingredientName, int displayIndex)
@@ -1070,12 +1303,6 @@ public class DayUIManager : MonoBehaviour
         if (string.IsNullOrEmpty(ingredientName))
         {
             targetText.text = displayIndex.ToString("00") + "  -";
-            return;
-        }
-
-        if (!IsIngredientUnlocked(ingredientName))
-        {
-            targetText.text = displayIndex.ToString("00") + "  잠김  " + ingredientName;
             return;
         }
 
@@ -1101,7 +1328,12 @@ public class DayUIManager : MonoBehaviour
 
         if (selectedIngredients.Contains(ingredientName))
         {
-            ShowPotHint(ingredientName + "은 이미 뚝배기에 들어가 있어요.");
+            selectedIngredients.Remove(ingredientName);
+            UpdateIngredientButtonTexts();
+            UpdateIngredientSlots();
+            UpdateCookingPotState();
+            UpdateCookButtonState();
+            ShowPotHint(ingredientName + "을 뚝배기에서 뺐어요.");
             return true;
         }
 
@@ -1119,9 +1351,18 @@ public class DayUIManager : MonoBehaviour
         return true;
     }
 
+    private void AddIngredientFromList(int index)
+    {
+        if (cookingGaugeActive)
+            return;
+
+        AddIngredientFromDrag(index);
+    }
+
     private bool CanStartIngredientDrag(int index)
     {
-        return kitchenPanel != null
+        return false
+            && kitchenPanel != null
             && kitchenPanel.activeInHierarchy
             && index >= 0
             && index < currentIngredientOptions.Length
@@ -1147,33 +1388,69 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateIngredientSlots()
     {
-        SetActive(slot1Text, false);
-        SetActive(slot2Text, false);
-        SetActive(slot3Text, false);
+        EnsureFourthIngredientSlot();
+        UpdateIngredientSlot(slot1Text, 0);
+        UpdateIngredientSlot(slot2Text, 1);
+        UpdateIngredientSlot(slot3Text, 2);
+        UpdateIngredientSlot(slot4Text, 3);
         UpdateCookingPotState();
+    }
+
+    private void EnsureFourthIngredientSlot()
+    {
+        if (slot4Text != null || slot3Text == null)
+            return;
+
+        TMP_Text clone = Instantiate(slot3Text, slot3Text.transform.parent);
+        clone.name = "Slot4Text";
+        slot4Text = clone;
+        ApplyTextStyle(slot4Text, ResolveSceneFont(), 16f, FontStyles.Normal, MutedTextTint);
+        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
+    }
+
+    private void UpdateIngredientSlot(TMP_Text slotText, int index)
+    {
+        if (slotText == null)
+            return;
+
+        SetActive(slotText, true);
+        slotText.text = index < selectedIngredients.Count
+            ? selectedIngredients[index]
+            : "+";
     }
 
     private void UpdateCookingPotState()
     {
+        if (cookingGaugeActive)
+            return;
+
         if (selectedIngredients.Count == 0)
         {
-            ShowPotHint("재료를 뚝배기에\n넣어주세요");
+            ShowPotHint("왼쪽 재료 목록에서\n재료를 선택하세요.");
             return;
         }
 
-        ShowPotHint("담긴 재료\n" + string.Join(" / ", selectedIngredients));
+        string suffix = selectedIngredients.Count >= MinIngredientSlots
+            ? "\n\n조리하기 버튼을 눌러\n게이지를 맞추세요."
+            : "\n\n선택한 재료가\n아래 슬롯에 담깁니다.";
+
+        ShowPotHint("담긴 재료\n" + string.Join(" / ", selectedIngredients) + suffix);
     }
 
     private void UpdateCookButtonState()
     {
-        SetInteractable(cookButton, selectedIngredients.Count == MaxIngredientSlots);
+        SetInteractable(cookButton, cookingGaugeActive || selectedIngredients.Count >= MinIngredientSlots);
     }
 
     private void ResetKitchenIngredientUI()
     {
-        ClearIngredientOptions();
+        PopulateKitchenIngredientOptions();
         selectedIngredients.Clear();
-        SetText(ingredientGuideText, "손님 단서에 맞춰 재료 선택");
+        cookingGaugeActive = false;
+        lastCookingGaugeSuccess = true;
+        cookingGaugeValue = 0f;
+        SetButtonLabel(cookButton, "조리하기");
+        SetText(ingredientGuideText, "재료 목록");
         UpdateIngredientButtonTexts();
         UpdateIngredientSlots();
         UpdateCookingPotState();
@@ -1186,6 +1463,8 @@ public class DayUIManager : MonoBehaviour
         SetActive(menuBoardPanel, false);
         EnsureCookingPotDropZone();
         ConfigureIngredientDragSources();
+        PopulateKitchenIngredientOptions();
+        UpdateIngredientButtonTexts();
         SetupIngredientsForCurrentCustomer();
     }
 
@@ -1197,11 +1476,67 @@ public class DayUIManager : MonoBehaviour
 
     private void CookSelectedRecipe()
     {
-        if (selectedIngredients.Count != MaxIngredientSlots)
+        if (cookingGaugeActive)
+        {
+            FinishCookingGauge();
+            return;
+        }
+
+        if (selectedIngredients.Count < MinIngredientSlots)
+            return;
+
+        StartCookingGauge();
+    }
+
+    private void StartCookingGauge()
+    {
+        cookingGaugeActive = true;
+        lastCookingGaugeSuccess = false;
+        cookingGaugeValue = 0f;
+        SetButtonLabel(cookButton, "멈추기");
+        UpdateCookButtonState();
+        UpdateCookingGaugeView();
+    }
+
+    private void UpdateCookingGaugeView()
+    {
+        int marker = Mathf.Clamp(Mathf.RoundToInt(cookingGaugeValue * 20f), 0, 20);
+        string bar = new string('-', marker) + "▼" + new string('-', 20 - marker);
+        string state = cookingGaugeValue >= CookingGaugeGoodMin && cookingGaugeValue <= CookingGaugeGoodMax
+            ? "적당"
+            : cookingGaugeValue > CookingGaugeGoodMax
+                ? "과열"
+                : "부족";
+
+        ShowPotHint("조리 게이지\n[" + bar + "]\n적당 범위에 맞춰 멈추세요\n현재: " + state + "\n\nSPACE 또는 클릭");
+    }
+
+    private void FinishCookingGauge()
+    {
+        if (!cookingGaugeActive)
+            return;
+
+        cookingGaugeActive = false;
+        lastCookingGaugeSuccess = cookingGaugeValue >= CookingGaugeGoodMin && cookingGaugeValue <= CookingGaugeGoodMax;
+        SetButtonLabel(cookButton, "조리하기");
+        FinishCookSelectedRecipe();
+    }
+
+    private void FinishCookSelectedRecipe()
+    {
+        if (selectedIngredients.Count < MinIngredientSlots)
             return;
 
         string cookedFoodName = ResolveCookedFoodName();
         EvaluationResult evaluation = EvaluateCustomerMatch();
+        if (!lastCookingGaugeSuccess)
+        {
+            evaluation = new EvaluationResult(
+                EvaluationGrade.Poor,
+                0,
+                "손님 반응: 조리 타이밍이 맞지 않아 음식의 맛이 흐트러졌어요.",
+                "다음에는 게이지를 '적당' 범위에서 멈춰 조리하세요.");
+        }
 
         SetPanelState(showCustomer: false, showKitchen: false, showResult: true);
         SetActive(menuBoardPanel, false);
@@ -1215,7 +1550,7 @@ public class DayUIManager : MonoBehaviour
         SetText(clueText, evaluation.Clue);
         SetResultClueLabel("플레이어 대화");
 
-        if (evaluation.Grade == EvaluationGrade.Perfect)
+        if (evaluation.Grade >= EvaluationGrade.Good)
         {
             if (currentDayNumber == 1)
             {
@@ -1287,60 +1622,31 @@ public class DayUIManager : MonoBehaviour
 
     private EvaluationResult EvaluateCustomerMatch()
     {
-        MenuId targetRecipe = GetTargetRecipeForCurrentDay();
-
-        if (selectedRecipeId != targetRecipe)
+        if (currentDayNumber == 1)
         {
-            return new EvaluationResult(
-                EvaluationGrade.Poor,
-                0,
-                GetWrongRecipeReactionForCurrentDay(),
-                GetWrongRecipeClueForCurrentDay());
+            return EvaluateExactDayIngredientSet(
+                new[] { "김치", "돼지고기", "버섯" },
+                "두부",
+                "하.. 역시. 난 살아있는 자체가 죄야.",
+                "문 뒤에서 소리 지르던 그 비명들... 죄송합니다..");
         }
 
-        if (currentDayNumber == 1 && selectedRecipeId == MenuId.KimchiJjigae)
+        if (currentDayNumber == 2)
         {
-            string[] requiredKimchiJjigaeIngredients = { "김치", "두부", "돼지고기" };
-            bool hasAllRequiredIngredients = requiredKimchiJjigaeIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
-
-            if (!hasAllRequiredIngredients)
-            {
-                return new EvaluationResult(
-                    EvaluationGrade.Poor,
-                    0,
-                    "하.. 역시. 난 살아있는 자체가 죄야.",
-                    "문 뒤에서 소리 지르던 그 비명들... 죄송합니다..");
-            }
+            return EvaluateExactDayIngredientSet(
+                new[] { "된장", "두부", "버섯" },
+                "애호박",
+                "심정지.... 사망... 변이.... 내가 조금만 더 빨랐다면.... 열이 오르면.... 또 그것처럼 변할 거야..",
+                ".......");
         }
 
-        if (currentDayNumber == 2 && selectedRecipeId == MenuId.SoondubuJjigae)
+        if (currentDayNumber >= 3)
         {
-            string[] requiredSoondubuJjigaeIngredients = { "순두부", "고춧가루", "계란" };
-            bool hasAllRequiredIngredients = requiredSoondubuJjigaeIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
-
-            if (!hasAllRequiredIngredients)
-            {
-                return new EvaluationResult(
-                    EvaluationGrade.Poor,
-                    0,
-                    "심정지.... 사망... 변이.... 내가 조금만 더 빨랐다면.... 열이 오르면.... 또 그것처럼 변할 거야..",
-                    ".......");
-            }
-        }
-
-        if (currentDayNumber >= 3 && selectedRecipeId == MenuId.DoenjangJjigae)
-        {
-            string[] requiredMinjunIngredients = { "된장", "두부", "버섯" };
-            bool hasAllRequiredIngredients = requiredMinjunIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
-
-            if (!hasAllRequiredIngredients)
-            {
-                return new EvaluationResult(
-                    EvaluationGrade.Poor,
-                    0,
-                    "\"역시.... 너무 큰 욕심인가...\"\n\n\"엄마... 어디에 있어요?\"\n\n\"아빠... 회사에 가신거죠?...\"",
-                    "(뒤틀리는 소리)\n변이 후 주인공 사망");
-            }
+            return EvaluateExactDayIngredientSet(
+                new[] { "순두부", "고춧가루", "버섯" },
+                "조개",
+                "\"역시.... 너무 큰 욕심인가...\"\n\n\"엄마... 어디에 있어요?\"\n\n\"아빠... 회사에 가신거죠?...\"",
+                "(뒤틀리는 소리)\n변이 후 주인공 사망");
         }
 
         string[] foodTags = GetCurrentFoodTags();
@@ -1365,6 +1671,31 @@ public class DayUIManager : MonoBehaviour
             score,
             BuildCustomerReaction(grade, foodTags, desiredTags, avoidedTags, forbiddenIngredients),
             BuildCustomerClue(grade, foodTags, desiredTags, avoidedTags, forbiddenIngredients));
+    }
+
+    private EvaluationResult EvaluateExactDayIngredientSet(string[] requiredIngredients, string bonusIngredient, string failureReaction, string failureClue)
+    {
+        bool hasAllRequiredIngredients = requiredIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
+        bool hasOnlyAllowedIngredients = selectedIngredients.All(ingredient => requiredIngredients.Contains(ingredient) || ingredient == bonusIngredient);
+
+        if (!hasAllRequiredIngredients || !hasOnlyAllowedIngredients)
+        {
+            return new EvaluationResult(
+                EvaluationGrade.Poor,
+                0,
+                failureReaction,
+                failureClue);
+        }
+
+        bool hasBonusIngredient = selectedIngredients.Contains(bonusIngredient);
+        EvaluationGrade grade = hasBonusIngredient ? EvaluationGrade.Perfect : EvaluationGrade.Good;
+        int score = hasBonusIngredient ? 100 : 80;
+
+        return new EvaluationResult(
+            grade,
+            score,
+            BuildCustomerReaction(grade, GetCurrentFoodTags(), GetDesiredTagsForCurrentCustomer(), GetAvoidedTagsForCurrentCustomer(), GetForbiddenIngredientsForCurrentCustomer()),
+            BuildCustomerClue(grade, GetCurrentFoodTags(), GetDesiredTagsForCurrentCustomer(), GetAvoidedTagsForCurrentCustomer(), GetForbiddenIngredientsForCurrentCustomer()));
     }
 
     private string[] GetCurrentFoodTags()
@@ -1744,9 +2075,15 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateMenuButtons()
     {
-        UpdateRecipeButton(recipeButton1, recipeButton1Text, MenuId.KimchiJjigae);
-        UpdateRecipeButton(recipeButton2, recipeButton2Text, MenuId.DoenjangJjigae);
-        UpdateRecipeButton(recipeButton3, recipeButton3Text, MenuId.SoondubuJjigae);
+        SetActive(recipeButton1, true);
+        SetActive(recipeButton2, true);
+        SetActive(recipeButton3, true);
+        SetInteractable(recipeButton1, true);
+        SetInteractable(recipeButton2, true);
+        SetInteractable(recipeButton3, true);
+        SetButtonLabel(recipeButton1, "환경설정");
+        SetButtonLabel(recipeButton2, "메뉴판");
+        SetButtonLabel(recipeButton3, "메모장");
 
         SetActive(menuButtonBibimbap, true);
         SetActive(menuButtonKimchiJjigae, true);
@@ -1867,6 +2204,9 @@ public class DayUIManager : MonoBehaviour
             && (IsKimchiJjigaeStarterIngredient(ingredientName)
                 || IsDoenjangJjigaeIngredientUnlocked(ingredientName)
                 || IsSoondubuJjigaeIngredientUnlocked(ingredientName)
+                || ingredientName == "순두부"
+                || ingredientName == "고춧가루"
+                || ingredientName == "조개"
                 || unlockedIngredients.Contains(ingredientName));
     }
 
@@ -2026,26 +2366,35 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyKitchenPrepLayout()
     {
-        SetRelativeRect(selectedRecipeText, new Vector2(0.07f, 0.77f), new Vector2(0.30f, 0.86f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton1, new Vector2(0.07f, 0.65f), new Vector2(0.30f, 0.74f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton2, new Vector2(0.07f, 0.53f), new Vector2(0.30f, 0.62f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton3, new Vector2(0.07f, 0.41f), new Vector2(0.30f, 0.50f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(selectedRecipeText, new Vector2(0.30f, 0.75f), new Vector2(0.70f, 0.84f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton1, new Vector2(0.82f, 0.76f), new Vector2(0.95f, 0.86f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton2, new Vector2(0.82f, 0.62f), new Vector2(0.95f, 0.72f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton3, new Vector2(0.82f, 0.48f), new Vector2(0.95f, 0.58f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(ingredientGuideText, new Vector2(0.36f, 0.76f), new Vector2(0.67f, 0.84f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.38f, 0.29f), new Vector2(0.66f, 0.66f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.39f, 0.37f), new Vector2(0.65f, 0.58f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientGuideText, new Vector2(0.05f, 0.80f), new Vector2(0.27f, 0.89f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotDropZone, new Vector2(0.36f, 0.42f), new Vector2(0.66f, 0.72f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotHintText, new Vector2(0.37f, 0.45f), new Vector2(0.65f, 0.68f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(ingredientButton1, new Vector2(0.71f, 0.61f), new Vector2(0.93f, 0.70f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton2, new Vector2(0.71f, 0.49f), new Vector2(0.93f, 0.58f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton3, new Vector2(0.71f, 0.37f), new Vector2(0.93f, 0.46f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton4, new Vector2(0.71f, 0.25f), new Vector2(0.93f, 0.34f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton1, new Vector2(0.05f, 0.67f), new Vector2(0.27f, 0.77f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton2, new Vector2(0.05f, 0.53f), new Vector2(0.27f, 0.63f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton3, new Vector2(0.05f, 0.39f), new Vector2(0.27f, 0.49f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton4, new Vector2(0.05f, 0.25f), new Vector2(0.27f, 0.35f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(cookButton, new Vector2(0.59f, 0.10f), new Vector2(0.80f, 0.19f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(backButton, new Vector2(0.82f, 0.10f), new Vector2(0.93f, 0.19f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
+        EnsureFourthIngredientSlot();
+        SetRelativeRect(slot1Text, new Vector2(0.30f, 0.09f), new Vector2(0.41f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot2Text, new Vector2(0.43f, 0.09f), new Vector2(0.54f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot3Text, new Vector2(0.56f, 0.09f), new Vector2(0.67f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot4Text, new Vector2(0.69f, 0.09f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
 
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
         SetTextAlignment(cookingPotHintText, TextAlignmentOptions.Center);
+        SetTextAlignment(slot1Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot2Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot3Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
         ApplyButtonLabelPadding(recipeButton1);
         ApplyButtonLabelPadding(recipeButton2);
         ApplyButtonLabelPadding(recipeButton3);
@@ -2055,13 +2404,14 @@ public class DayUIManager : MonoBehaviour
         ApplyButtonLabelPadding(ingredientButton4);
         ApplyButtonLabelPadding(cookButton);
         ApplyButtonLabelPadding(backButton);
-        SetTextAlignment(recipeButton1Text, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(recipeButton2Text, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(recipeButton3Text, TextAlignmentOptions.MidlineLeft);
+        SetTextAlignment(recipeButton1Text, TextAlignmentOptions.Center);
+        SetTextAlignment(recipeButton2Text, TextAlignmentOptions.Center);
+        SetTextAlignment(recipeButton3Text, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientButton1Text, TextAlignmentOptions.MidlineLeft);
         SetTextAlignment(ingredientButton2Text, TextAlignmentOptions.MidlineLeft);
         SetTextAlignment(ingredientButton3Text, TextAlignmentOptions.MidlineLeft);
         SetTextAlignment(ingredientButton4Text, TextAlignmentOptions.MidlineLeft);
+        ApplyIngredientListButtonLayout();
     }
 
     private void ApplyResultLayout()
@@ -2163,9 +2513,9 @@ public class DayUIManager : MonoBehaviour
         AddUiLabel(bottomPanel, "SectionLabel_Order", "주문 상담", new Vector2(0.04f, 0.86f), new Vector2(0.70f, 0.96f), font, 15f, MutedTextTint);
         AddUiDivider(bottomPanel, "SectionRule_Order", new Vector2(0.04f, 0.83f), new Vector2(0.70f, 0.845f));
 
-        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Recipes", "메뉴 선택", new Vector2(0.07f, 0.86f), new Vector2(0.30f, 0.91f), font, 16f, SecondaryTextTint);
-        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Pot", "뚝배기", new Vector2(0.38f, 0.67f), new Vector2(0.66f, 0.72f), font, 16f, SecondaryTextTint);
-        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Shelf", "재료 선반", new Vector2(0.71f, 0.71f), new Vector2(0.93f, 0.76f), font, 16f, SecondaryTextTint);
+        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Recipes", "선택 메뉴", new Vector2(0.30f, 0.84f), new Vector2(0.70f, 0.89f), font, 16f, SecondaryTextTint);
+        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Pot", "뚝배기", new Vector2(0.36f, 0.72f), new Vector2(0.66f, 0.77f), font, 16f, SecondaryTextTint);
+        AddUiLabel(kitchenPanel != null ? kitchenPanel.transform : null, "SectionLabel_Shelf", "재료 목록", new Vector2(0.05f, 0.89f), new Vector2(0.27f, 0.94f), font, 16f, SecondaryTextTint);
 
         AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultFood", "완성 음식", new Vector2(0.07f, 0.79f), new Vector2(0.37f, 0.84f), font, 15f, MutedTextTint);
         AddUiLabel(resultPanel != null ? resultPanel.transform : null, "SectionLabel_ResultReaction", "손님 반응", new Vector2(0.08f, 0.54f), new Vector2(0.51f, 0.59f), font, 15f, MutedTextTint);
@@ -2206,12 +2556,32 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(nextButton, new Vector2(0.77f, 0.42f), new Vector2(0.95f, 0.59f), Vector2.zero, Vector2.zero);
         SetRelativeRect(goKitchenButton, new Vector2(0.77f, 0.42f), new Vector2(0.95f, 0.59f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(selectedRecipeText, new Vector2(0.07f, 0.76f), new Vector2(0.30f, 0.84f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientGuideText, new Vector2(0.37f, 0.75f), new Vector2(0.66f, 0.83f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.39f, 0.37f), new Vector2(0.65f, 0.58f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(selectedRecipeText, new Vector2(0.30f, 0.75f), new Vector2(0.70f, 0.84f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientGuideText, new Vector2(0.05f, 0.80f), new Vector2(0.27f, 0.89f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton1, new Vector2(0.82f, 0.76f), new Vector2(0.95f, 0.86f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton2, new Vector2(0.82f, 0.62f), new Vector2(0.95f, 0.72f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton3, new Vector2(0.82f, 0.48f), new Vector2(0.95f, 0.58f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton1, new Vector2(0.05f, 0.67f), new Vector2(0.27f, 0.77f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton2, new Vector2(0.05f, 0.53f), new Vector2(0.27f, 0.63f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton3, new Vector2(0.05f, 0.39f), new Vector2(0.27f, 0.49f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(ingredientButton4, new Vector2(0.05f, 0.25f), new Vector2(0.27f, 0.35f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotDropZone, new Vector2(0.36f, 0.42f), new Vector2(0.66f, 0.72f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotHintText, new Vector2(0.37f, 0.45f), new Vector2(0.65f, 0.68f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
+        EnsureFourthIngredientSlot();
+        SetRelativeRect(slot1Text, new Vector2(0.30f, 0.09f), new Vector2(0.41f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot2Text, new Vector2(0.43f, 0.09f), new Vector2(0.54f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot3Text, new Vector2(0.56f, 0.09f), new Vector2(0.67f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slot4Text, new Vector2(0.69f, 0.09f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
         SetTextAlignment(cookingPotHintText, TextAlignmentOptions.Center);
+        SetTextAlignment(slot1Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot2Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot3Text, TextAlignmentOptions.Center);
+        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
+        ApplyIngredientListButtonLayout();
 
         SetRelativeRect(resultText, new Vector2(0.39f, 0.60f), new Vector2(0.91f, 0.76f), Vector2.zero, Vector2.zero);
         SetRelativeRect(reactionText, new Vector2(0.08f, 0.23f), new Vector2(0.51f, 0.54f), Vector2.zero, Vector2.zero);
@@ -2977,6 +3347,21 @@ public class DayUIManager : MonoBehaviour
     {
         for (int i = 0; i < currentIngredientOptions.Length; i++)
             currentIngredientOptions[i] = string.Empty;
+    }
+
+    private void PopulateKitchenIngredientOptions()
+    {
+        ClearIngredientOptions();
+
+        for (int i = 0; i < KitchenIngredientList.Length && i < currentIngredientOptions.Length; i++)
+            currentIngredientOptions[i] = KitchenIngredientList[i];
+    }
+
+    private void PopulateKitchenIngredientOptionsIfEmpty()
+    {
+        bool hasAnyIngredient = currentIngredientOptions.Any(option => !string.IsNullOrEmpty(option));
+        if (!hasAnyIngredient)
+            PopulateKitchenIngredientOptions();
     }
 
     private void ShowPotHint(string message)
