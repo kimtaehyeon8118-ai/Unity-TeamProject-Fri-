@@ -21,9 +21,9 @@ public sealed class CustomerDaySceneController : MonoBehaviour
     };
     [SerializeField] private RecipePopupEntry[] recipes =
     {
-        new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
-        new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
-        new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
+        new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
+        new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
+        new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
     };
 
     [Header("Scene Panels")]
@@ -130,8 +130,8 @@ public sealed class CustomerDaySceneController : MonoBehaviour
                 PlayerLine("그 말들이 아직도 마음에 남아 있는 거군요. 오늘은 자극적이지 않고 속을 감싸주는 음식이 좋겠어요."),
                 NpcLine("윤서아", "혹시 따뜻하고 부드러운 음식... 만들어 주실 수 있으신가요?"),
                 PlayerLine("그럼 순두부찌개로 따뜻하게 끓여볼게요. 순두부찌개에서 특히 좋아하는 재료가 있으세요?"),
-                NpcLine("윤서아", "순두부요. 부드럽게 넘어가는 게 좋고, 고춧가루가 적당히 들어갔으면 좋겠어요. 참고로 전 매운 걸 잘 못 먹어요. 그리고 완전히 안 익은 계란을 먹으면 마음이 조금 가라앉아요."),
-                PlayerLine("좋아요. 순두부와 적당한 고춧가루, 계란을 적당히 풀어 따뜻하게 끓여볼게요."),
+                NpcLine("윤서아", "순두부요. 부드럽게 넘어가는 게 좋고, 고춧가루가 적당히 들어갔으면 좋겠어요. 참고로 전 매운 걸 잘 못 먹어요. 버섯 향이 있으면 마음이 조금 가라앉고, 조개가 들어가면 더 좋을 것 같아요."),
+                PlayerLine("좋아요. 순두부와 적당한 고춧가루, 버섯을 넣고 조개로 시원하게 끓여볼게요."),
                 NpcLine("윤서아", "부탁드릴게요. 오늘은 조용히 속을 데우고 싶어요.")
             };
         }
@@ -155,16 +155,16 @@ public sealed class CustomerDaySceneController : MonoBehaviour
                 PlayerLine("가능해요. 그런데 민준이가 떠올리는 집밥의 안전한 맛을 조금 더 따라가볼게요."),
                 NpcLine("민준", "엄마가 시험날에 먹고 가라고 하셨는데 안 먹은 게 후회가..."),
                 PlayerLine("그 기억이라면 따뜻한 된장찌개가 잘 맞을 것 같아요. 엄마가 차려준 밥상처럼 끓여볼게요."),
-                NpcLine("민준", "엄마의 손 맛을 느끼고 싶어요."),
+                NpcLine("민준", "엄마의 손 맛을 느끼고 싶어요. 애호박도 좋아해요."),
                 PlayerLine("좋아요. 된장과 두부, 버섯을 넣어서 집밥처럼 따뜻하게 끓여볼게요.")
             };
         }
 
         recipes = new[]
         {
-            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 김치\n+ 돼지고기\n+ 버섯\n+ 두부(높은 점수)" },
-            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 된장\n+ 두부\n+ 버섯\n+ 애호박(높은 점수)" },
-            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 순두부\n+ 고춧가루\n+ 버섯\n+ 조개(높은 점수)" }
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
         };
     }
 
@@ -216,9 +216,9 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         };
         recipes = new[]
         {
-            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
-            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
-            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
         };
     }
 

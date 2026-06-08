@@ -26,11 +26,13 @@ public sealed class RecipePopupView : MonoBehaviour
     private void Awake()
     {
         BindButtonEvents();
+        ApplyLayout();
         ValidateReferences();
     }
 
     private void OnEnable()
     {
+        ApplyLayout();
         Open(currentDay);
     }
 
@@ -46,6 +48,7 @@ public sealed class RecipePopupView : MonoBehaviour
         recipeTitleText = titleText;
         recipeContentText = contentText;
         BindButtonEvents();
+        ApplyLayout();
     }
 
     public void SetRecipes(int day, RecipePopupEntry[] recipes)
@@ -57,6 +60,7 @@ public sealed class RecipePopupView : MonoBehaviour
     public void Open(int day)
     {
         currentDay = Mathf.Max(1, day);
+        ApplyLayout();
         RefreshButtons();
         SelectFirstUnlockedRecipe();
     }
@@ -130,6 +134,75 @@ public sealed class RecipePopupView : MonoBehaviour
         selectedIndex = index;
         SetText(recipeTitleText, entry.recipeName + " 레시피");
         SetText(recipeContentText, entry.recipeContent);
+    }
+
+    private void ApplyLayout()
+    {
+        RectTransform buttonRoot = null;
+        if (recipeButtons != null && recipeButtons.Length > 0 && recipeButtons[0] != null)
+            buttonRoot = recipeButtons[0].transform.parent as RectTransform;
+
+        if (buttonRoot != null)
+            Stretch(buttonRoot, new Vector2(0.15f, 0.67f), new Vector2(0.85f, 0.82f));
+
+        ApplyButtonRect(0, new Vector2(0.00f, 0.54f), new Vector2(0.48f, 1.00f));
+        ApplyButtonRect(1, new Vector2(0.52f, 0.54f), new Vector2(1.00f, 1.00f));
+        ApplyButtonRect(2, new Vector2(0.00f, 0.03f), new Vector2(0.48f, 0.47f));
+
+        if (recipeTitleText != null)
+        {
+            Stretch(recipeTitleText.rectTransform, new Vector2(0.16f, 0.53f), new Vector2(0.84f, 0.62f));
+            recipeTitleText.alignment = TextAlignmentOptions.MidlineLeft;
+            recipeTitleText.fontSize = 22f;
+            recipeTitleText.margin = new Vector4(8f, 0f, 8f, 0f);
+            recipeTitleText.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+
+        if (recipeContentText != null)
+        {
+            Stretch(recipeContentText.rectTransform, new Vector2(0.16f, 0.20f), new Vector2(0.84f, 0.52f));
+            recipeContentText.alignment = TextAlignmentOptions.TopLeft;
+            recipeContentText.fontSize = 22f;
+            recipeContentText.lineSpacing = 8f;
+            recipeContentText.margin = new Vector4(8f, 8f, 8f, 8f);
+            recipeContentText.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+
+        if (recipeButtonTexts == null)
+            return;
+
+        foreach (TMP_Text label in recipeButtonTexts)
+        {
+            if (label == null)
+                continue;
+
+            label.alignment = TextAlignmentOptions.Midline;
+            label.fontSize = 15f;
+            label.margin = new Vector4(4f, 0f, 4f, 0f);
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+    }
+
+    private void ApplyButtonRect(int index, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        if (recipeButtons == null || index < 0 || index >= recipeButtons.Length || recipeButtons[index] == null)
+            return;
+
+        RectTransform rectTransform = recipeButtons[index].GetComponent<RectTransform>();
+        Stretch(rectTransform, anchorMin, anchorMax);
+    }
+
+    private static void Stretch(RectTransform rectTransform, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        if (rectTransform == null)
+            return;
+
+        rectTransform.anchorMin = anchorMin;
+        rectTransform.anchorMax = anchorMax;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+        rectTransform.anchoredPosition = Vector2.zero;
+        rectTransform.sizeDelta = Vector2.zero;
     }
 
     private bool IsUnlocked(RecipePopupEntry entry)

@@ -269,6 +269,9 @@ public class DayUIManager : MonoBehaviour
     private static readonly Color32 ButtonPressedTint = new Color32(224, 178, 119, 255);
     private static readonly Color32 ButtonSelectedTint = new Color32(215, 231, 190, 255);
     private static readonly Color32 ButtonDisabledTint = new Color32(206, 190, 166, 180);
+    private static readonly Color32 IngredientLockedTint = new Color32(169, 151, 123, 255);
+    private static readonly Color32 IngredientLockedHighlightTint = new Color32(185, 167, 139, 255);
+    private static readonly Color32 IngredientLockedPressedTint = new Color32(145, 126, 100, 255);
     private static readonly Color32 PanelShadowTint = new Color32(70, 37, 20, 70);
     private static readonly Color32 ButtonShadowTint = new Color32(73, 39, 22, 54);
     private static readonly Color32 TextShadowTint = new Color32(255, 246, 224, 80);
@@ -405,12 +408,12 @@ public class DayUIManager : MonoBehaviour
         new DialogueLine
         {
             isCustomer = true,
-            text = "순두부요. 부드럽게 넘어가는 게 좋고, 고춧가루가 적당히 들어갔으면 좋겠어요. 참고로 전 매운 걸 잘 못 먹어요. 그리고 완전히 안 익은 계란을 먹으면 마음이 조금 가라앉아요."
+            text = "순두부요. 부드럽게 넘어가는 게 좋고, 고춧가루가 적당히 들어갔으면 좋겠어요. 참고로 전 매운 걸 잘 못 먹어요. 버섯 향이 있으면 마음이 조금 가라앉고, 조개가 들어가면 더 좋을 것 같아요."
         },
         new DialogueLine
         {
             isCustomer = false,
-            text = "좋아요. 순두부와 적당한 고춧가루, 계란을 적당히 풀어 따뜻하게 끓여볼게요."
+            text = "좋아요. 순두부와 적당한 고춧가루, 버섯을 넣고 조개로 시원하게 끓여볼게요."
         },
         new DialogueLine
         {
@@ -469,7 +472,7 @@ public class DayUIManager : MonoBehaviour
         new DialogueLine
         {
             isCustomer = true,
-            text = "엄마의 손 맛을 느끼고 싶어요."
+            text = "엄마의 손 맛을 느끼고 싶어요. 애호박도 좋아해요."
         },
         new DialogueLine
         {
@@ -869,9 +872,9 @@ public class DayUIManager : MonoBehaviour
             new RecipeDefinition(
                 MenuId.KimchiJjigae,
                 "김치찌개",
-                "김치와 돼지고기, 두부를 넣어 얼큰하고 든든한 국물 요리를 만든다.",
-                new[] { "김치", "돼지고기", "두부", "대파" },
-                new[] { "김치", "돼지고기", "두부" },
+                "김치와 돼지고기, 버섯을 넣어 얼큰하고 든든한 국물 요리를 만든다.",
+                new[] { "김치", "돼지고기", "버섯", "두부" },
+                new[] { "김치", "돼지고기", "버섯" },
                 new[] { "매움", "해장", "든든함" },
                 new[] { "기름짐" }));
 
@@ -880,9 +883,9 @@ public class DayUIManager : MonoBehaviour
             new RecipeDefinition(
                 MenuId.SoondubuJjigae,
                 "순두부찌개",
-                "순두부와 적당한 고춧가루, 계란을 넣어 따뜻하고 부드러운 국물 요리를 만든다.",
-                new[] { "순두부", "고춧가루", "계란", "두부" },
-                new[] { "순두부", "고춧가루", "계란" },
+                "순두부와 적당한 고춧가루, 버섯을 넣고 조개로 감칠맛을 더해 따뜻하고 부드러운 국물 요리를 만든다.",
+                new[] { "순두부", "고춧가루", "버섯", "조개" },
+                new[] { "순두부", "고춧가루", "버섯" },
                 new[] { "부드러움", "따뜻함", "담백함", "국물", "칼칼함" },
                 new[] { "매우매움", "기름짐" }));
     }
@@ -1049,13 +1052,13 @@ public class DayUIManager : MonoBehaviour
             switch (preference)
             {
                 case CustomerPreference.MildSoup:
-                    return "맞아요. 오늘은 구수하고 따뜻한 된장 국물이 좋겠어요.";
+                    return "맞아요. 오늘은 따뜻하고 부드러운 순두부 국물이 좋겠어요.";
 
                 case CustomerPreference.SpicySoup:
                     return "오늘은 매운 냄새보다 속이 편한 국물이 더 필요해요.";
 
                 default:
-                    return "맞아요. 오늘은 구수하고 따뜻한 된장 국물이 좋겠어요.";
+                    return "맞아요. 오늘은 따뜻하고 부드러운 순두부 국물이 좋겠어요.";
             }
         }
 
@@ -1119,9 +1122,9 @@ public class DayUIManager : MonoBehaviour
     private MenuId GetTargetRecipeForCurrentDay()
     {
         if (currentDayNumber >= 3)
-            return MenuId.SoondubuJjigae;
+            return MenuId.DoenjangJjigae;
 
-        return currentDayNumber >= 2 ? MenuId.DoenjangJjigae : MenuId.KimchiJjigae;
+        return currentDayNumber >= 2 ? MenuId.SoondubuJjigae : MenuId.KimchiJjigae;
     }
 
     private string GetWrongRecipeReactionForCurrentDay()
@@ -1293,6 +1296,8 @@ public class DayUIManager : MonoBehaviour
 
         for (int i = 0; i < ingredientListButtonTexts.Count && i < currentIngredientOptions.Length; i++)
             UpdateSingleIngredientButtonText(ingredientListButtonTexts[i], currentIngredientOptions[i], i + 1);
+
+        UpdateIngredientButtonVisuals();
     }
 
     private void UpdateSingleIngredientButtonText(TMP_Text targetText, string ingredientName, int displayIndex)
@@ -1306,9 +1311,47 @@ public class DayUIManager : MonoBehaviour
             return;
         }
 
+        if (!IsIngredientUnlocked(ingredientName))
+        {
+            targetText.text = displayIndex.ToString("00") + "  잠김  " + ingredientName;
+            return;
+        }
+
         targetText.text = selectedIngredients.Contains(ingredientName)
             ? displayIndex.ToString("00") + "  담음  " + ingredientName
             : displayIndex.ToString("00") + "  " + ingredientName;
+    }
+
+    private void UpdateIngredientButtonVisuals()
+    {
+        for (int i = 0; i < ingredientListButtons.Count; i++)
+        {
+            Button button = ingredientListButtons[i];
+            string ingredientName = i < currentIngredientOptions.Length ? currentIngredientOptions[i] : string.Empty;
+
+            if (button == null)
+                continue;
+
+            if (string.IsNullOrEmpty(ingredientName))
+            {
+                ApplyButtonTheme(button, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint);
+                continue;
+            }
+
+            if (!IsIngredientUnlocked(ingredientName))
+            {
+                ApplyButtonTheme(button, IngredientLockedTint, IngredientLockedHighlightTint, IngredientLockedPressedTint, IngredientLockedTint, IngredientLockedTint);
+                continue;
+            }
+
+            if (selectedIngredients.Contains(ingredientName))
+            {
+                ApplyButtonTheme(button, ButtonSelectedTint, ButtonHighlightTint, ButtonPressedTint, ButtonSelectedTint, ButtonDisabledTint);
+                continue;
+            }
+
+            ApplyButtonTheme(button, ButtonNormalTint, ButtonHighlightTint, ButtonPressedTint, ButtonSelectedTint, ButtonDisabledTint);
+        }
     }
 
     private bool AddIngredientFromDrag(int index)
@@ -1634,8 +1677,8 @@ public class DayUIManager : MonoBehaviour
         if (currentDayNumber == 2)
         {
             return EvaluateExactDayIngredientSet(
-                new[] { "된장", "두부", "버섯" },
-                "애호박",
+                new[] { "순두부", "고춧가루", "버섯" },
+                "조개",
                 "심정지.... 사망... 변이.... 내가 조금만 더 빨랐다면.... 열이 오르면.... 또 그것처럼 변할 거야..",
                 ".......");
         }
@@ -1643,8 +1686,8 @@ public class DayUIManager : MonoBehaviour
         if (currentDayNumber >= 3)
         {
             return EvaluateExactDayIngredientSet(
-                new[] { "순두부", "고춧가루", "버섯" },
-                "조개",
+                new[] { "된장", "두부", "버섯" },
+                "애호박",
                 "\"역시.... 너무 큰 욕심인가...\"\n\n\"엄마... 어디에 있어요?\"\n\n\"아빠... 회사에 가신거죠?...\"",
                 "(뒤틀리는 소리)\n변이 후 주인공 사망");
         }
@@ -2061,7 +2104,7 @@ public class DayUIManager : MonoBehaviour
         {
             return "손님 단서\n"
                 + "2일차 손님\n"
-                + "따뜻하고 부드러운 순두부찌개와 적당한 고춧가루, 계란을 찾고 있음\n\n"
+                + "따뜻하고 부드러운 순두부찌개와 적당한 고춧가루, 버섯 향을 찾고 있음\n\n"
                 + "목표\n"
                 + "순두부의 부드러움이 살아나도록 조리하세요.";
         }
@@ -2082,7 +2125,7 @@ public class DayUIManager : MonoBehaviour
         SetInteractable(recipeButton2, true);
         SetInteractable(recipeButton3, true);
         SetButtonLabel(recipeButton1, "환경설정");
-        SetButtonLabel(recipeButton2, "메뉴판");
+        SetButtonLabel(recipeButton2, "레시피");
         SetButtonLabel(recipeButton3, "메모장");
 
         SetActive(menuButtonBibimbap, true);
@@ -2105,7 +2148,7 @@ public class DayUIManager : MonoBehaviour
             return true;
 
         if (menuId == MenuId.SoondubuJjigae)
-            return IsSoondubuJjigaeUnlocked();
+            return true;
 
         return menuId != MenuId.None
             && recipes.ContainsKey(menuId)
@@ -2200,6 +2243,18 @@ public class DayUIManager : MonoBehaviour
 
     private bool IsIngredientUnlocked(string ingredientName)
     {
+        if (string.IsNullOrEmpty(ingredientName))
+            return false;
+
+        if (currentDayNumber <= 1 && (ingredientName == "된장" || ingredientName == "순두부"))
+            return false;
+
+        if (currentDayNumber == 2 && ingredientName == "된장")
+            return false;
+
+        if (currentDayNumber >= 3)
+            return true;
+
         return !string.IsNullOrEmpty(ingredientName)
             && (IsKimchiJjigaeStarterIngredient(ingredientName)
                 || IsDoenjangJjigaeIngredientUnlocked(ingredientName)

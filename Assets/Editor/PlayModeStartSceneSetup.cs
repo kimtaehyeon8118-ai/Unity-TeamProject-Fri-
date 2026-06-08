@@ -11,6 +11,8 @@ public static class PlayModeStartSceneSetup
     static PlayModeStartSceneSetup()
     {
         SetPlayModeStartScene();
+        EditorApplication.playModeStateChanged -= HandlePlayModeStateChanged;
+        EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
     }
 
     [MenuItem("Tools/Set Play Start Scene to Day")]
@@ -24,6 +26,15 @@ public static class PlayModeStartSceneSetup
         }
 
         EditorSceneManager.playModeStartScene = startScene;
+    }
+
+    private static void HandlePlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state != PlayModeStateChange.ExitingEditMode)
+            return;
+
+        GameProgression.ResetProgress();
+        Debug.Log("[PlayModeStartSceneSetup] Reset day progression for editor Play mode.");
     }
 }
 #endif

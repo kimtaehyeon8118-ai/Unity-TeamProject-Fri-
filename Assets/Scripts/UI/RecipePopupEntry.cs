@@ -8,5 +8,5 @@ public sealed class RecipePopupEntry
     public int unlockDay = 1;
 
     [TextArea(3, 8)]
-    public string recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)";
+    public string recipeContent = "- 김치\n- 돼지고기\n- 버섯";
 }

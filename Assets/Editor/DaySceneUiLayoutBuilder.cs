@@ -466,17 +466,17 @@ public static class DaySceneUiLayoutBuilder
         GameObject recipePopup = CreatePopupImage(root.transform, "RecipePopup", "Assets/UI/day_menu_popup.png", new Vector2(0.34f, 0.20f), new Vector2(0.66f, 0.86f));
         GameObject recipeButtonRoot = new GameObject("RecipeButtonRoot", typeof(RectTransform));
         recipeButtonRoot.transform.SetParent(recipePopup.transform, false);
-        Stretch(recipeButtonRoot.GetComponent<RectTransform>(), new Vector2(0.10f, 0.66f), new Vector2(0.90f, 0.82f));
+        Stretch(recipeButtonRoot.GetComponent<RectTransform>(), new Vector2(0.15f, 0.67f), new Vector2(0.85f, 0.82f));
 
         TMP_Text kimchiButtonText;
         TMP_Text doenjangButtonText;
         TMP_Text softTofuButtonText;
-        Button kimchiButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "KimchiStewButton", new Vector2(0.00f, 0.52f), new Vector2(0.48f, 1.00f), "김치찌개", font, out kimchiButtonText);
-        Button doenjangButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "DoenjangStewButton", new Vector2(0.52f, 0.52f), new Vector2(1.00f, 1.00f), "된장찌개", font, out doenjangButtonText);
-        Button softTofuButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "SoftTofuStewButton", new Vector2(0.00f, 0.00f), new Vector2(0.48f, 0.45f), "순두부찌개\n잠김", font, out softTofuButtonText);
+        Button kimchiButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "KimchiStewButton", new Vector2(0.00f, 0.54f), new Vector2(0.48f, 1.00f), "김치찌개", font, out kimchiButtonText);
+        Button doenjangButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "DoenjangStewButton", new Vector2(0.52f, 0.54f), new Vector2(1.00f, 1.00f), "된장찌개", font, out doenjangButtonText);
+        Button softTofuButton = CreatePopupRecipeButton(recipeButtonRoot.transform, "SoftTofuStewButton", new Vector2(0.00f, 0.03f), new Vector2(0.48f, 0.47f), "순두부찌개", font, out softTofuButtonText);
 
-        TMP_Text recipeTitleText = CreateText(recipePopup.transform, "RecipeTitleText", new Vector2(0.11f, 0.55f), new Vector2(0.89f, 0.64f), "김치찌개 레시피", 27f, TextAlignmentOptions.MidlineLeft, new Color32(55, 48, 42, 255), font);
-        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipeContentText", new Vector2(0.11f, 0.16f), new Vector2(0.89f, 0.54f), "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)", 25f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255), font);
+        TMP_Text recipeTitleText = CreateText(recipePopup.transform, "RecipeTitleText", new Vector2(0.16f, 0.53f), new Vector2(0.84f, 0.62f), "김치찌개 레시피", 22f, TextAlignmentOptions.MidlineLeft, new Color32(55, 48, 42, 255), font);
+        TMP_Text recipeText = CreateText(recipePopup.transform, "RecipeContentText", new Vector2(0.16f, 0.20f), new Vector2(0.84f, 0.52f), "- 김치\n- 돼지고기\n- 버섯", 22f, TextAlignmentOptions.TopLeft, new Color32(55, 48, 42, 255), font);
 
         GameObject memoPopup = CreatePopupImage(root.transform, "MemoPopup", "Assets/UI/day_memo_popup.png", new Vector2(0.32f, 0.16f), new Vector2(0.68f, 0.88f));
         TMP_InputField memoInput = CreateMemoInput(memoPopup.transform, font);
@@ -598,9 +598,9 @@ public static class DaySceneUiLayoutBuilder
     {
         return new[]
         {
-            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "+ 물\n+ 고춧가루\n+ 돼지고기\n+ 두부(선택)" },
-            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "+ 물\n+ 된장\n+ 두부\n+ 애호박" },
-            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 2, recipeContent = "+ 물\n+ 순두부\n+ 고춧가루\n+ 달걀" }
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
         };
     }
 
