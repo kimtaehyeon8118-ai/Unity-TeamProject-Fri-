@@ -76,6 +76,32 @@ public static class GameProgression
         return reward;
     }
 
+    public static string GrantNightReward(string reward)
+    {
+        EnsureInitialized();
+
+        List<string> unlockedIngredients = LoadList(UnlockedIngredientsKey).ToList();
+        List<string> pendingIngredients = LoadList(PendingIngredientsKey).ToList();
+        PlayerPrefs.SetInt(NightClearCountKey, PlayerPrefs.GetInt(NightClearCountKey, 0) + 1);
+
+        if (string.IsNullOrWhiteSpace(reward))
+        {
+            PlayerPrefs.Save();
+            return string.Empty;
+        }
+
+        if (!unlockedIngredients.Contains(reward))
+            unlockedIngredients.Add(reward);
+
+        if (!pendingIngredients.Contains(reward))
+            pendingIngredients.Add(reward);
+
+        SaveList(UnlockedIngredientsKey, unlockedIngredients);
+        SaveList(PendingIngredientsKey, pendingIngredients);
+        PlayerPrefs.Save();
+        return reward;
+    }
+
     public static void UnlockIngredients(params string[] ingredients)
     {
         EnsureInitialized();

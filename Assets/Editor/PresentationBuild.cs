@@ -20,7 +20,8 @@ public static class PresentationBuild
             {
                 "Assets/Scenes/TitleScene.unity",
                 "Assets/Scenes/DayScene.unity",
-                "Assets/Scenes/Stage01_CyberStreet.unity"
+                "Assets/Scenes/Stage01_CyberStreet.unity",
+                "Assets/Scenes/Stage02_1.unity"
             },
             locationPathName = BuildPath,
             target = BuildTarget.StandaloneOSX,

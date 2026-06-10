@@ -148,4 +148,11 @@ public class CameraFollow : MonoBehaviour
     {
         zoomOffset += delta;
     }
+
+    public void ConfigureBounds(Vector2 minimum, Vector2 maximum)
+    {
+        useBounds = true;
+        minBounds = minimum;
+        maxBounds = maximum;
+    }
 }

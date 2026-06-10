@@ -221,7 +221,20 @@ public class GameManager : MonoBehaviour
     private IEnumerator ClearStageRoutine()
     {
         isStageClearing = true;
-        string reward = GameProgression.GrantNightReward();
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        bool isDayTwoFinal = currentSceneName == "Stage02_1"
+            && GameFlowState.RequestedNightDay == 2;
+        string reward = string.Empty;
+
+        if (currentSceneName == "Stage01_CyberStreet")
+        {
+            reward = GameProgression.GrantNightReward("순두부");
+        }
+        else if (isDayTwoFinal)
+        {
+            reward = GameProgression.GrantNightReward();
+        }
+
         PushNotification(string.IsNullOrEmpty(reward)
             ? "재료를 챙겼어요"
             : "새 재료 해금: " + reward);
@@ -241,6 +254,7 @@ public class GameManager : MonoBehaviour
             : SceneFlowUtility.ResolveNextSceneIndex(SceneManager.GetActiveScene().buildIndex, titleSceneName);
         SceneManager.LoadScene(nextSceneIndex);
     }
+
 
     private void ResetStageState(bool pushNotification)
     {

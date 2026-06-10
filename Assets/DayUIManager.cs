@@ -230,6 +230,7 @@ public class DayUIManager : MonoBehaviour
 
     [Header("Scene Flow")]
     [SerializeField] private string nightSceneName = "Stage01_CyberStreet";
+    [SerializeField] private string dayTwoNightSceneName = "Stage02_1";
 
     [Header("Editor Preview")]
     [SerializeField] private bool startFromPreviewDayInEditor = false;
@@ -1827,11 +1828,14 @@ public class DayUIManager : MonoBehaviour
 
     private void StartNightFlow()
     {
-        GameFlowState.RequestNightPlay();
-        int sceneIndex = SceneFlowUtility.FindSceneIndexByName(nightSceneName);
+        string targetNightScene = currentDayNumber == 2
+            ? dayTwoNightSceneName
+            : nightSceneName;
+        GameFlowState.RequestNightPlay(currentDayNumber);
+        int sceneIndex = SceneFlowUtility.FindSceneIndexByName(targetNightScene);
         if (sceneIndex < 0)
         {
-            Debug.LogWarning("Night scene not found: " + nightSceneName);
+            Debug.LogWarning("Night scene not found: " + targetNightScene);
             return;
         }
 

@@ -112,7 +112,23 @@ public class StageArtApplier : MonoBehaviour
                 }
             }
 
-            if (objectName.StartsWith("Vending_"))
+            if (objectName.StartsWith("NeonSign") || objectName.StartsWith("NeonStrip"))
+            {
+                HidePlaceholderDecoration(renderer);
+            }
+            else if (objectName == "Ground_B")
+            {
+                ApplyGroundSurface(renderer);
+            }
+            else if (objectName == "Goal")
+            {
+                ApplyClearGoal(renderer);
+            }
+            else if (IsFloatingPlatform(objectName))
+            {
+                ApplyFloatingPlatform(renderer);
+            }
+            else if (objectName.StartsWith("Vending_"))
             {
                 ApplyGroundObstacle(renderer);
             }
@@ -151,17 +167,217 @@ public class StageArtApplier : MonoBehaviour
     private static bool IsStageVisual(string objectName)
     {
         return objectName.StartsWith("Ground")
+            || objectName.StartsWith("GapStep")
             || objectName.StartsWith("SkyDeck")
             || objectName.StartsWith("DashDeck")
             || objectName.StartsWith("GoalDeck")
             || objectName.StartsWith("FinalLift")
+            || objectName.StartsWith("VendingTop")
             || objectName.StartsWith("Vending")
             || objectName.StartsWith("Debris")
             || objectName.StartsWith("CeilingShard")
             || objectName.StartsWith("Neon")
             || objectName.StartsWith("Checkpoint")
+            || objectName == "Goal"
             || objectName == "Scaffold_Start"
             || objectName == "BossPerch";
+    }
+
+    private void HidePlaceholderDecoration(SpriteRenderer renderer)
+    {
+        renderer.enabled = false;
+
+        Transform glow = renderer.transform.Find("_NeonGlow");
+        if (glow != null)
+        {
+            glow.gameObject.SetActive(false);
+        }
+    }
+
+    private void ApplyGroundSurface(SpriteRenderer baseRenderer)
+    {
+        Sprite sprite = LoadSprite("Graphics/Ground/night_road_ground");
+        BoxCollider2D groundCollider = baseRenderer.GetComponent<BoxCollider2D>();
+        if (sprite == null || groundCollider == null)
+        {
+            return;
+        }
+
+        Transform root = PrepareVisualRoot(baseRenderer);
+        const float segmentHeight = 2.4f;
+        const float surfaceRatio = 0.13f;
+        float segmentWidth = segmentHeight
+            * sprite.bounds.size.x
+            / Mathf.Max(sprite.bounds.size.y, 0.001f);
+        int segmentCount = Mathf.CeilToInt(groundCollider.size.x / segmentWidth);
+        float coveredWidth = segmentCount * segmentWidth;
+        float startX = -(coveredWidth * 0.5f) + (segmentWidth * 0.5f);
+        float colliderTop = groundCollider.offset.y + (groundCollider.size.y * 0.5f);
+        float visualCenterY = colliderTop + ((surfaceRatio - 0.5f) * segmentHeight);
+
+        for (int index = 0; index < segmentCount; index++)
+        {
+            CreateSpriteChild(
+                root,
+                $"Road_{index}",
+                sprite,
+                baseRenderer,
+                new Vector3(startX + (segmentWidth * index), visualCenterY, 0f),
+                new Vector2(segmentWidth, segmentHeight),
+                1);
+        }
+
+        baseRenderer.enabled = false;
+    }
+
+    private void ApplyClearGoal(SpriteRenderer baseRenderer)
+    {
+        Sprite sprite = LoadSprite("Graphics/Goal/clear_terminal_gate");
+        GameObject finalDeck = GameObject.Find("GoalDeck_Final");
+        BoxCollider2D goalCollider = baseRenderer.GetComponent<BoxCollider2D>();
+        BoxCollider2D deckCollider = finalDeck != null ? finalDeck.GetComponent<BoxCollider2D>() : null;
+        if (sprite == null || finalDeck == null || goalCollider == null || deckCollider == null)
+        {
+            return;
+        }
+
+        SpriteAccentAnimator accentAnimator = baseRenderer.GetComponent<SpriteAccentAnimator>();
+        if (accentAnimator != null)
+        {
+            accentAnimator.enabled = false;
+        }
+
+        baseRenderer.transform.localScale = Vector3.one;
+        baseRenderer.transform.localRotation = Quaternion.identity;
+
+        float deckTop = deckCollider.bounds.max.y;
+        baseRenderer.transform.position = new Vector3(
+            finalDeck.transform.position.x,
+            deckTop + (goalCollider.size.y * 0.5f),
+            baseRenderer.transform.position.z);
+
+        float visualWidth = Mathf.Max(deckCollider.size.x - 0.4f, 1f);
+        float visualHeight = visualWidth
+            * sprite.bounds.size.y
+            / Mathf.Max(sprite.bounds.size.x, 0.001f);
+        float visualWorldCenterY = deckTop + (visualHeight * 0.5f);
+        float visualLocalCenterY = visualWorldCenterY - baseRenderer.transform.position.y;
+
+        Transform root = PrepareVisualRoot(baseRenderer);
+        CreateSpriteChild(
+            root,
+            "ClearTerminal",
+            sprite,
+            baseRenderer,
+            new Vector3(0f, visualLocalCenterY, 0f),
+            new Vector2(visualWidth, visualHeight),
+            2);
+        baseRenderer.enabled = false;
+    }
+
+    private static bool IsFloatingPlatform(string objectName)
+    {
+        return objectName.StartsWith("GapStep_")
+            || objectName.StartsWith("VendingTop")
+            || objectName.StartsWith("FinalLift")
+            || objectName.StartsWith("SkyDeck_")
+            || objectName.StartsWith("GoalDeck")
+            || objectName.StartsWith("DashDeck_")
+            || objectName == "Scaffold_Start"
+            || objectName == "BossPerch";
+    }
+
+    private void ApplyFloatingPlatform(SpriteRenderer baseRenderer)
+    {
+        string[] resourcePaths =
+        {
+            "Graphics/FloatingPlatforms/floating_platform_barrel",
+            "Graphics/FloatingPlatforms/floating_platform_cracked_a",
+            "Graphics/FloatingPlatforms/floating_platform_cracked_b",
+            "Graphics/FloatingPlatforms/floating_platform_debris",
+            "Graphics/FloatingPlatforms/floating_platform_stone",
+            "Graphics/FloatingPlatforms/floating_platform_cracked_c"
+        };
+
+        int variantIndex = GetFloatingPlatformVariant(baseRenderer.gameObject.name);
+        Sprite sprite = LoadSprite(resourcePaths[variantIndex]);
+        if (sprite == null)
+        {
+            return;
+        }
+
+        Vector2 targetSize = GetTargetSize(baseRenderer);
+        float visualWidth = targetSize.x + 0.12f;
+        float aspect = sprite.bounds.size.y / Mathf.Max(sprite.bounds.size.x, 0.001f);
+        float visualHeight = visualWidth * aspect;
+        float surfaceRatio = GetFloatingPlatformSurfaceRatio(variantIndex);
+        float colliderTop = targetSize.y * 0.5f;
+        float visualCenterY = colliderTop + ((surfaceRatio - 0.5f) * visualHeight);
+
+        Transform root = PrepareVisualRoot(baseRenderer);
+        CreateSpriteChild(
+            root,
+            "Platform",
+            sprite,
+            baseRenderer,
+            new Vector3(0f, visualCenterY, 0f),
+            new Vector2(visualWidth, visualHeight),
+            1);
+        baseRenderer.enabled = false;
+    }
+
+    private static int GetFloatingPlatformVariant(string objectName)
+    {
+        if (objectName == "Scaffold_Start" || objectName == "VendingTop_2" || objectName == "SkyDeck_C")
+        {
+            return 0;
+        }
+
+        if (objectName == "BossPerch" || objectName == "FinalLift_2" || objectName == "GoalDeck")
+        {
+            return 1;
+        }
+
+        if (objectName == "GapStep_1" || objectName == "VendingTop_3" || objectName == "DashDeck_A")
+        {
+            return 2;
+        }
+
+        if (objectName == "GapStep_2" || objectName == "FinalLift_3" || objectName == "DashDeck_B")
+        {
+            return 3;
+        }
+
+        if (objectName == "VendingTop" || objectName == "SkyDeck_A" || objectName == "DashDeck_C")
+        {
+            return 4;
+        }
+
+        return 5;
+    }
+
+    private static float GetFloatingPlatformSurfaceRatio(int variantIndex)
+    {
+        switch (variantIndex)
+        {
+            case 0:
+                return 0.554f;
+
+            case 1:
+                return 0.148f;
+
+            case 2:
+                return 0.211f;
+
+            case 3:
+                return 0.423f;
+
+            case 4:
+                return 0.095f;
+
+            default:
+                return 0.423f;
+        }
     }
 
     private void ApplyRendererMood(SpriteRenderer renderer)
@@ -194,10 +410,12 @@ public class StageArtApplier : MonoBehaviour
         }
 
         if (objectName.StartsWith("Ground")
+            || objectName.StartsWith("GapStep")
             || objectName.StartsWith("SkyDeck")
             || objectName.StartsWith("DashDeck")
             || objectName.StartsWith("GoalDeck")
             || objectName.StartsWith("FinalLift")
+            || objectName.StartsWith("VendingTop")
             || objectName == "Scaffold_Start"
             || objectName == "BossPerch")
         {
@@ -256,15 +474,18 @@ public class StageArtApplier : MonoBehaviour
 
     private void ApplyGroundHazard(SpriteRenderer baseRenderer, bool withWire)
     {
-        Vector2 targetSize = GetTargetSize(baseRenderer);
         Transform root = PrepareVisualRoot(baseRenderer);
         if (withWire)
         {
-            CreateWireHazardCluster(root, baseRenderer, targetSize);
+            Vector2 hazardSize = new Vector2(8f, 0.92f);
+            ConfigureHazardCollider(baseRenderer, hazardSize);
+            CreateWireHazardCluster(root, baseRenderer, hazardSize);
         }
         else
         {
-            CreateSingleMarker(root, baseRenderer, targetSize * new Vector2(0.4f, 1f));
+            Vector2 hazardSize = new Vector2(1.4f, 0.9f);
+            ConfigureHazardCollider(baseRenderer, hazardSize);
+            CreateSingleMarker(root, baseRenderer, hazardSize);
         }
 
         baseRenderer.enabled = false;
@@ -273,24 +494,38 @@ public class StageArtApplier : MonoBehaviour
     private void CreateWireHazardCluster(Transform root, SpriteRenderer baseRenderer, Vector2 targetSize)
     {
         Sprite rubbleSprite = LoadSprite("Graphics/Obstacles/rubble_hazard");
-        float clusterWidth = Mathf.Clamp(targetSize.x * 0.32f, 4f, 12f);
+        float clusterWidth = Mathf.Max(targetSize.x, 1.5f);
+        float clusterHeight = Mathf.Max(targetSize.y, 0.92f);
 
         if (rubbleSprite != null)
         {
-        CreateSpriteChild(
-            root,
-            "RubbleBase",
-            rubbleSprite,
-            baseRenderer,
-            new Vector3(0f, -0.07f, 0f),
-            new Vector2(clusterWidth, targetSize.y * 0.42f),
-            1,
-            true);
+            CreateSpriteChild(
+                root,
+                "RubbleBase",
+                rubbleSprite,
+                baseRenderer,
+                new Vector3(0f, -clusterHeight * 0.22f, 0f),
+                new Vector2(clusterWidth, clusterHeight * 0.52f),
+                1,
+                true);
         }
 
-        CreateTiledWireStrip(root, baseRenderer, new Vector2(clusterWidth, targetSize.y));
-        CreateHazardEndCaps(root, baseRenderer, new Vector2(clusterWidth, targetSize.y));
-        CreateNeonHazardUnderline(root, baseRenderer, new Vector2(clusterWidth, targetSize.y));
+        CreateTiledWireStrip(root, baseRenderer, new Vector2(clusterWidth, clusterHeight));
+        CreateHazardEndCaps(root, baseRenderer, new Vector2(clusterWidth, clusterHeight));
+        CreateNeonHazardUnderline(root, baseRenderer, new Vector2(clusterWidth, clusterHeight));
+    }
+
+    private void ConfigureHazardCollider(SpriteRenderer baseRenderer, Vector2 hazardSize)
+    {
+        BoxCollider2D boxCollider = baseRenderer.GetComponent<BoxCollider2D>();
+        if (boxCollider == null)
+        {
+            return;
+        }
+
+        boxCollider.size = hazardSize;
+        boxCollider.offset = Vector2.zero;
+        boxCollider.isTrigger = true;
     }
 
     private void RestoreBaseVisual(SpriteRenderer baseRenderer)
@@ -404,6 +639,7 @@ public class StageArtApplier : MonoBehaviour
         SpriteRenderer legacyRenderer = root.GetComponent<SpriteRenderer>();
         if (legacyRenderer != null)
         {
+            legacyRenderer.enabled = false;
             if (Application.isPlaying)
             {
                 Destroy(legacyRenderer);
@@ -416,13 +652,15 @@ public class StageArtApplier : MonoBehaviour
 
         for (int i = root.childCount - 1; i >= 0; i--)
         {
+            GameObject child = root.GetChild(i).gameObject;
+            child.SetActive(false);
             if (Application.isPlaying)
             {
-                Destroy(root.GetChild(i).gameObject);
+                Destroy(child);
             }
             else
             {
-                DestroyImmediate(root.GetChild(i).gameObject);
+                DestroyImmediate(child);
             }
         }
 
@@ -440,9 +678,9 @@ public class StageArtApplier : MonoBehaviour
             return;
         }
 
-        float desiredHeight = targetSize.y * 0.92f;
+        float desiredHeight = targetSize.y * 0.78f;
         float aspect = wireSprite.bounds.size.x / Mathf.Max(0.001f, wireSprite.bounds.size.y);
-        float segmentWidth = desiredHeight * aspect;
+        float segmentWidth = Mathf.Min(desiredHeight * aspect, 2.4f);
         float spanWidth = Mathf.Max(targetSize.x - 0.8f, 1f);
         int count = Mathf.Max(2, Mathf.CeilToInt(spanWidth / Mathf.Max(segmentWidth * 0.78f, 0.5f)));
         float step = count > 1 ? spanWidth / (count - 1) : 0f;
@@ -506,9 +744,9 @@ public class StageArtApplier : MonoBehaviour
             return;
         }
 
-        float markerHeight = targetSize.y * 0.72f;
+        float markerHeight = Mathf.Max(targetSize.y, 0.9f);
         float aspect = blockSprite.bounds.size.x / Mathf.Max(0.001f, blockSprite.bounds.size.y);
-        float markerWidth = markerHeight * aspect;
+        float markerWidth = Mathf.Max(targetSize.x, markerHeight * aspect);
         CreateSpriteChild(
             root,
             "Marker",
@@ -569,13 +807,6 @@ public class StageArtApplier : MonoBehaviour
         childRenderer.maskInteraction = baseRenderer.maskInteraction;
         childRenderer.sharedMaterial = baseRenderer.sharedMaterial;
         childRenderer.drawMode = SpriteDrawMode.Simple;
-
-        if (addTriggerCollider)
-        {
-            BoxCollider2D childCollider = child.AddComponent<BoxCollider2D>();
-            childCollider.isTrigger = true;
-            childCollider.size = worldSize;
-        }
 
         Vector2 spriteSize = new Vector2(sprite.bounds.size.x, sprite.bounds.size.y);
         if (spriteSize.x <= 0f || spriteSize.y <= 0f)
