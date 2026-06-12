@@ -58,6 +58,10 @@ public sealed class CustomerDaySceneController : MonoBehaviour
         yield return null;
         yield return new WaitForEndOfFrame();
         AutoBindSceneReferences();
+
+        if (FindAnyObjectByType<DayUIManager>() != null)
+            yield break;
+
         ValidateRequiredReferences();
         RefreshAll();
         BindButtons();

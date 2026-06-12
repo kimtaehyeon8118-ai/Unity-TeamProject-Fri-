@@ -111,6 +111,18 @@ public static class DaySceneUiLayoutBuilder
 
         manager.portraitImage = npcSlot;
         manager.customerPortrait = LoadSprite("Assets/UI/NPC1_teasu.png");
+        manager.dayOneCustomerPortrait = LoadSprite("Assets/UI/NPC1_teasu.png");
+        manager.dayTwoCustomerPortrait = LoadSprite("Assets/UI/NPC2_seoa.png");
+        manager.dayThreeCustomerPortrait = LoadSprite("Assets/UI/NPC3minjun.png");
+        manager.kitchenBackgroundSprite = LoadSprite("Assets/UI/day_cookbackground.png");
+        manager.emptyCookingPotSprite = LoadSprite("Assets/UI/찌개/Enrqorl_empty.png");
+        manager.cookMainSprite = LoadSprite("Assets/UI/day_CookMain.png");
+        manager.cookButtonSprite = LoadSprite("Assets/UI/day_CookButtun.png");
+        manager.ingredientItemSprite = LoadSprite("Assets/UI/day_Ingredient.png");
+        manager.dayOptionButtonSprite = LoadSprite("Assets/UI/day_option.png");
+        manager.dayMenuButtonSprite = LoadSprite("Assets/UI/day_menu.png");
+        manager.dayNoteButtonSprite = LoadSprite("Assets/UI/day_note.png");
+        manager.ingredientSprites = LoadIngredientSprites();
         manager.menuOpenButton = recipeButton;
         manager.nextButton = dialogueAdvanceButton;
         SetPrivateObjectReference(manager, "dayResponseArtView", artView);
@@ -184,9 +196,23 @@ public static class DaySceneUiLayoutBuilder
             "Assets/UI/day_option.png",
             "Assets/UI/day_menu_popup.png",
             "Assets/UI/day_memo_popup.png",
+            "Assets/UI/day_cookbackground.png",
+            "Assets/UI/day_CookButtun.png",
+            "Assets/UI/day_CookMain.png",
+            "Assets/UI/day_Ingredient.png",
             "Assets/UI/NPC1_teasu.png",
             "Assets/UI/NPC2_seoa.png",
-            "Assets/UI/NPC3minjun.png"
+            "Assets/UI/NPC3minjun.png",
+            "Assets/UI/찌개/Enrqorl_empty.png",
+            "Assets/UI/재료/ChiliPowder.png",
+            "Assets/UI/재료/Kimchi.png",
+            "Assets/UI/재료/Mushroom.png",
+            "Assets/UI/재료/Pork.png",
+            "Assets/UI/재료/Seasheell.png",
+            "Assets/UI/재료/SoftTofu.png",
+            "Assets/UI/재료/SoybeenPaste.png",
+            "Assets/UI/재료/Squash.png",
+            "Assets/UI/재료/Tofu.png"
         };
 
         foreach (string path in paths)
@@ -601,6 +627,22 @@ public static class DaySceneUiLayoutBuilder
             new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
             new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
             new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
+        };
+    }
+
+    private static Sprite[] LoadIngredientSprites()
+    {
+        return new[]
+        {
+            LoadSprite("Assets/UI/재료/ChiliPowder.png"),
+            LoadSprite("Assets/UI/재료/Kimchi.png"),
+            LoadSprite("Assets/UI/재료/Mushroom.png"),
+            LoadSprite("Assets/UI/재료/Pork.png"),
+            LoadSprite("Assets/UI/재료/Seasheell.png"),
+            LoadSprite("Assets/UI/재료/SoftTofu.png"),
+            LoadSprite("Assets/UI/재료/SoybeenPaste.png"),
+            LoadSprite("Assets/UI/재료/Squash.png"),
+            LoadSprite("Assets/UI/재료/Tofu.png")
         };
     }
 
