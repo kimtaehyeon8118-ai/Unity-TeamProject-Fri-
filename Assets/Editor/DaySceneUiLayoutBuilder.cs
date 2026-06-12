@@ -116,7 +116,8 @@ public static class DaySceneUiLayoutBuilder
         manager.dayThreeCustomerPortrait = LoadSprite("Assets/UI/NPC3minjun.png");
         manager.kitchenBackgroundSprite = LoadSprite("Assets/UI/day_cookbackground.png");
         manager.emptyCookingPotSprite = LoadSprite("Assets/UI/찌개/Enrqorl_empty.png");
-        manager.cookMainSprite = LoadSprite("Assets/UI/day_CookMain.png");
+        manager.kitchenIngredientPanelSprite = LoadSprite("Assets/UI/daykitchen_main1.png");
+        manager.kitchenSlotPanelSprite = LoadSprite("Assets/UI/daykitchen_main2.png");
         manager.cookButtonSprite = LoadSprite("Assets/UI/day_CookButtun.png");
         manager.ingredientItemSprite = LoadSprite("Assets/UI/day_Ingredient.png");
         manager.dayOptionButtonSprite = LoadSprite("Assets/UI/day_option.png");
@@ -198,7 +199,8 @@ public static class DaySceneUiLayoutBuilder
             "Assets/UI/day_memo_popup.png",
             "Assets/UI/day_cookbackground.png",
             "Assets/UI/day_CookButtun.png",
-            "Assets/UI/day_CookMain.png",
+            "Assets/UI/daykitchen_main1.png",
+            "Assets/UI/daykitchen_main2.png",
             "Assets/UI/day_Ingredient.png",
             "Assets/UI/NPC1_teasu.png",
             "Assets/UI/NPC2_seoa.png",

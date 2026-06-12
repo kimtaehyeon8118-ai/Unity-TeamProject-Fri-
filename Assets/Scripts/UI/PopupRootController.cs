@@ -7,6 +7,17 @@ public sealed class PopupRootController : MonoBehaviour
     [SerializeField] private GameObject recipePopup;
     [SerializeField] private GameObject memoPopup;
 
+    private void Awake()
+    {
+        Initialize();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            CloseAll();
+    }
+
     public void Bind(Button dim, GameObject recipe, GameObject memo)
     {
         dimButton = dim;

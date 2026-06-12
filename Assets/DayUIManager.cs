@@ -35,6 +35,21 @@ public class DayUIManager : MonoBehaviour
         Perfect
     }
 
+    private enum CookingGaugeResult
+    {
+        Low,
+        Good,
+        Overheated
+    }
+
+    private enum CookedStewId
+    {
+        None,
+        KimchiJjigae,
+        DoenjangJjigae,
+        SoondubuJjigae
+    }
+
     [Serializable]
     public class DialogueLine
     {
@@ -90,6 +105,16 @@ public class DayUIManager : MonoBehaviour
         public string Clue { get; }
     }
 
+    private sealed class CookingResultData
+    {
+        public CookedStewId StewId;
+        public string StewName;
+        public bool HasOptionalIngredient;
+        public EvaluationGrade Grade;
+        public Sprite ResultSprite;
+        public string Comment;
+    }
+
     private sealed class DraggableIngredientUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         private DayUIManager owner;
@@ -121,7 +146,7 @@ public class DayUIManager : MonoBehaviour
             originalAnchoredPosition = rectTransform.anchoredPosition;
 
             if (rootCanvas != null)
-                transform.SetParent(rootCanvas.transform, true);
+                transform.SetParent(rootCanvas.transform, false);
 
             canvasGroup.blocksRaycasts = false;
             canvasGroup.alpha = 0.75f;
@@ -143,7 +168,7 @@ public class DayUIManager : MonoBehaviour
             bool dropped = owner.TryDropIngredientIntoPot(ingredientIndex, eventData);
 
             if (originalParent != null)
-                transform.SetParent(originalParent, true);
+                transform.SetParent(originalParent, false);
 
             rectTransform.anchoredPosition = originalAnchoredPosition;
             canvasGroup.blocksRaycasts = true;
@@ -213,7 +238,6 @@ public class DayUIManager : MonoBehaviour
     public TMP_Text slot1Text;
     public TMP_Text slot2Text;
     public TMP_Text slot3Text;
-    private TMP_Text slot4Text;
 
     public Button cookButton;
     public Button backButton;
@@ -251,20 +275,34 @@ public class DayUIManager : MonoBehaviour
     public Sprite dayThreeCustomerPortrait;
     public Sprite kitchenBackgroundSprite;
     public Sprite emptyCookingPotSprite;
-    public Sprite cookMainSprite;
     public Sprite cookButtonSprite;
     public Sprite ingredientItemSprite;
     public Sprite dayOptionButtonSprite;
     public Sprite dayMenuButtonSprite;
     public Sprite dayNoteButtonSprite;
+    public Sprite resultUiSprite;
+    public Sprite resultOkUiSprite;
+    public Sprite kitchenIngredientPanelSprite;
+    public Sprite kitchenSlotPanelSprite;
     public Sprite[] ingredientSprites;
     public Sprite bibimbapSprite;
     public Sprite kimchiJjigaeSprite;
     public Sprite jeyukSprite;
 
+    [Header("Cooked Stew Result Sprites")]
+    public Sprite kimchiStewSprite;
+    public Sprite tofuKimchiStewSprite;
+    public Sprite doenjangStewSprite;
+    public Sprite pumpkinDoenjangStewSprite;
+    public Sprite soondubuStewSprite;
+    public Sprite shellSoondubuStewSprite;
+
     private const int ChoiceDialogueIndex = 2;
     private const int MinIngredientSlots = 3;
     private const int MaxIngredientSlots = 4;
+    private const float SelectedSlotIconSize = 124f;
+    private static readonly Vector2 IngredientScrollAnchorMin = new Vector2(0.030f, 0.095f);
+    private static readonly Vector2 IngredientScrollAnchorMax = new Vector2(0.205f, 0.850f);
     private const string MildChoiceText = "담백한 국물";
     private const string SpicyChoiceText = "얼큰한 국물";
 
@@ -506,11 +544,16 @@ public class DayUIManager : MonoBehaviour
     private RectTransform ingredientScrollView;
     private RectTransform ingredientScrollContent;
     private ScrollRect ingredientScrollRect;
+    private bool runtimeIngredientButtonsBuilt;
+    private RectTransform selectedSlotInteractionLayer;
+    private readonly Button[] selectedSlotButtons = new Button[MaxIngredientSlots];
+    private readonly Image[] selectedSlotIconImages = new Image[MaxIngredientSlots];
     private Button dayArtNoteButton;
     private Button dayArtOptionButton;
     private HashSet<string> unlockedIngredients = new HashSet<string>();
     private bool cookingGaugeActive;
     private bool lastCookingGaugeSuccess = true;
+    private CookingGaugeResult lastCookingGaugeResult = CookingGaugeResult.Good;
     private float cookingGaugeValue;
     private const float CookingGaugeSpeed = 0.85f;
     private const float CookingGaugeGoodMin = 0.55f;
@@ -583,12 +626,15 @@ public class DayUIManager : MonoBehaviour
         customerPortrait = customerPortrait != null ? customerPortrait : dayOneCustomerPortrait;
         kitchenBackgroundSprite = kitchenBackgroundSprite != null ? kitchenBackgroundSprite : LoadEditorSprite("Assets/UI/day_cookbackground.png");
         emptyCookingPotSprite = emptyCookingPotSprite != null ? emptyCookingPotSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_empty.png");
-        cookMainSprite = cookMainSprite != null ? cookMainSprite : LoadEditorSprite("Assets/UI/day_CookMain.png");
         cookButtonSprite = cookButtonSprite != null ? cookButtonSprite : LoadEditorSprite("Assets/UI/day_CookButtun.png");
         ingredientItemSprite = ingredientItemSprite != null ? ingredientItemSprite : LoadEditorSprite("Assets/UI/day_Ingredient.png");
         dayOptionButtonSprite = dayOptionButtonSprite != null ? dayOptionButtonSprite : LoadEditorSprite("Assets/UI/day_option.png");
         dayMenuButtonSprite = dayMenuButtonSprite != null ? dayMenuButtonSprite : LoadEditorSprite("Assets/UI/day_menu.png");
         dayNoteButtonSprite = dayNoteButtonSprite != null ? dayNoteButtonSprite : LoadEditorSprite("Assets/UI/day_note.png");
+        resultUiSprite = resultUiSprite != null ? resultUiSprite : LoadEditorSprite("Assets/UI/resultui.png");
+        resultOkUiSprite = resultOkUiSprite != null ? resultOkUiSprite : LoadEditorSprite("Assets/UI/resultokui.png");
+        kitchenIngredientPanelSprite = kitchenIngredientPanelSprite != null ? kitchenIngredientPanelSprite : LoadEditorSprite("Assets/UI/daykitchen_main1.png");
+        kitchenSlotPanelSprite = kitchenSlotPanelSprite != null ? kitchenSlotPanelSprite : LoadEditorSprite("Assets/UI/daykitchen_main2.png");
 
         if (ingredientSprites == null || ingredientSprites.Length < KitchenIngredientList.Length || ingredientSprites.Any(sprite => sprite == null))
         {
@@ -605,6 +651,13 @@ public class DayUIManager : MonoBehaviour
                 LoadEditorSprite("Assets/UI/재료/Tofu.png")
             };
         }
+
+        kimchiStewSprite = kimchiStewSprite != null ? kimchiStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_kimchi.png");
+        tofuKimchiStewSprite = tofuKimchiStewSprite != null ? tofuKimchiStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_tofukimchi.png");
+        doenjangStewSprite = doenjangStewSprite != null ? doenjangStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_soybeen.png");
+        pumpkinDoenjangStewSprite = pumpkinDoenjangStewSprite != null ? pumpkinDoenjangStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_hobaksoybeen.png");
+        soondubuStewSprite = soondubuStewSprite != null ? soondubuStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_tufu.png");
+        shellSoondubuStewSprite = shellSoondubuStewSprite != null ? shellSoondubuStewSprite : LoadEditorSprite("Assets/UI/찌개/Enrqorl_bajiraktufu.png");
 #endif
     }
 
@@ -646,7 +699,7 @@ public class DayUIManager : MonoBehaviour
         Bind(choiceButtonA, () => OnChoiceSelected(CustomerPreference.MildSoup));
         Bind(choiceButtonB, () => OnChoiceSelected(CustomerPreference.SpicySoup));
 
-        Bind(recipeButton1, () => ShowPotHint("환경설정은 아직 준비 중입니다."));
+        Bind(recipeButton1, () => Debug.Log("설정 버튼 클릭"));
         Bind(recipeButton2, OpenMenuBoard);
         Bind(recipeButton3, OpenMemoPopup);
         BindIngredientListButtons();
@@ -657,7 +710,7 @@ public class DayUIManager : MonoBehaviour
 
         Bind(menuOpenButton, OpenMenuBoard);
         Bind(dayArtNoteButton, OpenMemoPopup);
-        Bind(dayArtOptionButton, () => Debug.Log("설정 버튼 클릭: 아직 연결된 설정 기능은 없습니다."));
+        Bind(dayArtOptionButton, () => Debug.Log("설정 버튼 클릭"));
         Bind(closeButton, CloseMenuBoard);
 
         Bind(menuButtonBibimbap, () => ShowRecipeDetail(MenuId.KimchiJjigae));
@@ -753,42 +806,105 @@ public class DayUIManager : MonoBehaviour
 
     private void EnsureIngredientListButtons()
     {
-        if (ingredientListButtons.Count == 0)
-        {
-            RegisterIngredientButton(ingredientButton1, ingredientButton1Text);
-            RegisterIngredientButton(ingredientButton2, ingredientButton2Text);
-            RegisterIngredientButton(ingredientButton3, ingredientButton3Text);
-            RegisterIngredientButton(ingredientButton4, ingredientButton4Text);
-        }
-
-        if (kitchenPanel == null || ingredientButton4 == null)
+        if (kitchenPanel == null)
             return;
 
         EnsureIngredientScrollView();
+        HideLegacyIngredientButtons();
 
-        if (ingredientScrollContent != null)
+        if (ingredientScrollContent == null)
+            return;
+
+        if (!runtimeIngredientButtonsBuilt)
         {
-            foreach (Button button in ingredientListButtons)
-            {
-                if (button != null && button.transform.parent != ingredientScrollContent)
-                    button.transform.SetParent(ingredientScrollContent, false);
-            }
-        }
+            ingredientListButtons.Clear();
+            ingredientListButtonTexts.Clear();
 
-        Transform parent = ingredientScrollContent != null ? ingredientScrollContent : ingredientButton4.transform.parent;
-        for (int i = ingredientListButtons.Count; i < KitchenIngredientList.Length; i++)
-        {
-            Button clone = Instantiate(ingredientButton4, parent);
-            clone.name = "IngredientButton" + (i + 1);
+            for (int i = 0; i < KitchenIngredientList.Length; i++)
+                CreateRuntimeIngredientButton(i);
 
-            TMP_Text cloneText = clone.GetComponentInChildren<TMP_Text>(true);
-            if (cloneText != null)
-                cloneText.name = "IngredientButton" + (i + 1) + "Text";
-
-            RegisterIngredientButton(clone, cloneText);
+            runtimeIngredientButtonsBuilt = true;
         }
 
         ApplyIngredientListButtonLayout();
+    }
+
+    private void HideLegacyIngredientButtons()
+    {
+        SetActive(ingredientButton1, false);
+        SetActive(ingredientButton2, false);
+        SetActive(ingredientButton3, false);
+        SetActive(ingredientButton4, false);
+
+        HideLegacyIngredientButtonByName("IngredientButton1");
+        HideLegacyIngredientButtonByName("IngredientButton2");
+        HideLegacyIngredientButtonByName("IngredientButton3");
+        HideLegacyIngredientButtonByName("IngredientButton4");
+    }
+
+    private void HideLegacyIngredientButtonByName(string objectName)
+    {
+        Transform legacy = FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, objectName);
+        if (legacy != null)
+            legacy.gameObject.SetActive(false);
+    }
+
+    private void CreateRuntimeIngredientButton(int index)
+    {
+        string buttonName = "RuntimeIngredientSlot_" + index;
+        Transform existing = ingredientScrollContent != null ? ingredientScrollContent.Find(buttonName) : null;
+        GameObject buttonObject = existing != null
+            ? existing.gameObject
+            : new GameObject(buttonName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        buttonObject.name = buttonName;
+        buttonObject.transform.SetParent(ingredientScrollContent, false);
+        DisableLayoutDrivenResize(buttonObject);
+
+        Image buttonImage = buttonObject.GetComponent<Image>();
+        if (buttonImage == null)
+            buttonImage = buttonObject.AddComponent<Image>();
+        buttonImage.sprite = ingredientItemSprite;
+        buttonImage.type = Image.Type.Simple;
+        buttonImage.color = Color.white;
+        buttonImage.raycastTarget = true;
+
+        Button button = buttonObject.GetComponent<Button>();
+        if (button == null)
+            button = buttonObject.AddComponent<Button>();
+        button.targetGraphic = buttonImage;
+
+        Transform iconTransform = buttonObject.transform.Find("IngredientIcon");
+        GameObject iconObject = iconTransform != null
+            ? iconTransform.gameObject
+            : new GameObject("IngredientIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        iconObject.transform.SetParent(buttonObject.transform, false);
+        DisableLayoutDrivenResize(iconObject);
+
+        Image iconImage = iconObject.GetComponent<Image>();
+        if (iconImage == null)
+            iconImage = iconObject.AddComponent<Image>();
+        iconImage.type = Image.Type.Simple;
+        iconImage.preserveAspect = true;
+        iconImage.raycastTarget = false;
+        iconImage.color = Color.white;
+
+        Transform textTransform = buttonObject.transform.Find("Name_Text");
+        GameObject textObject = textTransform != null
+            ? textTransform.gameObject
+            : new GameObject("Name_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(buttonObject.transform, false);
+        DisableLayoutDrivenResize(textObject);
+
+        TMP_Text label = textObject.GetComponent<TMP_Text>();
+        if (label == null)
+            label = textObject.AddComponent<TextMeshProUGUI>();
+        ApplyTextStyle(label, ResolveSceneFont(), 15f, FontStyles.Bold, Color.white);
+        label.enableAutoSizing = false;
+        label.overflowMode = TextOverflowModes.Ellipsis;
+        label.margin = Vector4.zero;
+        SetTextAlignment(label, TextAlignmentOptions.MidlineLeft);
+
+        RegisterIngredientButton(button, label);
     }
 
     private void EnsureIngredientScrollView()
@@ -847,7 +963,16 @@ public class DayUIManager : MonoBehaviour
             ingredientScrollRect.scrollSensitivity = 32f;
         }
 
-        SetRelativeRect(ingredientScrollView, new Vector2(0.05f, 0.25f), new Vector2(0.28f, 0.78f), Vector2.zero, Vector2.zero);
+        ApplyIngredientScrollViewRect();
+    }
+
+    private void ApplyIngredientScrollViewRect()
+    {
+        if (ingredientScrollView == null)
+            return;
+
+        SetRelativeRect(ingredientScrollView, IngredientScrollAnchorMin, IngredientScrollAnchorMax, Vector2.zero, Vector2.zero);
+        ingredientScrollView.localScale = Vector3.one;
     }
 
     private void RegisterIngredientButton(Button button, TMP_Text label)
@@ -877,10 +1002,10 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollContent == null)
             return;
 
-        const float buttonHeight = 76f;
+        const float buttonHeight = 92f;
         const float gap = 12f;
-        const float topPadding = 10f;
-        const float bottomPadding = 8f;
+        const float topPadding = 12f;
+        const float bottomPadding = 12f;
         float contentHeight = topPadding + ingredientListButtons.Count * buttonHeight + Mathf.Max(0, ingredientListButtons.Count - 1) * gap + bottomPadding;
 
         ingredientScrollContent.sizeDelta = new Vector2(0f, contentHeight);
@@ -891,6 +1016,7 @@ public class DayUIManager : MonoBehaviour
             if (button == null)
                 continue;
 
+            DisableLayoutDrivenResize(button.gameObject);
             RectTransform buttonRect = button.GetComponent<RectTransform>();
             buttonRect.SetParent(ingredientScrollContent, false);
             buttonRect.anchorMin = new Vector2(0f, 1f);
@@ -900,15 +1026,11 @@ public class DayUIManager : MonoBehaviour
             buttonRect.offsetMax = new Vector2(0f, 0f);
             buttonRect.sizeDelta = new Vector2(0f, buttonHeight);
             buttonRect.anchoredPosition = new Vector2(0f, -(topPadding + i * (buttonHeight + gap)));
-            ApplyButtonLabelPadding(button);
             ApplyIngredientItemArt(button, i);
 
             TMP_Text label = i < ingredientListButtonTexts.Count ? ingredientListButtonTexts[i] : null;
             SetTextAlignment(label, TextAlignmentOptions.MidlineLeft);
         }
-
-        if (ingredientScrollRect != null)
-            ingredientScrollRect.verticalNormalizedPosition = 1f;
     }
 
     private void BuildIngredientTags()
@@ -1002,8 +1124,8 @@ public class DayUIManager : MonoBehaviour
         SetActive(customerSpeechText, false);
         SetText(customerInfoText, GetCustomerInfoForCurrentDay());
         SetPanelHeaderTitle(customerPanel, currentDayNumber + "일차 오늘의 한식");
-        SetPanelHeaderTitle(kitchenPanel, currentDayNumber + "일차 주방 조리대");
-        SetPanelHeaderTitle(resultPanel, currentDayNumber + "일차 식사 평가");
+        HideKitchenTemporaryHeader();
+        SetPanelHeaderTitle(resultPanel, "요리결과");
         SetText(choiceButtonAText, MildChoiceText);
         SetText(choiceButtonBText, SpicyChoiceText);
         SetText(selectedRecipeText, "선택한 메뉴\n없음");
@@ -1504,8 +1626,7 @@ public class DayUIManager : MonoBehaviour
 
     private bool CanStartIngredientDrag(int index)
     {
-        return false
-            && kitchenPanel != null
+        return kitchenPanel != null
             && kitchenPanel.activeInHierarchy
             && index >= 0
             && index < currentIngredientOptions.Length
@@ -1531,83 +1652,26 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateIngredientSlots()
     {
-        EnsureFourthIngredientSlot();
-        UpdateIngredientSlot(slot1Text, 0);
-        UpdateIngredientSlot(slot2Text, 1);
-        UpdateIngredientSlot(slot3Text, 2);
-        UpdateIngredientSlot(slot4Text, 3);
+        EnsureSelectedSlotInteractionLayer();
+
+        for (int i = 0; i < MaxIngredientSlots; i++)
+            RefreshFixedSelectedSlot(i);
+
         UpdateCookingPotState();
     }
 
-    private void EnsureFourthIngredientSlot()
+    private void RemoveSelectedIngredientAtSlot(int index)
     {
-        if (slot4Text != null || slot3Text == null)
+        if (cookingGaugeActive || index < 0 || index >= selectedIngredients.Count)
             return;
 
-        TMP_Text clone = Instantiate(slot3Text, slot3Text.transform.parent);
-        clone.name = "Slot4Text";
-        slot4Text = clone;
-        ApplyTextStyle(slot4Text, ResolveSceneFont(), 16f, FontStyles.Normal, MutedTextTint);
-        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
-    }
-
-    private void UpdateIngredientSlot(TMP_Text slotText, int index)
-    {
-        if (slotText == null)
-            return;
-
-        SetActive(slotText, true);
-        bool hasIngredient = index < selectedIngredients.Count;
-        slotText.text = hasIngredient ? string.Empty : "+";
-        RefreshIngredientSlotVisual(slotText, hasIngredient ? selectedIngredients[index] : string.Empty);
-    }
-
-    private void RefreshIngredientSlotVisual(TMP_Text slotText, string ingredientName)
-    {
-        if (slotText == null)
-            return;
-
-        Transform frameTransform = slotText.transform.Find("Slot_Background");
-        GameObject frameObject = frameTransform != null
-            ? frameTransform.gameObject
-            : new GameObject("Slot_Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        frameObject.transform.SetParent(slotText.transform, false);
-        SetRelativeRect(frameObject.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-
-        Image frameImage = frameObject.GetComponent<Image>();
-        frameImage.color = new Color32(65, 70, 88, 188);
-        frameImage.raycastTarget = false;
-
-        Outline outline = frameObject.GetComponent<Outline>();
-        if (outline == null)
-            outline = frameObject.AddComponent<Outline>();
-        outline.effectColor = new Color32(230, 220, 226, 220);
-        outline.effectDistance = new Vector2(3f, -3f);
-        frameObject.transform.SetAsFirstSibling();
-
-        Transform iconTransform = slotText.transform.Find("Icon_Image");
-        GameObject iconObject = iconTransform != null
-            ? iconTransform.gameObject
-            : new GameObject("Icon_Image", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        iconObject.transform.SetParent(slotText.transform, false);
-
-        RectTransform iconRect = iconObject.GetComponent<RectTransform>();
-        iconRect.anchorMin = new Vector2(0.12f, 0.12f);
-        iconRect.anchorMax = new Vector2(0.88f, 0.88f);
-        iconRect.offsetMin = Vector2.zero;
-        iconRect.offsetMax = Vector2.zero;
-
-        Image iconImage = iconObject.GetComponent<Image>();
-        iconImage.sprite = GetIngredientSprite(ingredientName);
-        iconImage.preserveAspect = true;
-        iconImage.raycastTarget = false;
-        iconObject.SetActive(iconImage.sprite != null);
-        iconObject.transform.SetSiblingIndex(1);
-
-        slotText.fontSize = 54f;
-        slotText.color = new Color32(230, 220, 226, 255);
-        slotText.alignment = TextAlignmentOptions.Midline;
-        slotText.raycastTarget = false;
+        string removedIngredient = selectedIngredients[index];
+        selectedIngredients.RemoveAt(index);
+        UpdateIngredientButtonTexts();
+        UpdateIngredientSlots();
+        UpdateCookingPotState();
+        UpdateCookButtonState();
+        ShowPotHint(removedIngredient + "을 슬롯에서 뺐어요.");
     }
 
     private Sprite GetIngredientSprite(string ingredientName)
@@ -1718,9 +1782,18 @@ public class DayUIManager : MonoBehaviour
             return;
 
         cookingGaugeActive = false;
-        lastCookingGaugeSuccess = cookingGaugeValue >= CookingGaugeGoodMin && cookingGaugeValue <= CookingGaugeGoodMax;
+        lastCookingGaugeResult = GetCookingGaugeResult(cookingGaugeValue);
+        lastCookingGaugeSuccess = lastCookingGaugeResult == CookingGaugeResult.Good;
         SetButtonLabel(cookButton, "조리하기");
         FinishCookSelectedRecipe();
+    }
+
+    private CookingGaugeResult GetCookingGaugeResult(float value)
+    {
+        if (value < CookingGaugeGoodMin)
+            return CookingGaugeResult.Low;
+
+        return value <= CookingGaugeGoodMax ? CookingGaugeResult.Good : CookingGaugeResult.Overheated;
     }
 
     private void FinishCookSelectedRecipe()
@@ -1728,59 +1801,187 @@ public class DayUIManager : MonoBehaviour
         if (selectedIngredients.Count < MinIngredientSlots)
             return;
 
-        string cookedFoodName = ResolveCookedFoodName();
-        EvaluationResult evaluation = EvaluateCustomerMatch();
-        if (!lastCookingGaugeSuccess)
-        {
-            evaluation = new EvaluationResult(
-                EvaluationGrade.Poor,
-                0,
-                "손님 반응: 조리 타이밍이 맞지 않아 음식의 맛이 흐트러졌어요.",
-                "다음에는 게이지를 '적당' 범위에서 멈춰 조리하세요.");
-        }
+        CookingResultData result = EvaluateCookingResult();
 
         Debug.Log("조리하기: " + string.Join(", ", selectedIngredients));
-        lastCookingSucceeded = evaluation.Grade >= EvaluationGrade.Good;
+        lastCookingSucceeded = result.Grade >= EvaluationGrade.Good;
 
         SetPanelState(showCustomer: false, showKitchen: false, showResult: true);
         SetActive(menuBoardPanel, false);
 
-        Sprite sprite = GetFoodSpriteForCurrentIngredients();
-        if (foodImage != null && sprite != null)
-            foodImage.sprite = sprite;
-
-        SetText(resultText, cookedFoodName + "\n" + GetGradeBadge(evaluation.Grade));
-        SetText(reactionText, evaluation.Reaction);
-        SetText(clueText, evaluation.Clue);
-        SetResultClueLabel("플레이어 대화");
-
-        if (evaluation.Grade >= EvaluationGrade.Good)
+        if (resultPanel != null)
         {
-            if (currentDayNumber == 1)
+            resultPanel.name = "resultui";
+            resultPanel.transform.SetAsLastSibling();
+            Image resultPanelImage = resultPanel.GetComponent<Image>();
+            if (resultPanelImage != null && resultUiSprite != null)
             {
-                GameProgression.UnlockIngredients("순두부", "고춧가루", "계란");
-                RefreshUnlockedIngredients();
-                SetText(unlockTitleText, "새로 해금된 메뉴");
-                SetText(unlockMenuText, "순두부찌개");
+                resultPanelImage.sprite = resultUiSprite;
+                resultPanelImage.color = Color.white;
+                resultPanelImage.type = Image.Type.Simple;
             }
-            else
-            {
-                SetText(unlockTitleText, currentDayNumber + "일차 완료");
-                SetText(unlockMenuText, currentDayNumber >= 3 ? "다음 이야기는 준비 중입니다." : "다음 손님은 준비 중입니다.");
-            }
-
-            SetButtonLabel(nextDayButton, "확인");
-            Bind(nextDayButton, ReturnToCustomerForPostResultDialogue);
         }
-        else
+
+        if (nextDayButton != null)
         {
-            SetText(unlockTitleText, "후속 대화");
-            SetText(unlockMenuText, "손님이 원하던 음식이나 식재료를 놓쳤습니다.\n응대 자리로 돌아가 후속 대사를 확인하세요.");
-            SetButtonLabel(nextDayButton, "확인");
-            Bind(nextDayButton, ReturnToCustomerForPostResultDialogue);
+            nextDayButton.name = "resultokui";
+            nextDayButton.transform.SetAsLastSibling();
+            ApplyButtonSprite(nextDayButton, resultOkUiSprite);
+        }
+
+        if (foodImage != null)
+        {
+            foodImage.sprite = result.ResultSprite;
+            foodImage.preserveAspect = true;
+            if (result.ResultSprite == null)
+                Debug.LogWarning("찌개 결과 리소스를 찾지 못했습니다. 선택 조합: " + string.Join(", ", selectedIngredients));
+        }
+
+        SetPanelHeaderTitle(resultPanel, "요리결과");
+        SetText(resultText, GetGradeLabel(result.Grade));
+        SetText(reactionText, result.Comment);
+        SetText(clueText, result.StewName);
+        SetText(unlockTitleText, string.Empty);
+        SetText(unlockMenuText, string.Empty);
+        SetActive(unlockTitleText, false);
+        SetActive(unlockMenuText, false);
+        SetResultClueLabel("완성된 찌개");
+        SetButtonLabel(nextDayButton, "다음으로");
+        Bind(nextDayButton, OnClickResultOk);
+
+        if (result.Grade >= EvaluationGrade.Good && currentDayNumber == 1)
+        {
+            GameProgression.UnlockIngredients("순두부", "고춧가루", "계란");
+            RefreshUnlockedIngredients();
         }
 
         UpdateMenuButtons();
+    }
+
+    private void OnClickResultOk()
+    {
+        ReturnToCustomerForPostResultDialogue();
+    }
+
+    private CookingResultData EvaluateCookingResult()
+    {
+        CookingResultData result = new CookingResultData
+        {
+            StewId = CookedStewId.None,
+            StewName = "알 수 없는 찌개",
+            Grade = EvaluationGrade.Poor,
+            ResultSprite = emptyCookingPotSprite
+        };
+
+        if (!TryResolveCookedStew(out result.StewId, out result.StewName, out result.HasOptionalIngredient, out result.ResultSprite))
+        {
+            result.Comment = GetCustomerResultComment(result.Grade);
+            Debug.LogWarning("어떤 찌개 조합에도 해당하지 않습니다. 선택 조합: " + string.Join(", ", selectedIngredients));
+            return result;
+        }
+
+        result.Grade = ResolveResultGrade(result.HasOptionalIngredient, lastCookingGaugeResult);
+        result.Comment = GetCustomerResultComment(result.Grade);
+        return result;
+    }
+
+    private bool TryResolveCookedStew(out CookedStewId stewId, out string stewName, out bool hasOptionalIngredient, out Sprite sprite)
+    {
+        stewId = CookedStewId.None;
+        stewName = "알 수 없는 찌개";
+        hasOptionalIngredient = false;
+        sprite = emptyCookingPotSprite;
+
+        if (MatchesStew(new[] { "김치", "돼지고기", "버섯" }, "두부", out hasOptionalIngredient))
+        {
+            stewId = CookedStewId.KimchiJjigae;
+            stewName = "김치찌개";
+            sprite = hasOptionalIngredient ? tofuKimchiStewSprite : kimchiStewSprite;
+            WarnMissingStewSprite(sprite, stewName, hasOptionalIngredient);
+            return true;
+        }
+
+        if (MatchesStew(new[] { "된장", "두부", "버섯" }, "애호박", out hasOptionalIngredient))
+        {
+            stewId = CookedStewId.DoenjangJjigae;
+            stewName = "된장찌개";
+            sprite = hasOptionalIngredient ? pumpkinDoenjangStewSprite : doenjangStewSprite;
+            WarnMissingStewSprite(sprite, stewName, hasOptionalIngredient);
+            return true;
+        }
+
+        if (MatchesStew(new[] { "순두부", "고춧가루", "버섯" }, "조개", out hasOptionalIngredient))
+        {
+            stewId = CookedStewId.SoondubuJjigae;
+            stewName = "순두부찌개";
+            sprite = hasOptionalIngredient ? shellSoondubuStewSprite : soondubuStewSprite;
+            WarnMissingStewSprite(sprite, stewName, hasOptionalIngredient);
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool MatchesStew(string[] requiredIngredients, string optionalIngredient, out bool hasOptionalIngredient)
+    {
+        hasOptionalIngredient = selectedIngredients.Contains(optionalIngredient);
+        bool hasAllRequiredIngredients = requiredIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
+        bool hasOnlyAllowedIngredients = selectedIngredients.All(ingredient => requiredIngredients.Contains(ingredient) || ingredient == optionalIngredient);
+        return hasAllRequiredIngredients && hasOnlyAllowedIngredients;
+    }
+
+    private EvaluationGrade ResolveResultGrade(bool hasOptionalIngredient, CookingGaugeResult gaugeResult)
+    {
+        if (!hasOptionalIngredient)
+            return gaugeResult == CookingGaugeResult.Good ? EvaluationGrade.Good : EvaluationGrade.Poor;
+
+        return gaugeResult == CookingGaugeResult.Good ? EvaluationGrade.Perfect : EvaluationGrade.Good;
+    }
+
+    private string GetCustomerResultComment(EvaluationGrade grade)
+    {
+        string customerName = GetCustomerNameForCurrentDay();
+
+        if (customerName == "강태수")
+        {
+            if (grade == EvaluationGrade.Perfect)
+                return "아내가 끓여주던 그 맛이야... 고맙네, 정말.";
+
+            return grade == EvaluationGrade.Good
+                ? "그래... 이 매운맛이면 오늘은 버틸 수 있겠군."
+                : "역시... 이런 맛까지 바라면 안 됐나.";
+        }
+
+        if (customerName == "윤서아")
+        {
+            if (grade == EvaluationGrade.Perfect)
+                return "이 온기 덕분에 다시 사람들을 돌볼 수 있을 것 같아요.";
+
+            return grade == EvaluationGrade.Good
+                ? "조금은... 숨을 돌릴 수 있을 것 같아요."
+                : "따뜻한 줄 알았는데... 마음이 더 식는 것 같아요.";
+        }
+
+        if (customerName == "민준" || customerName == "준")
+        {
+            if (grade == EvaluationGrade.Perfect)
+                return "엄마가 해준 것 같아요... 오늘도 살아볼게요.";
+
+            return grade == EvaluationGrade.Good
+                ? "맛있어요... 집 생각이 조금 나네요."
+                : "괜찮아요... 제가 너무 기대했나 봐요.";
+        }
+
+        Debug.LogWarning("결과 한줄평이 정의되지 않은 손님입니다: " + customerName);
+        return grade == EvaluationGrade.Poor ? "다시 조리해보는 게 좋겠어요." : "좋은 한 끼였어요.";
+    }
+
+    private void WarnMissingStewSprite(Sprite sprite, string stewName, bool hasOptionalIngredient)
+    {
+        if (sprite != null)
+            return;
+
+        Debug.LogWarning(stewName + " 결과 리소스를 찾지 못했습니다. 선택 재료 포함: " + hasOptionalIngredient);
     }
 
     private void ReturnToCustomerForPostResultDialogue()
@@ -2467,22 +2668,22 @@ public class DayUIManager : MonoBehaviour
         switch (grade)
         {
             case EvaluationGrade.Perfect:
-                return "완벽";
+                return "대성공";
 
             case EvaluationGrade.Good:
-                return "만족";
+                return "성공";
 
             case EvaluationGrade.Okay:
-                return "애매함";
+                return "성공";
 
             default:
-                return "불만";
+                return "실패";
         }
     }
 
     private string GetGradeBadge(EvaluationGrade grade)
     {
-        return "평가: " + GetGradeLabel(grade);
+        return GetGradeLabel(grade);
     }
 
     private void StartNightFlow()
@@ -2705,19 +2906,9 @@ public class DayUIManager : MonoBehaviour
 
         SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
         SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
-        EnsureFourthIngredientSlot();
-        SetRelativeRect(slot1Text, new Vector2(0.30f, 0.09f), new Vector2(0.41f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot2Text, new Vector2(0.43f, 0.09f), new Vector2(0.54f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot3Text, new Vector2(0.56f, 0.09f), new Vector2(0.67f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot4Text, new Vector2(0.69f, 0.09f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
-
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
         SetTextAlignment(cookingPotHintText, TextAlignmentOptions.Center);
-        SetTextAlignment(slot1Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot2Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot3Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
         ApplyButtonLabelPadding(recipeButton1);
         ApplyButtonLabelPadding(recipeButton2);
         ApplyButtonLabelPadding(recipeButton3);
@@ -2743,6 +2934,7 @@ public class DayUIManager : MonoBehaviour
             return;
 
         StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
+        HideKitchenTemporaryHeader();
         EnsureCookingPotDropZone();
         EnsureIngredientListButtons();
 
@@ -2755,6 +2947,7 @@ public class DayUIManager : MonoBehaviour
             background.raycastTarget = false;
         }
 
+        ConfigureKitchenSeparatedGraphics();
         ConfigureKitchenIngredientPanel();
         ConfigureKitchenPotAndCookButton();
         ConfigureKitchenSelectedSlots();
@@ -2766,17 +2959,63 @@ public class DayUIManager : MonoBehaviour
         UpdateIngredientSlots();
     }
 
+    private void ConfigureKitchenSeparatedGraphics()
+    {
+        if (kitchenPanel == null)
+            return;
+
+        Transform oldCookMainGraphic = kitchenPanel.transform.Find("CookMainGraphic");
+        if (oldCookMainGraphic != null)
+            oldCookMainGraphic.gameObject.SetActive(false);
+
+        Transform old = kitchenPanel.transform.Find("day_CookMain");
+        if (old != null)
+            old.gameObject.SetActive(false);
+
+        ConfigureKitchenGraphic("IngredientPanelGraphic", kitchenIngredientPanelSprite, new Vector2(0.010f, 0.015f), new Vector2(0.225f, 0.985f), 1);
+        ConfigureKitchenGraphic("SelectedSlotPanelGraphic", kitchenSlotPanelSprite, new Vector2(0.240f, 0.005f), new Vector2(0.760f, 0.250f), 2);
+    }
+
+    private void ConfigureKitchenGraphic(string objectName, Sprite sprite, Vector2 anchorMin, Vector2 anchorMax, int siblingIndex)
+    {
+        if (kitchenPanel == null || sprite == null)
+            return;
+
+        Transform existing = kitchenPanel.transform.Find(objectName);
+        GameObject graphicObject = existing != null
+            ? existing.gameObject
+            : new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+
+        graphicObject.transform.SetParent(kitchenPanel.transform, false);
+        SetRelativeRect(graphicObject.transform, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+
+        Image image = graphicObject.GetComponent<Image>();
+        image.sprite = sprite;
+        image.color = Color.white;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+        graphicObject.SetActive(true);
+        graphicObject.transform.SetSiblingIndex(Mathf.Min(siblingIndex, kitchenPanel.transform.childCount - 1));
+    }
+
+    private void HideKitchenTemporaryHeader()
+    {
+        SetActive(FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "PaperFrameHeader"), false);
+        SetActive(FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "PaperFrameHeaderText"), false);
+        SetActive(FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "PaperFrameRule"), false);
+    }
+
     private void ConfigureKitchenIngredientPanel()
     {
         EnsureIngredientScrollView();
-        SetRelativeRect(ingredientScrollView, new Vector2(0.010f, 0.015f), new Vector2(0.225f, 0.985f), Vector2.zero, Vector2.zero);
+        ApplyIngredientScrollViewRect();
 
         Image panelImage = ingredientScrollView != null ? ingredientScrollView.GetComponent<Image>() : null;
         if (panelImage != null)
         {
-            panelImage.sprite = cookMainSprite;
+            panelImage.sprite = null;
             panelImage.type = Image.Type.Simple;
-            panelImage.color = new Color32(55, 60, 78, 205);
+            panelImage.color = new Color(1f, 1f, 1f, 0f);
             panelImage.raycastTarget = true;
         }
 
@@ -2788,8 +3027,8 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollRect != null && ingredientScrollRect.viewport != null)
         {
             RectTransform viewport = ingredientScrollRect.viewport;
-            viewport.anchorMin = new Vector2(0.055f, 0.075f);
-            viewport.anchorMax = new Vector2(0.880f, 0.860f);
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
             viewport.offsetMin = Vector2.zero;
             viewport.offsetMax = Vector2.zero;
 
@@ -2804,14 +3043,13 @@ public class DayUIManager : MonoBehaviour
                 viewport.gameObject.AddComponent<RectMask2D>();
         }
 
-        EnsureKitchenScrollbar();
         ApplyIngredientListButtonLayout();
-        SetRelativeRect(ingredientScrollView, new Vector2(0.010f, 0.015f), new Vector2(0.225f, 0.985f), Vector2.zero, Vector2.zero);
+        ApplyIngredientScrollViewRect();
         if (ingredientScrollRect != null && ingredientScrollRect.viewport != null)
         {
             RectTransform viewport = ingredientScrollRect.viewport;
-            viewport.anchorMin = new Vector2(0.055f, 0.075f);
-            viewport.anchorMax = new Vector2(0.880f, 0.860f);
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
             viewport.offsetMin = Vector2.zero;
             viewport.offsetMax = Vector2.zero;
 
@@ -2825,13 +3063,13 @@ public class DayUIManager : MonoBehaviour
             if (viewport.GetComponent<RectMask2D>() == null)
                 viewport.gameObject.AddComponent<RectMask2D>();
         }
-        EnsureKitchenScrollbar();
+        DisableGeneratedKitchenScrollbar();
     }
 
     private void ConfigureKitchenPotAndCookButton()
     {
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.365f, 0.425f), new Vector2(0.585f, 0.665f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.390f, 0.455f), new Vector2(0.560f, 0.620f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotDropZone, new Vector2(0.410f, 0.430f), new Vector2(0.585f, 0.630f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotHintText, new Vector2(0.430f, 0.460f), new Vector2(0.565f, 0.585f), Vector2.zero, Vector2.zero);
 
         if (cookingPotImage != null)
         {
@@ -2841,7 +3079,7 @@ public class DayUIManager : MonoBehaviour
             cookingPotImage.raycastTarget = true;
         }
 
-        SetRelativeRect(cookButton, new Vector2(0.370f, 0.300f), new Vector2(0.635f, 0.405f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookButton, new Vector2(0.365f, 0.265f), new Vector2(0.635f, 0.365f), Vector2.zero, Vector2.zero);
         ApplyButtonSprite(cookButton, cookButtonSprite);
         SetButtonLabel(cookButton, "조리하기");
 
@@ -2860,28 +3098,30 @@ public class DayUIManager : MonoBehaviour
 
     private void ConfigureKitchenSelectedSlots()
     {
-        EnsureFourthIngredientSlot();
         RectTransform slotsPanel = EnsureKitchenSlotsPanel();
-        SetRelativeRect(slotsPanel, new Vector2(0.245f, 0.012f), new Vector2(0.765f, 0.255f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(slotsPanel, new Vector2(0.240f, 0.005f), new Vector2(0.760f, 0.250f), Vector2.zero, Vector2.zero);
 
-        SetRelativeRect(slot1Text, new Vector2(0.055f, 0.120f), new Vector2(0.245f, 0.875f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot2Text, new Vector2(0.285f, 0.120f), new Vector2(0.475f, 0.875f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot3Text, new Vector2(0.515f, 0.120f), new Vector2(0.705f, 0.875f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot4Text, new Vector2(0.745f, 0.120f), new Vector2(0.935f, 0.875f), Vector2.zero, Vector2.zero);
+        HideLegacySelectedSlotTexts();
+        EnsureSelectedSlotInteractionLayer();
+        SetRelativeRect(selectedSlotInteractionLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        ConfigureFixedSelectedSlot(0, new Vector2(0.040f, 0.120f), new Vector2(0.235f, 0.870f));
+        ConfigureFixedSelectedSlot(1, new Vector2(0.280f, 0.120f), new Vector2(0.475f, 0.870f));
+        ConfigureFixedSelectedSlot(2, new Vector2(0.525f, 0.120f), new Vector2(0.720f, 0.870f));
+        ConfigureFixedSelectedSlot(3, new Vector2(0.765f, 0.120f), new Vector2(0.960f, 0.870f));
     }
 
     private void ConfigureKitchenSideButtons()
     {
-        SetRelativeRect(recipeButton1, new Vector2(0.930f, 0.860f), new Vector2(0.990f, 0.985f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton2, new Vector2(0.910f, 0.545f), new Vector2(0.990f, 0.735f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton3, new Vector2(0.910f, 0.360f), new Vector2(0.990f, 0.545f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton1, new Vector2(0.928f, 0.860f), new Vector2(0.988f, 0.985f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton2, new Vector2(0.903f, 0.625f), new Vector2(0.974f, 0.790f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton3, new Vector2(0.903f, 0.445f), new Vector2(0.974f, 0.610f), Vector2.zero, Vector2.zero);
 
         ApplyButtonSprite(recipeButton1, dayOptionButtonSprite);
         ApplyButtonSprite(recipeButton2, dayMenuButtonSprite);
         ApplyButtonSprite(recipeButton3, dayNoteButtonSprite);
         StyleKitchenSideButtonLabel(recipeButton1Text, string.Empty);
-        StyleKitchenSideButtonLabel(recipeButton2Text, "메뉴판");
-        StyleKitchenSideButtonLabel(recipeButton3Text, "메모장");
+        StyleKitchenSideButtonLabel(recipeButton2Text, string.Empty);
+        StyleKitchenSideButtonLabel(recipeButton3Text, string.Empty);
 
         if (recipeButton1 != null)
             recipeButton1.transform.SetAsLastSibling();
@@ -2891,57 +3131,26 @@ public class DayUIManager : MonoBehaviour
             recipeButton3.transform.SetAsLastSibling();
     }
 
-    private void EnsureKitchenScrollbar()
+    private void DisableGeneratedKitchenScrollbar()
     {
         if (ingredientScrollRect == null || ingredientScrollView == null)
             return;
 
         Scrollbar scrollbar = ingredientScrollRect.verticalScrollbar;
-        if (scrollbar == null)
-        {
-            Transform existing = ingredientScrollView.transform.Find("Scrollbar");
-            GameObject scrollbarObject = existing != null
-                ? existing.gameObject
-                : new GameObject("Scrollbar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Scrollbar));
-            scrollbarObject.transform.SetParent(ingredientScrollView, false);
-            scrollbar = scrollbarObject.GetComponent<Scrollbar>();
+        if (scrollbar != null)
+            scrollbar.gameObject.SetActive(false);
 
-            Transform slidingArea = scrollbarObject.transform.Find("Sliding Area");
-            if (slidingArea == null)
-            {
-                GameObject slidingObject = new GameObject("Sliding Area", typeof(RectTransform));
-                slidingObject.transform.SetParent(scrollbarObject.transform, false);
-                slidingArea = slidingObject.transform;
-            }
+        Transform generatedScrollbar = ingredientScrollView.transform.Find("Scrollbar");
+        if (generatedScrollbar != null)
+            generatedScrollbar.gameObject.SetActive(false);
 
-            Transform handle = slidingArea.Find("Handle");
-            if (handle == null)
-            {
-                GameObject handleObject = new GameObject("Handle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-                handleObject.transform.SetParent(slidingArea, false);
-                handle = handleObject.transform;
-            }
-
-            SetRelativeRect(slidingArea, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            SetRelativeRect(handle, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-
-            Image handleImage = handle.GetComponent<Image>();
-            handleImage.color = new Color32(230, 220, 226, 220);
-            scrollbar.handleRect = handle.GetComponent<RectTransform>();
-            scrollbar.direction = Scrollbar.Direction.BottomToTop;
-            ingredientScrollRect.verticalScrollbar = scrollbar;
-        }
-
-        SetRelativeRect(scrollbar, new Vector2(0.900f, 0.075f), new Vector2(0.970f, 0.860f), Vector2.zero, Vector2.zero);
-        Image scrollbarImage = scrollbar.GetComponent<Image>();
-        if (scrollbarImage != null)
-            scrollbarImage.color = new Color32(42, 45, 58, 155);
+        ingredientScrollRect.verticalScrollbar = null;
 
         ingredientScrollRect.horizontal = false;
         ingredientScrollRect.vertical = true;
         ingredientScrollRect.movementType = ScrollRect.MovementType.Clamped;
         ingredientScrollRect.scrollSensitivity = 32f;
-        ingredientScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+        ingredientScrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
         ingredientScrollRect.verticalScrollbarSpacing = 0f;
     }
 
@@ -2956,23 +3165,135 @@ public class DayUIManager : MonoBehaviour
         RectTransform rect = panelObject.GetComponent<RectTransform>();
 
         Image image = panelObject.GetComponent<Image>();
-        image.sprite = cookMainSprite;
+        image.sprite = null;
         image.type = Image.Type.Simple;
-        image.color = new Color32(55, 60, 78, 205);
-        image.raycastTarget = false;
+        image.color = new Color(1f, 1f, 1f, 0f);
+        image.raycastTarget = true;
         panelObject.transform.SetAsLastSibling();
-
-        MoveSlotUnderPanel(slot1Text, panelObject.transform);
-        MoveSlotUnderPanel(slot2Text, panelObject.transform);
-        MoveSlotUnderPanel(slot3Text, panelObject.transform);
-        MoveSlotUnderPanel(slot4Text, panelObject.transform);
         return rect;
     }
 
-    private static void MoveSlotUnderPanel(TMP_Text slotText, Transform panel)
+    private void HideLegacySelectedSlotTexts()
     {
-        if (slotText != null && panel != null && slotText.transform.parent != panel)
-            slotText.transform.SetParent(panel, false);
+        SetActive(slot1Text, false);
+        SetActive(slot2Text, false);
+        SetActive(slot3Text, false);
+    }
+
+    private void EnsureSelectedSlotInteractionLayer()
+    {
+        if (kitchenPanel == null)
+            return;
+
+        RectTransform slotsPanel = EnsureKitchenSlotsPanel();
+        Transform existing = slotsPanel.transform.Find("SelectedSlotInteractionLayer");
+        GameObject layerObject = existing != null
+            ? existing.gameObject
+            : new GameObject("SelectedSlotInteractionLayer", typeof(RectTransform));
+
+        layerObject.transform.SetParent(slotsPanel, false);
+        selectedSlotInteractionLayer = layerObject.GetComponent<RectTransform>();
+        DisableLayoutDrivenResize(layerObject);
+        SetRelativeRect(selectedSlotInteractionLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        layerObject.transform.SetAsLastSibling();
+
+        for (int i = 0; i < MaxIngredientSlots; i++)
+            EnsureFixedSelectedSlot(i);
+    }
+
+    private void ConfigureFixedSelectedSlot(int index, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        if (index < 0 || index >= MaxIngredientSlots)
+            return;
+
+        EnsureFixedSelectedSlot(index);
+        Button slotButton = selectedSlotButtons[index];
+        if (slotButton == null)
+            return;
+
+        RectTransform slotRect = slotButton.transform.parent.GetComponent<RectTransform>();
+        SetRelativeRect(slotRect, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+
+        Transform clickArea = slotButton.transform;
+        SetRelativeRect(clickArea, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        Image iconImage = selectedSlotIconImages[index];
+        if (iconImage != null)
+        {
+            RectTransform iconRect = iconImage.GetComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+            iconRect.anchoredPosition = Vector2.zero;
+            iconRect.sizeDelta = new Vector2(SelectedSlotIconSize, SelectedSlotIconSize);
+            iconImage.type = Image.Type.Simple;
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            iconImage.color = Color.white;
+        }
+    }
+
+    private void EnsureFixedSelectedSlot(int index)
+    {
+        if (selectedSlotInteractionLayer == null || index < 0 || index >= MaxIngredientSlots)
+            return;
+
+        string slotName = "SelectedSlot_" + index;
+        Transform slotTransform = selectedSlotInteractionLayer.Find(slotName);
+        GameObject slotObject = slotTransform != null
+            ? slotTransform.gameObject
+            : new GameObject(slotName, typeof(RectTransform));
+        slotObject.transform.SetParent(selectedSlotInteractionLayer, false);
+        DisableLayoutDrivenResize(slotObject);
+
+        Transform clickTransform = slotObject.transform.Find("ClickArea");
+        GameObject clickObject = clickTransform != null
+            ? clickTransform.gameObject
+            : new GameObject("ClickArea", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        clickObject.transform.SetParent(slotObject.transform, false);
+        DisableLayoutDrivenResize(clickObject);
+
+        Image clickImage = clickObject.GetComponent<Image>();
+        clickImage.sprite = null;
+        clickImage.type = Image.Type.Simple;
+        clickImage.color = new Color(1f, 1f, 1f, 0f);
+        clickImage.raycastTarget = true;
+
+        Button button = clickObject.GetComponent<Button>();
+        button.targetGraphic = clickImage;
+        button.onClick.RemoveAllListeners();
+        int capturedIndex = index;
+        button.onClick.AddListener(() => RemoveSelectedIngredientAtSlot(capturedIndex));
+        selectedSlotButtons[index] = button;
+
+        Transform iconTransform = slotObject.transform.Find("IngredientIcon");
+        GameObject iconObject = iconTransform != null
+            ? iconTransform.gameObject
+            : new GameObject("IngredientIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        iconObject.transform.SetParent(slotObject.transform, false);
+        DisableLayoutDrivenResize(iconObject);
+        selectedSlotIconImages[index] = iconObject.GetComponent<Image>();
+        iconObject.transform.SetAsLastSibling();
+    }
+
+    private void RefreshFixedSelectedSlot(int index)
+    {
+        if (index < 0 || index >= MaxIngredientSlots)
+            return;
+
+        EnsureFixedSelectedSlot(index);
+
+        bool hasIngredient = index < selectedIngredients.Count;
+        Image iconImage = selectedSlotIconImages[index];
+        if (iconImage != null)
+        {
+            iconImage.sprite = hasIngredient ? GetIngredientSprite(selectedIngredients[index]) : null;
+            iconImage.gameObject.SetActive(hasIngredient && iconImage.sprite != null);
+        }
+
+        Button button = selectedSlotButtons[index];
+        if (button != null)
+            button.interactable = hasIngredient && !cookingGaugeActive;
     }
 
     private void StyleKitchenSideButtonLabel(TMP_Text label, string text)
@@ -2993,23 +3314,24 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyResultLayout()
     {
-        SetRelativeRect(foodImage, new Vector2(0.08f, 0.58f), new Vector2(0.34f, 0.78f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(resultText, new Vector2(0.39f, 0.62f), new Vector2(0.91f, 0.78f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(reactionText, new Vector2(0.08f, 0.23f), new Vector2(0.51f, 0.54f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(clueText, new Vector2(0.56f, 0.34f), new Vector2(0.91f, 0.54f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockTitleText, new Vector2(0.56f, 0.25f), new Vector2(0.91f, 0.31f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.56f, 0.18f), new Vector2(0.91f, 0.24f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(nextDayButton, new Vector2(0.41f, 0.06f), new Vector2(0.59f, 0.14f), Vector2.zero, Vector2.zero);
+        StretchPanel(resultPanel, new Vector2(0.23f, 0.12f), new Vector2(0.77f, 0.88f));
+        SetRelativeRect(foodImage, new Vector2(0.30f, 0.53f), new Vector2(0.70f, 0.76f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(resultText, new Vector2(0.18f, 0.405f), new Vector2(0.82f, 0.505f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(reactionText, new Vector2(0.12f, 0.225f), new Vector2(0.88f, 0.365f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(clueText, new Vector2(0.18f, 0.475f), new Vector2(0.82f, 0.525f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockTitleText, new Vector2(0.20f, 0.17f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockMenuText, new Vector2(0.20f, 0.13f), new Vector2(0.80f, 0.17f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(nextDayButton, new Vector2(0.36f, 0.055f), new Vector2(0.64f, 0.145f), Vector2.zero, Vector2.zero);
 
         ApplyPanelTint(foodImage != null ? foodImage.gameObject : null, new Color32(255, 248, 228, 255));
         ApplyTextBoxPadding(resultText, new Vector4(8f, 4f, 8f, 4f));
         ApplyTextBoxPadding(reactionText, new Vector4(12f, 8f, 12f, 8f));
         ApplyTextBoxPadding(clueText, new Vector4(12f, 8f, 12f, 8f));
-        SetTextAlignment(resultText, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(reactionText, TextAlignmentOptions.TopLeft);
-        SetTextAlignment(clueText, TextAlignmentOptions.TopLeft);
-        SetTextAlignment(unlockTitleText, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(unlockMenuText, TextAlignmentOptions.MidlineLeft);
+        SetTextAlignment(resultText, TextAlignmentOptions.Midline);
+        SetTextAlignment(reactionText, TextAlignmentOptions.Midline);
+        SetTextAlignment(clueText, TextAlignmentOptions.Midline);
+        SetTextAlignment(unlockTitleText, TextAlignmentOptions.Midline);
+        SetTextAlignment(unlockMenuText, TextAlignmentOptions.Midline);
         ApplyButtonLabelPadding(nextDayButton);
     }
 
@@ -3146,32 +3468,23 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(cookingPotHintText, new Vector2(0.37f, 0.45f), new Vector2(0.65f, 0.68f), Vector2.zero, Vector2.zero);
         SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
         SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
-        EnsureFourthIngredientSlot();
-        SetRelativeRect(slot1Text, new Vector2(0.30f, 0.09f), new Vector2(0.41f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot2Text, new Vector2(0.43f, 0.09f), new Vector2(0.54f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot3Text, new Vector2(0.56f, 0.09f), new Vector2(0.67f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(slot4Text, new Vector2(0.69f, 0.09f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
         SetTextAlignment(cookingPotHintText, TextAlignmentOptions.Center);
-        SetTextAlignment(slot1Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot2Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot3Text, TextAlignmentOptions.Center);
-        SetTextAlignment(slot4Text, TextAlignmentOptions.Center);
         ApplyIngredientListButtonLayout();
 
-        SetRelativeRect(resultText, new Vector2(0.39f, 0.60f), new Vector2(0.91f, 0.76f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(reactionText, new Vector2(0.08f, 0.23f), new Vector2(0.51f, 0.54f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(clueText, new Vector2(0.56f, 0.34f), new Vector2(0.91f, 0.54f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockTitleText, new Vector2(0.56f, 0.25f), new Vector2(0.91f, 0.31f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.56f, 0.18f), new Vector2(0.91f, 0.24f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(resultText, new Vector2(0.18f, 0.405f), new Vector2(0.82f, 0.505f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(reactionText, new Vector2(0.12f, 0.225f), new Vector2(0.88f, 0.365f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(clueText, new Vector2(0.18f, 0.475f), new Vector2(0.82f, 0.525f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockTitleText, new Vector2(0.20f, 0.17f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(unlockMenuText, new Vector2(0.20f, 0.13f), new Vector2(0.80f, 0.17f), Vector2.zero, Vector2.zero);
         ApplyTextBoxPadding(reactionText, new Vector4(10f, 6f, 10f, 6f));
         ApplyTextBoxPadding(clueText, new Vector4(10f, 6f, 10f, 6f));
-        SetTextAlignment(resultText, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(reactionText, TextAlignmentOptions.TopLeft);
-        SetTextAlignment(clueText, TextAlignmentOptions.TopLeft);
-        SetTextAlignment(unlockTitleText, TextAlignmentOptions.MidlineLeft);
-        SetTextAlignment(unlockMenuText, TextAlignmentOptions.MidlineLeft);
+        SetTextAlignment(resultText, TextAlignmentOptions.Midline);
+        SetTextAlignment(reactionText, TextAlignmentOptions.Midline);
+        SetTextAlignment(clueText, TextAlignmentOptions.Midline);
+        SetTextAlignment(unlockTitleText, TextAlignmentOptions.Midline);
+        SetTextAlignment(unlockMenuText, TextAlignmentOptions.Midline);
     }
 
     private void ApplyDayArtSceneLayout()
@@ -3355,7 +3668,7 @@ public class DayUIManager : MonoBehaviour
         TMP_FontAsset referenceFont = ResolveSceneFont();
         ApplyPaperFrame(customerPanel, "오늘의 한식", new Color32(165, 49, 35, 255), referenceFont);
         ApplyPaperFrame(kitchenPanel, "주방 조리대", new Color32(128, 70, 34, 255), referenceFont);
-        ApplyPaperFrame(resultPanel, "식사 평가", new Color32(151, 57, 39, 255), referenceFont);
+        ApplyPaperFrame(resultPanel, "요리결과", new Color32(151, 57, 39, 255), referenceFont);
         ApplyPaperFrame(menuBoardPanel, "한식 메뉴판", new Color32(151, 57, 39, 255), referenceFont);
 
         ApplyButtonTheme(choiceButtonA, ButtonNormalTint, ButtonHighlightTint, ButtonPressedTint, ButtonSelectedTint, ButtonDisabledTint);
@@ -3446,10 +3759,6 @@ public class DayUIManager : MonoBehaviour
         ApplyTextStyle(selectedRecipeText, bodyFont, 20f, FontStyles.Bold, AccentTextTint);
         ApplyTextStyle(ingredientGuideText, bodyFont, 18f, FontStyles.Bold, SecondaryTextTint);
         ApplyTextStyle(cookingPotHintText, bodyFont, 22f, FontStyles.Bold, PrimaryTextTint);
-
-        ApplyTextStyle(slot1Text, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
-        ApplyTextStyle(slot2Text, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
-        ApplyTextStyle(slot3Text, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
 
         ApplyTextStyle(resultText, bodyFont, 28f, FontStyles.Bold, PrimaryTextTint);
         ApplyTextStyle(reactionText, bodyFont, 17f, FontStyles.Normal, SecondaryTextTint);
@@ -3777,6 +4086,7 @@ public class DayUIManager : MonoBehaviour
         if (button == null)
             return;
 
+        DisableLayoutDrivenResize(button.gameObject);
         Image buttonImage = button.GetComponent<Image>();
         if (buttonImage != null && ingredientItemSprite != null)
         {
@@ -3785,38 +4095,67 @@ public class DayUIManager : MonoBehaviour
             buttonImage.color = Color.white;
         }
 
-        Transform iconTransform = button.transform.Find("Icon_Image");
+        Transform iconTransform = button.transform.Find("IngredientIcon");
+        if (iconTransform == null)
+            iconTransform = button.transform.Find("Icon_Image");
         GameObject iconObject = iconTransform != null
             ? iconTransform.gameObject
-            : new GameObject("Icon_Image", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            : new GameObject("IngredientIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
 
+        iconObject.name = "IngredientIcon";
         iconObject.transform.SetParent(button.transform, false);
+        DisableLayoutDrivenResize(iconObject);
         RectTransform iconRect = iconObject.GetComponent<RectTransform>();
-        iconRect.anchorMin = new Vector2(0.06f, 0.18f);
-        iconRect.anchorMax = new Vector2(0.26f, 0.82f);
+        iconRect.anchorMin = new Vector2(0.055f, 0.145f);
+        iconRect.anchorMax = new Vector2(0.285f, 0.855f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
         iconRect.offsetMin = Vector2.zero;
         iconRect.offsetMax = Vector2.zero;
 
         Image iconImage = iconObject.GetComponent<Image>();
         if (ingredientSprites != null && index >= 0 && index < ingredientSprites.Length)
             iconImage.sprite = ingredientSprites[index];
+        iconImage.type = Image.Type.Simple;
         iconImage.preserveAspect = true;
         iconImage.raycastTarget = false;
+        iconImage.color = Color.white;
         iconObject.transform.SetAsFirstSibling();
 
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
         if (label == null)
             return;
 
+        DisableLayoutDrivenResize(label.gameObject);
         label.name = "Name_Text";
+        label.enableAutoSizing = false;
+        label.overflowMode = TextOverflowModes.Ellipsis;
+        label.fontSize = 15f;
         RectTransform labelRect = label.GetComponent<RectTransform>();
         if (labelRect != null)
         {
-            labelRect.anchorMin = new Vector2(0.30f, 0.08f);
-            labelRect.anchorMax = new Vector2(0.96f, 0.92f);
+            labelRect.anchorMin = new Vector2(0.320f, 0.150f);
+            labelRect.anchorMax = new Vector2(0.940f, 0.850f);
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
         }
+    }
+
+    private static void DisableLayoutDrivenResize(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        ContentSizeFitter[] fitters = target.GetComponents<ContentSizeFitter>();
+        for (int i = 0; i < fitters.Length; i++)
+            fitters[i].enabled = false;
+
+        LayoutGroup[] layoutGroups = target.GetComponents<LayoutGroup>();
+        for (int i = 0; i < layoutGroups.Length; i++)
+            layoutGroups[i].enabled = false;
+
+        LayoutElement layoutElement = target.GetComponent<LayoutElement>();
+        if (layoutElement != null)
+            layoutElement.ignoreLayout = true;
     }
 
     private static void ApplyButtonSprite(Button button, Sprite sprite)
