@@ -297,6 +297,26 @@ public class DayUIManager : MonoBehaviour
     public Sprite soondubuStewSprite;
     public Sprite shellSoondubuStewSprite;
 
+    [Header("Designer Sprite Overrides")]
+    public Sprite customerPanelSpriteOverride;
+    public Sprite kitchenPanelSpriteOverride;
+    public Sprite resultPanelSpriteOverride;
+    public Sprite menuBoardPanelSpriteOverride;
+    public Sprite portraitPanelSpriteOverride;
+    public Sprite customerSpeechPanelSpriteOverride;
+    public Sprite dialogueBoxSpriteOverride;
+    public Sprite bottomPanelSpriteOverride;
+    public Sprite cookingPotSpriteOverride;
+    public Sprite cookButtonSpriteOverride;
+    public Sprite kitchenSideButtonSpriteOverride;
+    public Sprite ingredientButtonSpriteOverride;
+    public Sprite lockedIngredientButtonSpriteOverride;
+    public Sprite selectedIngredientButtonSpriteOverride;
+    public Sprite selectedSlotPanelSpriteOverride;
+    public Sprite resultFoodPanelSpriteOverride;
+    public Sprite resultNextButtonSpriteOverride;
+    public DaySceneSpriteOverrideSlot[] extraSpriteOverrides;
+
     private const int ChoiceDialogueIndex = 2;
     private const int MinIngredientSlots = 3;
     private const int MaxIngredientSlots = 4;
@@ -615,7 +635,15 @@ public class DayUIManager : MonoBehaviour
         EnsureCookingPotDropZone();
         ConfigureIngredientDragSources();
         LoadCustomerScene();
+        ApplyDesignerSpriteOverrides();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        ApplyDesignerSpriteOverrides();
+    }
+#endif
 
     private void ResolveEditorSpriteFallbacks()
     {
@@ -1579,22 +1607,26 @@ public class DayUIManager : MonoBehaviour
             if (string.IsNullOrEmpty(ingredientName))
             {
                 ApplyButtonTheme(button, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint, ButtonDisabledTint);
+                ApplyIngredientButtonSprite(button, ingredientButtonSpriteOverride);
                 continue;
             }
 
             if (!IsIngredientUnlocked(ingredientName))
             {
                 ApplyButtonTheme(button, IngredientLockedTint, IngredientLockedHighlightTint, IngredientLockedPressedTint, IngredientLockedTint, IngredientLockedTint);
+                ApplyIngredientButtonSprite(button, lockedIngredientButtonSpriteOverride != null ? lockedIngredientButtonSpriteOverride : ingredientButtonSpriteOverride);
                 continue;
             }
 
             if (selectedIngredients.Contains(ingredientName))
             {
                 ApplyButtonTheme(button, ButtonSelectedTint, ButtonHighlightTint, ButtonPressedTint, ButtonSelectedTint, ButtonDisabledTint);
+                ApplyIngredientButtonSprite(button, selectedIngredientButtonSpriteOverride != null ? selectedIngredientButtonSpriteOverride : ingredientButtonSpriteOverride);
                 continue;
             }
 
             ApplyButtonTheme(button, ButtonNormalTint, ButtonHighlightTint, ButtonPressedTint, ButtonSelectedTint, ButtonDisabledTint);
+            ApplyIngredientButtonSprite(button, ingredientButtonSpriteOverride);
         }
     }
 
@@ -4161,6 +4193,90 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
             target.transform.localScale = Vector3.one;
     }
 
+    [ContextMenu("Apply Designer Sprite Overrides")]
+    public void ApplyDesignerSpriteOverrides()
+    {
+        ApplySpriteOverride(customerPanel, customerPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(kitchenPanel, kitchenPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(resultPanel, resultPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(menuBoardPanel, menuBoardPanelSpriteOverride, preserveAspect: false);
+
+        ApplySpriteOverride(FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerPortraitPanel"), portraitPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel"), customerSpeechPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "DialogueBox"), dialogueBoxSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel"), bottomPanelSpriteOverride, preserveAspect: false);
+
+        ApplySpriteOverride(cookingPotImage, cookingPotSpriteOverride, preserveAspect: true);
+        ApplyButtonSprite(cookButton, cookButtonSpriteOverride);
+        ApplyButtonSprite(recipeButton1, kitchenSideButtonSpriteOverride);
+        ApplyButtonSprite(recipeButton2, kitchenSideButtonSpriteOverride);
+        ApplyButtonSprite(recipeButton3, kitchenSideButtonSpriteOverride);
+        ApplyButtonSprite(nextDayButton, resultNextButtonSpriteOverride);
+        ApplySpriteOverride(foodImage, resultFoodPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "SelectedSlotPanelGraphic"), selectedSlotPanelSpriteOverride, preserveAspect: false);
+        ApplySpriteOverride(FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "SelectedIngredientSlotPanel"), selectedSlotPanelSpriteOverride, preserveAspect: false);
+
+        for (int i = 0; i < ingredientListButtons.Count; i++)
+            ApplyIngredientButtonSprite(ingredientListButtons[i], ingredientButtonSpriteOverride);
+
+        if (dayResponseArtView != null)
+            dayResponseArtView.ApplyDesignerSpriteOverrides();
+
+        ApplyExtraSpriteOverrides();
+    }
+
+    private void ApplyExtraSpriteOverrides()
+    {
+        if (extraSpriteOverrides == null)
+            return;
+
+        for (int i = 0; i < extraSpriteOverrides.Length; i++)
+        {
+            if (extraSpriteOverrides[i] != null)
+                extraSpriteOverrides[i].Apply();
+        }
+    }
+
+    private static void ApplySpriteOverride(Component target, Sprite sprite, bool preserveAspect)
+    {
+        if (target == null)
+            return;
+
+        ApplySpriteOverride(target.GetComponent<Image>(), sprite, preserveAspect);
+    }
+
+    private static void ApplySpriteOverride(GameObject target, Sprite sprite, bool preserveAspect)
+    {
+        if (target == null)
+            return;
+
+        ApplySpriteOverride(target.GetComponent<Image>(), sprite, preserveAspect);
+    }
+
+    private static void ApplySpriteOverride(Image image, Sprite sprite, bool preserveAspect)
+    {
+        if (image == null || sprite == null)
+            return;
+
+        image.sprite = sprite;
+        image.preserveAspect = preserveAspect;
+        image.color = Color.white;
+    }
+
+    private static void ApplyIngredientButtonSprite(Button button, Sprite sprite)
+    {
+        if (button == null || sprite == null)
+            return;
+
+        Image image = button.GetComponent<Image>();
+        if (image == null)
+            return;
+
+        image.sprite = sprite;
+        image.type = Image.Type.Simple;
+        image.preserveAspect = true;
+    }
+
     private static void ApplyButtonSprite(Button button, Sprite sprite)
     {
         if (button == null || sprite == null)
@@ -4411,6 +4527,7 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (dayResponseArtView != null)
             dayResponseArtView.gameObject.SetActive(showCustomer);
         ApplyActivePanelLayout(showCustomer, showKitchen, showResult);
+        ApplyDesignerSpriteOverrides();
     }
 
     private void ClearIngredientOptions()
