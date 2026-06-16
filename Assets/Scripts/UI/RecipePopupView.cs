@@ -21,6 +21,9 @@ public sealed class RecipePopupView : MonoBehaviour
     [Header("Locked State")]
     [SerializeField] private string lockedSuffix = "잠김";
 
+    [Header("Designer Static Layout")]
+    [SerializeField] private bool useStaticDesignerLayout = true;
+
     private int selectedIndex = -1;
 
     private void Awake()
@@ -138,6 +141,9 @@ public sealed class RecipePopupView : MonoBehaviour
 
     private void ApplyLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         RectTransform buttonRoot = null;
         if (recipeButtons != null && recipeButtons.Length > 0 && recipeButtons[0] != null)
             buttonRoot = recipeButtons[0].transform.parent as RectTransform;

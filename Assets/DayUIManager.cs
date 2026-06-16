@@ -268,6 +268,9 @@ public class DayUIManager : MonoBehaviour
     [SerializeField] private bool useDayArtLayout = true;
     [SerializeField] private DayResponseArtView dayResponseArtView;
 
+    [Header("Designer Static Layout")]
+    [SerializeField] private bool useStaticDesignerLayout = true;
+
     [Header("Test Data")]
     public Sprite customerPortrait;
     public Sprite dayOneCustomerPortrait;
@@ -618,18 +621,21 @@ public class DayUIManager : MonoBehaviour
         rootCanvas = GetComponentInParent<Canvas>();
         BindDayResponseArtView();
         InitUI();
-        ApplyLayoutPreset();
-        ApplyColorPreset();
-        ApplyTypographyPreset();
-        ApplyViewportFitPreset();
-        ApplyCustomerOrderLayout();
-        ApplyKitchenPrepLayout();
-        ApplyResultLayout();
-        ApplyMenuBoardLayout();
-        ApplyIndieUiPolish();
-        ApplyTextPlacementPolish();
-        ApplyKitchenArtLayout();
-        ApplyDayArtSceneLayout();
+        if (!useStaticDesignerLayout)
+        {
+            ApplyLayoutPreset();
+            ApplyColorPreset();
+            ApplyTypographyPreset();
+            ApplyViewportFitPreset();
+            ApplyCustomerOrderLayout();
+            ApplyKitchenPrepLayout();
+            ApplyResultLayout();
+            ApplyMenuBoardLayout();
+            ApplyIndieUiPolish();
+            ApplyTextPlacementPolish();
+            ApplyKitchenArtLayout();
+            ApplyDayArtSceneLayout();
+        }
         EnsureIngredientListButtons();
         BindButtons();
         EnsureCookingPotDropZone();
@@ -1041,6 +1047,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyIngredientListButtonLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         EnsureIngredientScrollView();
 
         if (ingredientScrollContent == null)
@@ -2858,6 +2867,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyLayoutPreset()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (layoutApplied)
             return;
 
@@ -2872,6 +2884,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyViewportFitPreset()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         float widthRatio = Mathf.Clamp01(Screen.width / 1920f);
         float heightRatio = Mathf.Clamp01(Screen.height / 1080f);
         float scale = Mathf.Clamp(Mathf.Min(widthRatio, heightRatio), 0.82f, 1f);
@@ -2884,6 +2899,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyCustomerOrderLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         Transform portraitPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerPortraitPanel");
         Transform speechPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel");
         Transform bottomPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel");
@@ -2925,6 +2943,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyKitchenPrepLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         Image kitchenBackground = kitchenPanel != null ? kitchenPanel.GetComponent<Image>() : null;
         if (kitchenBackground != null && kitchenBackgroundSprite != null)
         {
@@ -2964,6 +2985,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyKitchenArtLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (kitchenPanel == null)
             return;
 
@@ -3348,6 +3372,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyResultLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         StretchPanel(resultPanel, new Vector2(0.23f, 0.12f), new Vector2(0.77f, 0.88f));
         SetRelativeRect(foodImage, new Vector2(0.30f, 0.53f), new Vector2(0.70f, 0.76f), Vector2.zero, Vector2.zero);
         SetRelativeRect(resultText, new Vector2(0.18f, 0.405f), new Vector2(0.82f, 0.505f), Vector2.zero, Vector2.zero);
@@ -3371,6 +3398,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyMenuBoardLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (menuBoardPanel == null)
             return;
 
@@ -3410,6 +3440,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyIndieUiPolish()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (polishApplied)
             return;
 
@@ -3464,6 +3497,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyTextPlacementPolish()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         Transform bottomPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "BottomPanel");
         Transform speechPanel = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerSpeechPanel");
 
@@ -3513,6 +3549,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyDayArtSceneLayout()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (!useDayArtLayout)
             return;
 
@@ -3673,6 +3712,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyColorPreset()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (colorApplied)
             return;
 
@@ -3759,6 +3801,9 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyTypographyPreset()
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (typographyApplied)
             return;
 
@@ -4504,6 +4549,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
 
     private void ApplyActivePanelLayout(bool showCustomer, bool showKitchen, bool showResult)
     {
+        if (useStaticDesignerLayout)
+            return;
+
         if (showCustomer)
         {
             if (useDayArtLayout)
