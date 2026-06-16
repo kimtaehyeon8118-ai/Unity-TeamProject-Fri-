@@ -270,6 +270,22 @@ public class DayUIManager : MonoBehaviour
 
     [Header("Designer Static Layout")]
     [SerializeField] private bool useStaticDesignerLayout = true;
+    [SerializeField] private bool applyStaticNpcPlacement = true;
+    [SerializeField] private Vector2 staticNpcAnchorMin = new Vector2(0.270f, 0.145f);
+    [SerializeField] private Vector2 staticNpcAnchorMax = new Vector2(0.600f, 0.835f);
+    [SerializeField, Range(-0.2f, 0.2f)] private float staticNpcCenterOffsetX = 0.060f;
+
+    [Header("Kitchen Text Readability")]
+    [SerializeField] private bool enhanceKitchenWorldTextReadability = true;
+    [SerializeField] private Color kitchenWorldTextColor = new Color32(248, 232, 199, 255);
+    [SerializeField] private Color kitchenWorldTextOutlineColor = new Color32(49, 30, 19, 255);
+    [SerializeField, Range(0f, 0.5f)] private float kitchenWorldTextOutlineWidth = 0.16f;
+
+    [Header("Kitchen Side Button Labels")]
+    [SerializeField] private Color kitchenSideButtonLabelColor = new Color32(246, 236, 218, 255);
+    [SerializeField] private Color kitchenSideButtonLabelOutlineColor = new Color32(34, 27, 31, 255);
+    [SerializeField, Range(0f, 0.5f)] private float kitchenSideButtonLabelOutlineWidth = 0.18f;
+    [SerializeField] private Color kitchenCameraBackgroundColor = new Color32(24, 21, 24, 255);
 
     [Header("Test Data")]
     public Sprite customerPortrait;
@@ -578,9 +594,9 @@ public class DayUIManager : MonoBehaviour
     private bool lastCookingGaugeSuccess = true;
     private CookingGaugeResult lastCookingGaugeResult = CookingGaugeResult.Good;
     private float cookingGaugeValue;
-    private const float CookingGaugeSpeed = 0.85f;
-    private const float CookingGaugeGoodMin = 0.55f;
-    private const float CookingGaugeGoodMax = 0.75f;
+    private const float CookingGaugeSpeed = 0.45f;
+    private const float CookingGaugeGoodMin = 0.38f;
+    private const float CookingGaugeGoodMax = 0.82f;
     private static readonly string[] KitchenIngredientList =
     {
         "고춧가루",
@@ -1047,9 +1063,6 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyIngredientListButtonLayout()
     {
-        if (useStaticDesignerLayout)
-            return;
-
         EnsureIngredientScrollView();
 
         if (ingredientScrollContent == null)
@@ -1176,6 +1189,7 @@ public class DayUIManager : MonoBehaviour
         SetText(dialogueText, string.Empty);
         SetActive(customerSpeechText, false);
         SetText(customerInfoText, GetCustomerInfoForCurrentDay());
+        UpdateDayArtHudText();
         SetPanelHeaderTitle(customerPanel, currentDayNumber + "일차 오늘의 한식");
         HideKitchenTemporaryHeader();
         SetPanelHeaderTitle(resultPanel, "요리결과");
@@ -1195,6 +1209,15 @@ public class DayUIManager : MonoBehaviour
         UpdateMenuBoard();
         ResetKitchenIngredientUI();
         ShowCurrentDialogue();
+        ApplyStaticCustomerNpcPlacement();
+    }
+
+    private void UpdateDayArtHudText()
+    {
+        if (dayResponseArtView == null)
+            return;
+
+        SetText(dayResponseArtView.dayText, currentDayNumber + "일차");
     }
 
     private void ShowCurrentDialogue()
@@ -1822,15 +1845,15 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateCookingGaugeView()
     {
-        int marker = Mathf.Clamp(Mathf.RoundToInt(cookingGaugeValue * 20f), 0, 20);
-        string bar = new string('-', marker) + "▼" + new string('-', 20 - marker);
+        int marker = Mathf.Clamp(Mathf.RoundToInt(cookingGaugeValue * 10f), 0, 10);
+        string bar = new string('■', marker) + new string('□', 10 - marker);
         string state = cookingGaugeValue >= CookingGaugeGoodMin && cookingGaugeValue <= CookingGaugeGoodMax
-            ? "적당"
+            ? "적당!"
             : cookingGaugeValue > CookingGaugeGoodMax
                 ? "과열"
-                : "부족";
+                : "조금 더";
 
-        ShowPotHint("조리 게이지\n[" + bar + "]\n적당 범위에 맞춰 멈추세요\n현재: " + state + "\n\nSPACE 또는 클릭");
+        ShowPotHint("조리 게이지\n" + bar + "\n현재: " + state + "\nSPACE / 클릭");
     }
 
     private void FinishCookingGauge()
@@ -1894,7 +1917,6 @@ public class DayUIManager : MonoBehaviour
                 Debug.LogWarning("찌개 결과 리소스를 찾지 못했습니다. 선택 조합: " + string.Join(", ", selectedIngredients));
         }
 
-        SetPanelHeaderTitle(resultPanel, "요리결과");
         SetText(resultText, GetGradeLabel(result.Grade));
         SetText(reactionText, result.Comment);
         SetText(clueText, result.StewName);
@@ -1905,6 +1927,7 @@ public class DayUIManager : MonoBehaviour
         SetResultClueLabel("완성된 찌개");
         SetButtonLabel(nextDayButton, "다음으로");
         Bind(nextDayButton, OnClickResultOk);
+        ApplyResultArtLayout(result);
 
         if (result.Grade >= EvaluationGrade.Good && currentDayNumber == 1)
         {
@@ -1937,9 +1960,27 @@ public class DayUIManager : MonoBehaviour
             return result;
         }
 
+        if (!IsExpectedStewForCurrentDay(result.StewId))
+        {
+            result.Grade = EvaluationGrade.Poor;
+            result.Comment = GetCustomerResultComment(result.Grade);
+            return result;
+        }
+
         result.Grade = ResolveResultGrade(result.HasOptionalIngredient, lastCookingGaugeResult);
         result.Comment = GetCustomerResultComment(result.Grade);
         return result;
+    }
+
+    private bool IsExpectedStewForCurrentDay(CookedStewId stewId)
+    {
+        if (currentDayNumber == 1)
+            return stewId == CookedStewId.KimchiJjigae;
+
+        if (currentDayNumber == 2)
+            return stewId == CookedStewId.SoondubuJjigae;
+
+        return stewId == CookedStewId.DoenjangJjigae;
     }
 
     private bool TryResolveCookedStew(out CookedStewId stewId, out string stewName, out bool hasOptionalIngredient, out Sprite sprite)
@@ -1983,8 +2024,7 @@ public class DayUIManager : MonoBehaviour
     {
         hasOptionalIngredient = selectedIngredients.Contains(optionalIngredient);
         bool hasAllRequiredIngredients = requiredIngredients.All(ingredient => selectedIngredients.Contains(ingredient));
-        bool hasOnlyAllowedIngredients = selectedIngredients.All(ingredient => requiredIngredients.Contains(ingredient) || ingredient == optionalIngredient);
-        return hasAllRequiredIngredients && hasOnlyAllowedIngredients;
+        return hasAllRequiredIngredients;
     }
 
     private EvaluationGrade ResolveResultGrade(bool hasOptionalIngredient, CookingGaugeResult gaugeResult)
@@ -2985,12 +3025,10 @@ public class DayUIManager : MonoBehaviour
 
     private void ApplyKitchenArtLayout()
     {
-        if (useStaticDesignerLayout)
-            return;
-
         if (kitchenPanel == null)
             return;
 
+        ForceKitchenPanelFullscreen();
         StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
         HideKitchenTemporaryHeader();
         EnsureCookingPotDropZone();
@@ -3005,6 +3043,7 @@ public class DayUIManager : MonoBehaviour
             background.raycastTarget = false;
         }
 
+        ApplyKitchenCameraBackground();
         ConfigureKitchenSeparatedGraphics();
         ConfigureKitchenIngredientPanel();
         ConfigureKitchenPotAndCookButton();
@@ -3015,6 +3054,7 @@ public class DayUIManager : MonoBehaviour
         SetActive(selectedMenuImage, false);
         SetActive(backButton, false);
         UpdateIngredientSlots();
+        ApplyKitchenTextReadability();
     }
 
     private void ConfigureKitchenSeparatedGraphics()
@@ -3120,8 +3160,8 @@ public class DayUIManager : MonoBehaviour
 
     private void ConfigureKitchenPotAndCookButton()
     {
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.405f, 0.445f), new Vector2(0.595f, 0.655f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.430f, 0.475f), new Vector2(0.570f, 0.610f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotDropZone, new Vector2(0.390f, 0.430f), new Vector2(0.610f, 0.660f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotHintText, new Vector2(0.360f, 0.470f), new Vector2(0.640f, 0.635f), Vector2.zero, Vector2.zero);
         ResetRectScale(cookingPotDropZone);
         ResetRectScale(cookingPotHintText);
 
@@ -3177,9 +3217,9 @@ public class DayUIManager : MonoBehaviour
         ApplyButtonSprite(recipeButton1, dayOptionButtonSprite);
         ApplyButtonSprite(recipeButton2, dayMenuButtonSprite);
         ApplyButtonSprite(recipeButton3, dayNoteButtonSprite);
-        StyleKitchenSideButtonLabel(recipeButton1Text, string.Empty);
-        StyleKitchenSideButtonLabel(recipeButton2Text, string.Empty);
-        StyleKitchenSideButtonLabel(recipeButton3Text, string.Empty);
+        HideKitchenSideButtonChildLabels(recipeButton1);
+        HideKitchenSideButtonChildLabels(recipeButton2);
+        HideKitchenSideButtonChildLabels(recipeButton3);
 
         if (recipeButton1 != null)
             recipeButton1.transform.SetAsLastSibling();
@@ -3187,6 +3227,18 @@ public class DayUIManager : MonoBehaviour
             recipeButton2.transform.SetAsLastSibling();
         if (recipeButton3 != null)
             recipeButton3.transform.SetAsLastSibling();
+
+        recipeButton1Text = null;
+        recipeButton2Text = EnsureKitchenSideButtonOverlayLabel(
+            "KitchenRecipeButtonLabel",
+            "레시피",
+            new Vector2(0.905f, 0.548f),
+            new Vector2(0.980f, 0.598f));
+        recipeButton3Text = EnsureKitchenSideButtonOverlayLabel(
+            "KitchenMemoButtonLabel",
+            "메모장",
+            new Vector2(0.905f, 0.378f),
+            new Vector2(0.980f, 0.428f));
     }
 
     private void DisableGeneratedKitchenScrollbar()
@@ -3360,14 +3412,135 @@ public class DayUIManager : MonoBehaviour
             return;
 
         label.text = text;
-        label.color = Color.white;
-        label.fontSize = 18f;
+        label.gameObject.SetActive(!string.IsNullOrWhiteSpace(text));
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        label.color = kitchenSideButtonLabelColor;
+        label.fontSize = 17f;
         label.enableAutoSizing = true;
         label.fontSizeMin = 11f;
-        label.fontSizeMax = 18f;
-        label.alignment = TextAlignmentOptions.Midline;
+        label.fontSizeMax = 17f;
+        label.alignment = TextAlignmentOptions.Center;
+        label.textWrappingMode = TextWrappingModes.NoWrap;
+        label.overflowMode = TextOverflowModes.Ellipsis;
         label.margin = Vector4.zero;
         label.raycastTarget = false;
+        label.outlineColor = kitchenSideButtonLabelOutlineColor;
+        label.outlineWidth = kitchenSideButtonLabelOutlineWidth;
+
+        RectTransform rect = label.rectTransform;
+        rect.anchorMin = new Vector2(0.04f, 0.05f);
+        rect.anchorMax = new Vector2(0.96f, 0.35f);
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.localScale = Vector3.one;
+
+        Shadow shadow = label.GetComponent<Shadow>();
+        if (shadow == null)
+            shadow = label.gameObject.AddComponent<Shadow>();
+
+        shadow.effectColor = new Color(0.05f, 0.04f, 0.05f, 0.82f);
+        shadow.effectDistance = new Vector2(1.2f, -1.2f);
+        shadow.useGraphicAlpha = true;
+    }
+
+    private TMP_Text StyleKitchenSideButtonLabels(Button button, TMP_Text primaryLabel, string text)
+    {
+        TMP_Text[] labels = button != null
+            ? button.GetComponentsInChildren<TMP_Text>(true)
+            : Array.Empty<TMP_Text>();
+
+        TMP_Text targetLabel = primaryLabel;
+        if (targetLabel == null && labels.Length > 0)
+            targetLabel = labels[0];
+        if (targetLabel == null && button != null && !string.IsNullOrWhiteSpace(text))
+            targetLabel = CreateKitchenSideButtonLabel(button);
+
+        for (int i = 0; i < labels.Length; i++)
+        {
+            TMP_Text label = labels[i];
+            if (label == null || label == targetLabel)
+                continue;
+
+            label.text = string.Empty;
+            label.gameObject.SetActive(false);
+        }
+
+        StyleKitchenSideButtonLabel(targetLabel, text);
+        return targetLabel;
+    }
+
+    private void HideKitchenSideButtonChildLabels(Button button)
+    {
+        if (button == null)
+            return;
+
+        TMP_Text[] labels = button.GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < labels.Length; i++)
+        {
+            TMP_Text label = labels[i];
+            if (label == null)
+                continue;
+
+            label.text = string.Empty;
+            label.gameObject.SetActive(false);
+        }
+    }
+
+    private TMP_Text EnsureKitchenSideButtonOverlayLabel(string objectName, string text, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        if (kitchenPanel == null)
+            return null;
+
+        Transform existing = kitchenPanel.transform.Find(objectName);
+        GameObject labelObject = existing != null
+            ? existing.gameObject
+            : new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+
+        labelObject.transform.SetParent(kitchenPanel.transform, false);
+        labelObject.transform.SetAsLastSibling();
+
+        TMP_Text label = labelObject.GetComponent<TMP_Text>();
+        TMP_FontAsset font = ResolveSceneFont();
+        if (font != null)
+            label.font = font;
+
+        StyleKitchenSideButtonLabel(label, text);
+        SetRelativeRect(label, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+        label.fontSize = 15f;
+        label.fontSizeMin = 10f;
+        label.fontSizeMax = 15f;
+        label.raycastTarget = false;
+        return label;
+    }
+
+    private TMP_Text CreateKitchenSideButtonLabel(Button button)
+    {
+        if (button == null)
+            return null;
+
+        GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        labelObject.transform.SetParent(button.transform, false);
+        labelObject.transform.SetAsLastSibling();
+
+        TMP_Text label = labelObject.GetComponent<TMP_Text>();
+        TMP_FontAsset font = ResolveSceneFont();
+        if (font != null)
+            label.font = font;
+
+        label.raycastTarget = false;
+        return label;
+    }
+
+    private void ApplyKitchenCameraBackground()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+            return;
+
+        mainCamera.backgroundColor = kitchenCameraBackgroundColor;
     }
 
     private void ApplyResultLayout()
@@ -3394,6 +3567,114 @@ public class DayUIManager : MonoBehaviour
         SetTextAlignment(unlockTitleText, TextAlignmentOptions.Midline);
         SetTextAlignment(unlockMenuText, TextAlignmentOptions.Midline);
         ApplyButtonLabelPadding(nextDayButton);
+    }
+
+    private void ApplyResultArtLayout(CookingResultData result)
+    {
+        if (resultPanel == null)
+            return;
+
+        StretchPanel(resultPanel, Vector2.zero, Vector2.one);
+        HideResultTemporaryChrome();
+
+        Image panelImage = resultPanel.GetComponent<Image>();
+        if (panelImage != null)
+        {
+            panelImage.preserveAspect = false;
+            panelImage.raycastTarget = false;
+        }
+
+        HideResultExtraImages();
+
+        SetRelativeRect(resultText, new Vector2(0.355f, 0.625f), new Vector2(0.645f, 0.720f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(reactionText, new Vector2(0.145f, 0.355f), new Vector2(0.500f, 0.530f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(clueText, new Vector2(0.525f, 0.355f), new Vector2(0.855f, 0.530f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(nextDayButton, new Vector2(0.425f, 0.090f), new Vector2(0.575f, 0.165f), Vector2.zero, Vector2.zero);
+
+        bool hasResultSprite = result != null && result.ResultSprite != null && result.ResultSprite != emptyCookingPotSprite;
+        if (foodImage != null)
+        {
+            SetRelativeRect(foodImage, new Vector2(0.430f, 0.520f), new Vector2(0.570f, 0.625f), Vector2.zero, Vector2.zero);
+            foodImage.gameObject.SetActive(hasResultSprite);
+            foodImage.color = Color.white;
+            foodImage.preserveAspect = true;
+            foodImage.raycastTarget = false;
+        }
+
+        StyleResultText(resultText, 32f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
+        StyleResultText(reactionText, 17f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
+        StyleResultText(clueText, 17f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
+
+        TMP_Text buttonText = nextDayButton != null ? nextDayButton.GetComponentInChildren<TMP_Text>(true) : null;
+        StyleResultText(buttonText, 18f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
+
+        SetActive(unlockTitleText, false);
+        SetActive(unlockMenuText, false);
+
+        if (nextDayButton != null)
+            nextDayButton.transform.SetAsLastSibling();
+    }
+
+    private void HideResultExtraImages()
+    {
+        if (resultPanel == null)
+            return;
+
+        Image rootImage = resultPanel.GetComponent<Image>();
+        Image[] images = resultPanel.GetComponentsInChildren<Image>(true);
+        foreach (Image image in images)
+        {
+            if (image == null || image == rootImage)
+                continue;
+
+            Transform imageTransform = image.transform;
+            if (foodImage != null && (imageTransform == foodImage.transform || imageTransform.IsChildOf(foodImage.transform)))
+                continue;
+
+            if (nextDayButton != null && (imageTransform == nextDayButton.transform || imageTransform.IsChildOf(nextDayButton.transform)))
+                continue;
+
+            image.gameObject.SetActive(false);
+        }
+    }
+
+    private void HideResultTemporaryChrome()
+    {
+        Transform root = resultPanel != null ? resultPanel.transform : null;
+        SetActive(FindChildRecursive(root, "PaperFrameHeader"), false);
+        SetActive(FindChildRecursive(root, "PaperFrameHeaderText"), false);
+        SetActive(FindChildRecursive(root, "PaperFrameRule"), false);
+        SetActive(FindChildRecursive(root, "SectionLabel_ResultFood"), false);
+        SetActive(FindChildRecursive(root, "SectionLabel_ResultReaction"), false);
+        SetActive(FindChildRecursive(root, "SectionLabel_ResultClue"), false);
+        SetActive(FindChildRecursive(root, "SectionLabel_ResultUnlock"), false);
+        SetActive(FindChildRecursive(root, "SectionRule_ResultLeft"), false);
+        SetActive(FindChildRecursive(root, "SectionRule_ResultRight"), false);
+    }
+
+    private void StyleResultText(TMP_Text text, float fontSize, FontStyles style, Color color, TextAlignmentOptions alignment)
+    {
+        if (text == null)
+            return;
+
+        TMP_FontAsset font = ResolveSceneFont();
+        if (font != null)
+            text.font = font;
+
+        text.gameObject.SetActive(true);
+        text.color = color;
+        text.fontSize = fontSize;
+        text.fontStyle = style;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = Mathf.Max(10f, fontSize - 6f);
+        text.fontSizeMax = fontSize;
+        text.alignment = alignment;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.margin = Vector4.zero;
+        text.outlineColor = new Color32(34, 27, 31, 255);
+        text.outlineWidth = 0.12f;
+        text.raycastTarget = false;
     }
 
     private void ApplyMenuBoardLayout()
@@ -4270,6 +4551,69 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         ApplyExtraSpriteOverrides();
     }
 
+    private void ApplyStaticCustomerNpcPlacement()
+    {
+        if (!useStaticDesignerLayout || !applyStaticNpcPlacement || portraitImage == null)
+            return;
+
+        Vector2 anchorMin = staticNpcAnchorMin + new Vector2(staticNpcCenterOffsetX, 0f);
+        Vector2 anchorMax = staticNpcAnchorMax + new Vector2(staticNpcCenterOffsetX, 0f);
+        SetRelativeRect(portraitImage, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+        portraitImage.preserveAspect = true;
+        portraitImage.raycastTarget = false;
+    }
+
+    private void ApplyKitchenTextReadability()
+    {
+        if (!enhanceKitchenWorldTextReadability || kitchenPanel == null)
+            return;
+
+        TMP_Text[] texts = kitchenPanel.GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            TMP_Text text = texts[i];
+            if (text == null || text.GetComponentInParent<Button>() != null)
+                continue;
+
+            ApplyReadableKitchenLabel(text);
+        }
+    }
+
+    private void ApplyReadableKitchenLabel(TMP_Text text)
+    {
+        if (!enhanceKitchenWorldTextReadability || text == null)
+            return;
+
+        text.color = kitchenWorldTextColor;
+        text.outlineColor = kitchenWorldTextOutlineColor;
+        text.outlineWidth = kitchenWorldTextOutlineWidth;
+
+        if (text == cookingPotHintText)
+        {
+            TMP_FontAsset font = ResolveSceneFont();
+            if (font != null)
+                text.font = font;
+
+            text.enableAutoSizing = true;
+            text.fontSize = cookingGaugeActive ? 23f : 18f;
+            text.fontSizeMin = cookingGaugeActive ? 17f : 13f;
+            text.fontSizeMax = cookingGaugeActive ? 25f : 20f;
+            text.alignment = TextAlignmentOptions.Center;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.lineSpacing = cookingGaugeActive ? -12f : -4f;
+            text.margin = Vector4.zero;
+        }
+
+        Shadow shadow = text.GetComponent<Shadow>();
+        if (shadow == null)
+            shadow = text.gameObject.AddComponent<Shadow>();
+
+        shadow.effectColor = new Color(0.08f, 0.045f, 0.025f, 0.78f);
+        shadow.effectDistance = new Vector2(1.1f, -1.1f);
+        shadow.useGraphicAlpha = true;
+    }
+
     private void ApplyExtraSpriteOverrides()
     {
         if (extraSpriteOverrides == null)
@@ -4550,7 +4894,15 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     private void ApplyActivePanelLayout(bool showCustomer, bool showKitchen, bool showResult)
     {
         if (useStaticDesignerLayout)
+        {
+            if (showKitchen)
+            {
+                ForceKitchenPanelFullscreen();
+                StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
+            }
+
             return;
+        }
 
         if (showCustomer)
         {
@@ -4561,7 +4913,10 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         }
 
         if (showKitchen)
-            StretchPanel(kitchenPanel, new Vector2(0.12f, 0.07f), new Vector2(0.88f, 0.93f));
+        {
+            ForceKitchenPanelFullscreen();
+            StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
+        }
 
         if (showResult)
             StretchPanel(resultPanel, new Vector2(0.20f, 0.10f), new Vector2(0.80f, 0.90f));
@@ -4575,7 +4930,35 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (dayResponseArtView != null)
             dayResponseArtView.gameObject.SetActive(showCustomer);
         ApplyActivePanelLayout(showCustomer, showKitchen, showResult);
+        if (showCustomer)
+            ApplyStaticCustomerNpcPlacement();
         ApplyDesignerSpriteOverrides();
+    }
+
+    private void ForceKitchenPanelFullscreen()
+    {
+        if (kitchenPanel == null)
+            return;
+
+        Transform current = kitchenPanel.transform;
+        while (current != null)
+        {
+            RectTransform rect = current.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.localScale = Vector3.one;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                rect.pivot = new Vector2(0.5f, 0.5f);
+            }
+
+            if (current.GetComponent<Canvas>() != null)
+                break;
+
+            current = current.parent;
+        }
     }
 
     private void ClearIngredientOptions()
@@ -4602,6 +4985,7 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     private void ShowPotHint(string message)
     {
         SetText(cookingPotHintText, message);
+        ApplyReadableKitchenLabel(cookingPotHintText);
     }
 
     private static void Bind(Button button, UnityEngine.Events.UnityAction action)
