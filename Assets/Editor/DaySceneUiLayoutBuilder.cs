@@ -16,7 +16,7 @@ public static class DaySceneUiLayoutBuilder
     private const string GeneratedFolder = "Assets/UI/Generated";
     private const string Background2AlphaPath = GeneratedFolder + "/day_background2_alpha.png";
     private const string MainOverlayAlphaPath = GeneratedFolder + "/day_main_alpha.png";
-    private const string KoreanFontPath = "Assets/Fonts/Korean_Full_TMP.asset";
+    private const string KoreanFontPath = "Assets/Fonts/GALMURI11_TMP.asset";
 
     [MenuItem("Tools/Day UI/Apply Provided Art Layout")]
     public static void ApplyProvidedArtLayout()
@@ -250,7 +250,7 @@ public static class DaySceneUiLayoutBuilder
             return null;
         }
 
-        font.atlasPopulationMode = AtlasPopulationMode.Static;
+        font.atlasPopulationMode = AtlasPopulationMode.Dynamic;
         EditorUtility.SetDirty(font);
         return font;
     }

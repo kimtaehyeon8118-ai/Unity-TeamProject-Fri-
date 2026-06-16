@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -301,8 +301,8 @@ public class DayUIManager : MonoBehaviour
     private const int MinIngredientSlots = 3;
     private const int MaxIngredientSlots = 4;
     private const float SelectedSlotIconSize = 124f;
-    private static readonly Vector2 IngredientScrollAnchorMin = new Vector2(0.030f, 0.095f);
-    private static readonly Vector2 IngredientScrollAnchorMax = new Vector2(0.205f, 0.850f);
+    private static readonly Vector2 IngredientScrollAnchorMin = new Vector2(0.030f, 0.100f);
+    private static readonly Vector2 IngredientScrollAnchorMax = new Vector2(0.185f, 0.825f);
     private const string MildChoiceText = "담백한 국물";
     private const string SpicyChoiceText = "얼큰한 국물";
 
@@ -973,6 +973,22 @@ public class DayUIManager : MonoBehaviour
 
         SetRelativeRect(ingredientScrollView, IngredientScrollAnchorMin, IngredientScrollAnchorMax, Vector2.zero, Vector2.zero);
         ingredientScrollView.localScale = Vector3.one;
+
+        if (ingredientScrollRect != null && ingredientScrollRect.viewport != null)
+        {
+            RectTransform viewport = ingredientScrollRect.viewport;
+            SetRelativeRect(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            viewport.localScale = Vector3.one;
+        }
+
+        if (ingredientScrollContent != null)
+        {
+            ingredientScrollContent.anchorMin = new Vector2(0f, 1f);
+            ingredientScrollContent.anchorMax = new Vector2(1f, 1f);
+            ingredientScrollContent.pivot = new Vector2(0.5f, 1f);
+            ingredientScrollContent.anchoredPosition = Vector2.zero;
+            ingredientScrollContent.localScale = Vector3.one;
+        }
     }
 
     private void RegisterIngredientButton(Button button, TMP_Text label)
@@ -2891,20 +2907,6 @@ public class DayUIManager : MonoBehaviour
         ApplyButtonSprite(recipeButton3, dayNoteButtonSprite);
 
         SetRelativeRect(selectedRecipeText, new Vector2(0.30f, 0.75f), new Vector2(0.70f, 0.84f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton1, new Vector2(0.82f, 0.76f), new Vector2(0.95f, 0.86f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton2, new Vector2(0.82f, 0.62f), new Vector2(0.95f, 0.72f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton3, new Vector2(0.82f, 0.48f), new Vector2(0.95f, 0.58f), Vector2.zero, Vector2.zero);
-
-        SetRelativeRect(ingredientGuideText, new Vector2(0.05f, 0.80f), new Vector2(0.27f, 0.89f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.36f, 0.42f), new Vector2(0.66f, 0.72f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.37f, 0.45f), new Vector2(0.65f, 0.68f), Vector2.zero, Vector2.zero);
-
-        SetRelativeRect(ingredientButton1, new Vector2(0.05f, 0.67f), new Vector2(0.27f, 0.77f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton2, new Vector2(0.05f, 0.53f), new Vector2(0.27f, 0.63f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton3, new Vector2(0.05f, 0.39f), new Vector2(0.27f, 0.49f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton4, new Vector2(0.05f, 0.25f), new Vector2(0.27f, 0.35f), Vector2.zero, Vector2.zero);
-
-        SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
         SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
@@ -3027,10 +3029,7 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollRect != null && ingredientScrollRect.viewport != null)
         {
             RectTransform viewport = ingredientScrollRect.viewport;
-            viewport.anchorMin = Vector2.zero;
-            viewport.anchorMax = Vector2.one;
-            viewport.offsetMin = Vector2.zero;
-            viewport.offsetMax = Vector2.zero;
+            SetRelativeRect(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
             Image viewportImage = viewport.GetComponent<Image>();
             if (viewportImage != null)
@@ -3048,10 +3047,7 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollRect != null && ingredientScrollRect.viewport != null)
         {
             RectTransform viewport = ingredientScrollRect.viewport;
-            viewport.anchorMin = Vector2.zero;
-            viewport.anchorMax = Vector2.one;
-            viewport.offsetMin = Vector2.zero;
-            viewport.offsetMax = Vector2.zero;
+            SetRelativeRect(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
             Image viewportImage = viewport.GetComponent<Image>();
             if (viewportImage != null)
@@ -3068,8 +3064,10 @@ public class DayUIManager : MonoBehaviour
 
     private void ConfigureKitchenPotAndCookButton()
     {
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.410f, 0.430f), new Vector2(0.585f, 0.630f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.430f, 0.460f), new Vector2(0.565f, 0.585f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotDropZone, new Vector2(0.405f, 0.445f), new Vector2(0.595f, 0.655f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookingPotHintText, new Vector2(0.430f, 0.475f), new Vector2(0.570f, 0.610f), Vector2.zero, Vector2.zero);
+        ResetRectScale(cookingPotDropZone);
+        ResetRectScale(cookingPotHintText);
 
         if (cookingPotImage != null)
         {
@@ -3079,7 +3077,8 @@ public class DayUIManager : MonoBehaviour
             cookingPotImage.raycastTarget = true;
         }
 
-        SetRelativeRect(cookButton, new Vector2(0.365f, 0.265f), new Vector2(0.635f, 0.365f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(cookButton, new Vector2(0.405f, 0.285f), new Vector2(0.615f, 0.380f), Vector2.zero, Vector2.zero);
+        ResetRectScale(cookButton);
         ApplyButtonSprite(cookButton, cookButtonSprite);
         SetButtonLabel(cookButton, "조리하기");
 
@@ -3112,9 +3111,12 @@ public class DayUIManager : MonoBehaviour
 
     private void ConfigureKitchenSideButtons()
     {
-        SetRelativeRect(recipeButton1, new Vector2(0.928f, 0.860f), new Vector2(0.988f, 0.985f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton2, new Vector2(0.903f, 0.625f), new Vector2(0.974f, 0.790f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton3, new Vector2(0.903f, 0.445f), new Vector2(0.974f, 0.610f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton1, new Vector2(0.925f, 0.860f), new Vector2(0.985f, 0.985f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton2, new Vector2(0.905f, 0.535f), new Vector2(0.980f, 0.705f), Vector2.zero, Vector2.zero);
+        SetRelativeRect(recipeButton3, new Vector2(0.905f, 0.365f), new Vector2(0.980f, 0.535f), Vector2.zero, Vector2.zero);
+        ResetRectScale(recipeButton1);
+        ResetRectScale(recipeButton2);
+        ResetRectScale(recipeButton3);
 
         ApplyButtonSprite(recipeButton1, dayOptionButtonSprite);
         ApplyButtonSprite(recipeButton2, dayMenuButtonSprite);
@@ -3457,16 +3459,6 @@ public class DayUIManager : MonoBehaviour
 
         SetRelativeRect(selectedRecipeText, new Vector2(0.30f, 0.75f), new Vector2(0.70f, 0.84f), Vector2.zero, Vector2.zero);
         SetRelativeRect(ingredientGuideText, new Vector2(0.05f, 0.80f), new Vector2(0.27f, 0.89f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton1, new Vector2(0.82f, 0.76f), new Vector2(0.95f, 0.86f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton2, new Vector2(0.82f, 0.62f), new Vector2(0.95f, 0.72f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(recipeButton3, new Vector2(0.82f, 0.48f), new Vector2(0.95f, 0.58f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton1, new Vector2(0.05f, 0.67f), new Vector2(0.27f, 0.77f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton2, new Vector2(0.05f, 0.53f), new Vector2(0.27f, 0.63f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton3, new Vector2(0.05f, 0.39f), new Vector2(0.27f, 0.49f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(ingredientButton4, new Vector2(0.05f, 0.25f), new Vector2(0.27f, 0.35f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotDropZone, new Vector2(0.36f, 0.42f), new Vector2(0.66f, 0.72f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookingPotHintText, new Vector2(0.37f, 0.45f), new Vector2(0.65f, 0.68f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(cookButton, new Vector2(0.39f, 0.27f), new Vector2(0.63f, 0.37f), Vector2.zero, Vector2.zero);
         SetRelativeRect(backButton, new Vector2(0.82f, 0.34f), new Vector2(0.95f, 0.44f), Vector2.zero, Vector2.zero);
         SetTextAlignment(selectedRecipeText, TextAlignmentOptions.Center);
         SetTextAlignment(ingredientGuideText, TextAlignmentOptions.Center);
@@ -3787,8 +3779,13 @@ public class DayUIManager : MonoBehaviour
         ApplyButtonTextStyle(nextDayButton != null ? nextDayButton.GetComponentInChildren<TMP_Text>(true) : null, bodyFont, 18f, FontStyles.Bold);
     }
 
-    private static TMP_FontAsset LoadFontAsset(string assetName)
+private static TMP_FontAsset LoadFontAsset(string assetName)
     {
+#if UNITY_EDITOR
+        TMP_FontAsset editorFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/" + assetName + ".asset");
+        if (editorFont != null)
+            return editorFont;
+#endif
         return Resources.Load<TMP_FontAsset>("Fonts/" + assetName);
     }
 
@@ -3809,7 +3806,7 @@ public class DayUIManager : MonoBehaviour
         if (resultText != null && resultText.font != null)
             return resultText.font;
 
-        return LoadFontAsset("Korean_Full_TMP");
+        return LoadFontAsset("GALMURI11_TMP");
     }
 
     private static void ApplyButtonTextStyle(TMP_Text target, TMP_FontAsset font, float size, FontStyles style)
@@ -4156,6 +4153,12 @@ public class DayUIManager : MonoBehaviour
         LayoutElement layoutElement = target.GetComponent<LayoutElement>();
         if (layoutElement != null)
             layoutElement.ignoreLayout = true;
+    }
+
+    private static void ResetRectScale(Component target)
+    {
+        if (target != null)
+            target.transform.localScale = Vector3.one;
     }
 
     private static void ApplyButtonSprite(Button button, Sprite sprite)
