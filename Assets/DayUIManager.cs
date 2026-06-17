@@ -680,8 +680,7 @@ public class DayUIManager : MonoBehaviour
 
         ResolveEditorSpriteFallbacks();
         bool changed = EnsureDesignerStaticHierarchy();
-        if (!changed)
-            return;
+        ApplyDesignerPreviewKitchenAndResultState();
 
         EditorUtility.SetDirty(this);
         if (gameObject.scene.IsValid())
@@ -718,6 +717,7 @@ public class DayUIManager : MonoBehaviour
                 continue;
 
             manager.RebuildDesignerStaticKitchenAndResult();
+            manager.ApplyDesignerPreviewKitchenAndResultState();
             EditorUtility.SetDirty(manager);
             rebuiltCount++;
         }
@@ -730,6 +730,46 @@ public class DayUIManager : MonoBehaviour
             EditorSceneManager.CloseScene(targetScene, true);
 
         Debug.Log("Designer static Kitchen/Result hierarchy rebuilt: " + rebuiltCount);
+    }
+
+    private void ApplyDesignerPreviewKitchenAndResultState()
+    {
+        if (!useStaticDesignerLayout || Application.isPlaying)
+            return;
+
+        ResolveEditorSpriteFallbacks();
+        PopulateKitchenIngredientOptions();
+        selectedIngredients.Clear();
+        selectedIngredients.Add("김치");
+        selectedIngredients.Add("돼지고기");
+        selectedIngredients.Add("버섯");
+        selectedIngredients.Add("두부");
+        selectedRecipeId = MenuId.KimchiJjigae;
+        cookingGaugeActive = false;
+        lastCookingGaugeSuccess = true;
+        cookingGaugeValue = 0f;
+
+        UpdateIngredientButtonTexts();
+        ApplyStaticKitchenArtState();
+        UpdateIngredientSlots();
+        UpdateCookButtonState();
+
+        CookingResultData previewResult = new CookingResultData
+        {
+            StewId = CookedStewId.KimchiJjigae,
+            StewName = "김치찌개",
+            Grade = EvaluationGrade.Good,
+            ResultSprite = kimchiStewSprite != null ? kimchiStewSprite : emptyCookingPotSprite,
+            Comment = "그래... 이 정도면 몸을 데울 수 있겠군."
+        };
+
+        SetText(resultText, GetGradeLabel(previewResult.Grade));
+        SetText(reactionText, previewResult.Comment);
+        SetText(clueText, previewResult.StewName);
+        SetText(unlockTitleText, "해금 기록");
+        SetText(unlockMenuText, "미리보기");
+        SetButtonLabel(nextDayButton, "다음으로");
+        ApplyStaticResultArtState(previewResult);
     }
 
     private void QueueEnsureDesignerStaticHierarchy()
