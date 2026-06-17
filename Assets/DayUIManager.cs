@@ -8,10 +8,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 public class DayUIManager : MonoBehaviour
 {
+    // Designer layout mode keeps KitchenPanel and ResultPanel object placement editable in the scene.
     private enum MenuId
     {
         None,
@@ -624,6 +626,9 @@ public class DayUIManager : MonoBehaviour
     private CustomerPreference selectedPreference = CustomerPreference.Unknown;
     private bool showingPostResultDialogue;
     private bool lastCookingSucceeded;
+#if UNITY_EDITOR
+    private bool staticHierarchyBuildQueued;
+#endif
 
     private void Awake()
     {
@@ -664,6 +669,498 @@ public class DayUIManager : MonoBehaviour
     private void OnValidate()
     {
         ApplyDesignerSpriteOverrides();
+        QueueEnsureDesignerStaticHierarchy();
+    }
+
+    [ContextMenu("Rebuild Designer Static Kitchen And Result")]
+    private void RebuildDesignerStaticKitchenAndResult()
+    {
+        if (!useStaticDesignerLayout || Application.isPlaying)
+            return;
+
+        ResolveEditorSpriteFallbacks();
+        bool changed = EnsureDesignerStaticHierarchy();
+        if (!changed)
+            return;
+
+        EditorUtility.SetDirty(this);
+        if (gameObject.scene.IsValid())
+            EditorSceneManager.MarkSceneDirty(gameObject.scene);
+    }
+
+    [MenuItem("Tools/Day UI/Rebuild Designer Static Kitchen And Result")]
+    private static void RebuildDesignerStaticKitchenAndResultInDayScene()
+    {
+        const string dayScenePath = "Assets/Scenes/DayScene.unity";
+        Scene targetScene = default;
+        bool alreadyLoaded = false;
+
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (scene.path != dayScenePath)
+                continue;
+
+            targetScene = scene;
+            alreadyLoaded = true;
+            break;
+        }
+
+        if (!alreadyLoaded)
+            targetScene = EditorSceneManager.OpenScene(dayScenePath, OpenSceneMode.Additive);
+
+        DayUIManager[] managers = FindObjectsByType<DayUIManager>(FindObjectsInactive.Include);
+        int rebuiltCount = 0;
+        for (int i = 0; i < managers.Length; i++)
+        {
+            DayUIManager manager = managers[i];
+            if (manager == null || manager.gameObject.scene != targetScene)
+                continue;
+
+            manager.RebuildDesignerStaticKitchenAndResult();
+            EditorUtility.SetDirty(manager);
+            rebuiltCount++;
+        }
+
+        EditorSceneManager.MarkSceneDirty(targetScene);
+        EditorSceneManager.SaveScene(targetScene);
+        AssetDatabase.SaveAssets();
+
+        if (!alreadyLoaded)
+            EditorSceneManager.CloseScene(targetScene, true);
+
+        Debug.Log("Designer static Kitchen/Result hierarchy rebuilt: " + rebuiltCount);
+    }
+
+    private void QueueEnsureDesignerStaticHierarchy()
+    {
+        if (!useStaticDesignerLayout || Application.isPlaying || staticHierarchyBuildQueued)
+            return;
+
+        staticHierarchyBuildQueued = true;
+        EditorApplication.delayCall += () =>
+        {
+            staticHierarchyBuildQueued = false;
+            if (this == null || Application.isPlaying || !useStaticDesignerLayout)
+                return;
+
+            bool changed = EnsureDesignerStaticHierarchy();
+            if (!changed)
+                return;
+
+            EditorUtility.SetDirty(this);
+            if (gameObject.scene.IsValid())
+                EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        };
+    }
+
+    private bool EnsureDesignerStaticHierarchy()
+    {
+        bool changed = false;
+        changed |= EnsureDesignerKitchenChrome();
+        changed |= EnsureDesignerIngredientList();
+        changed |= EnsureDesignerSelectedSlots();
+        changed |= EnsureDesignerResultChrome();
+        return changed;
+    }
+
+    private bool EnsureDesignerKitchenChrome()
+    {
+        if (kitchenPanel == null)
+            return false;
+
+        bool changed = false;
+        Image background = kitchenPanel.GetComponent<Image>();
+        if (background != null && background.sprite == null && kitchenBackgroundSprite != null)
+        {
+            background.sprite = kitchenBackgroundSprite;
+            background.color = Color.white;
+            background.preserveAspect = false;
+            changed = true;
+        }
+
+        changed |= EnsureDesignerKitchenGraphic("IngredientPanelGraphic", kitchenIngredientPanelSprite, new Vector2(0.010f, 0.015f), new Vector2(0.225f, 0.985f), 1);
+        changed |= EnsureDesignerKitchenGraphic("SelectedSlotPanelGraphic", kitchenSlotPanelSprite, new Vector2(0.240f, 0.005f), new Vector2(0.760f, 0.250f), 2);
+
+        if (cookingPotDropZone == null)
+        {
+            Transform existingPot = kitchenPanel.transform.Find("CookingPotDropZone");
+            if (existingPot != null)
+            {
+                cookingPotDropZone = existingPot.GetComponent<RectTransform>();
+                cookingPotImage = existingPot.GetComponent<Image>();
+                cookingPotHintText = existingPot.GetComponentInChildren<TMP_Text>(true);
+            }
+        }
+
+        if (cookingPotDropZone == null)
+        {
+            RectTransform pot = CreateDesignerUiObject("CookingPotDropZone", kitchenPanel.transform, typeof(Image)).GetComponent<RectTransform>();
+            SetRelativeRect(pot, new Vector2(0.390f, 0.430f), new Vector2(0.610f, 0.660f), Vector2.zero, Vector2.zero);
+            cookingPotDropZone = pot;
+            cookingPotImage = pot.GetComponent<Image>();
+            changed = true;
+        }
+
+        if (cookingPotImage != null && cookingPotImage.sprite == null && emptyCookingPotSprite != null)
+        {
+            cookingPotImage.sprite = emptyCookingPotSprite;
+            cookingPotImage.color = Color.white;
+            cookingPotImage.preserveAspect = true;
+            changed = true;
+        }
+
+        if (cookingPotHintText == null && cookingPotDropZone != null)
+        {
+            RectTransform hint = CreateDesignerUiObject("PotHintText", cookingPotDropZone, typeof(TextMeshProUGUI)).GetComponent<RectTransform>();
+            SetRelativeRect(hint, new Vector2(0.18f, 0.18f), new Vector2(0.82f, 0.82f), Vector2.zero, Vector2.zero);
+            cookingPotHintText = hint.GetComponent<TMP_Text>();
+            cookingPotHintText.alignment = TextAlignmentOptions.Center;
+            cookingPotHintText.fontSize = 18f;
+            cookingPotHintText.color = kitchenWorldTextColor;
+            changed = true;
+        }
+
+        changed |= EnsureDesignerButtonLabel(recipeButton2, "KitchenRecipeButtonLabel", "레시피");
+        changed |= EnsureDesignerButtonLabel(recipeButton3, "KitchenMemoButtonLabel", "메모장");
+        return changed;
+    }
+
+    private bool EnsureDesignerKitchenGraphic(string objectName, Sprite sprite, Vector2 anchorMin, Vector2 anchorMax, int siblingIndex)
+    {
+        if (kitchenPanel == null)
+            return false;
+
+        bool changed = false;
+        Transform existing = kitchenPanel.transform.Find(objectName);
+        RectTransform rect = existing != null
+            ? existing.GetComponent<RectTransform>()
+            : CreateDesignerUiObject(objectName, kitchenPanel.transform, typeof(Image)).GetComponent<RectTransform>();
+
+        if (existing == null)
+        {
+            SetRelativeRect(rect, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+            rect.SetSiblingIndex(Mathf.Min(siblingIndex, kitchenPanel.transform.childCount - 1));
+            changed = true;
+        }
+
+        Image image = rect.GetComponent<Image>();
+        if (image != null && image.sprite == null && sprite != null)
+        {
+            image.sprite = sprite;
+            image.color = Color.white;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private bool EnsureDesignerButtonLabel(Button button, string objectName, string labelText)
+    {
+        if (button == null)
+            return false;
+
+        Transform existing = button.transform.Find(objectName);
+        if (existing != null)
+            return false;
+
+        RectTransform labelRect = CreateDesignerUiObject(objectName, button.transform, typeof(TextMeshProUGUI)).GetComponent<RectTransform>();
+        SetRelativeRect(labelRect, new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.35f), Vector2.zero, Vector2.zero);
+        TMP_Text label = labelRect.GetComponent<TMP_Text>();
+        label.text = labelText;
+        label.fontSize = 17f;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = kitchenSideButtonLabelColor;
+        label.raycastTarget = false;
+        return true;
+    }
+
+    private bool EnsureDesignerResultChrome()
+    {
+        if (resultPanel == null)
+            return false;
+
+        bool changed = false;
+        Image background = resultPanel.GetComponent<Image>();
+        if (background != null && background.sprite == null && resultUiSprite != null)
+        {
+            background.sprite = resultUiSprite;
+            background.color = Color.white;
+            background.preserveAspect = false;
+            background.raycastTarget = false;
+            changed = true;
+        }
+
+        changed |= EnsureDesignerResultPanel("ResultReactionPanel", new Vector2(0.120f, 0.245f), new Vector2(0.505f, 0.540f));
+        changed |= EnsureDesignerResultPanel("ResultPlayerPanel", new Vector2(0.525f, 0.365f), new Vector2(0.870f, 0.540f));
+        changed |= EnsureDesignerResultPanel("ResultUnlockPanel", new Vector2(0.525f, 0.175f), new Vector2(0.870f, 0.330f));
+
+        changed |= EnsureDesignerResultText(ref resultText, "ResultText", new Vector2(0.355f, 0.620f), new Vector2(0.645f, 0.735f), 34f, TextAlignmentOptions.Center);
+        changed |= EnsureDesignerResultText(ref reactionText, "ReactionText", new Vector2(0.140f, 0.270f), new Vector2(0.485f, 0.505f), 18f, TextAlignmentOptions.TopLeft);
+        changed |= EnsureDesignerResultText(ref clueText, "ClueText", new Vector2(0.545f, 0.395f), new Vector2(0.850f, 0.500f), 18f, TextAlignmentOptions.TopLeft);
+        changed |= EnsureDesignerResultText(ref unlockTitleText, "UnlockTitleText", new Vector2(0.545f, 0.245f), new Vector2(0.850f, 0.300f), 20f, TextAlignmentOptions.TopLeft);
+        changed |= EnsureDesignerResultText(ref unlockMenuText, "UnlockMenuText", new Vector2(0.545f, 0.195f), new Vector2(0.850f, 0.240f), 18f, TextAlignmentOptions.TopLeft);
+        changed |= EnsureDesignerResultFoodImage();
+        return changed;
+    }
+
+    private bool EnsureDesignerResultPanel(string objectName, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        if (resultPanel == null)
+            return false;
+
+        Transform existing = resultPanel.transform.Find(objectName);
+        if (existing != null)
+            return false;
+
+        RectTransform rect = CreateDesignerUiObject(objectName, resultPanel.transform, typeof(Image)).GetComponent<RectTransform>();
+        SetRelativeRect(rect, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+
+        Image image = rect.GetComponent<Image>();
+        image.color = new Color32(31, 42, 67, 145);
+        image.raycastTarget = false;
+        return true;
+    }
+
+    private bool EnsureDesignerResultFoodImage()
+    {
+        if (resultPanel == null)
+            return false;
+
+        if (foodImage == null)
+        {
+            Transform existing = resultPanel.transform.Find("FoodImage");
+            if (existing != null)
+                foodImage = existing.GetComponent<Image>();
+        }
+
+        if (foodImage != null)
+            return false;
+
+        RectTransform foodRect = CreateDesignerUiObject("FoodImage", resultPanel.transform, typeof(Image)).GetComponent<RectTransform>();
+        SetRelativeRect(foodRect, new Vector2(0.205f, 0.590f), new Vector2(0.365f, 0.760f), Vector2.zero, Vector2.zero);
+        foodImage = foodRect.GetComponent<Image>();
+        foodImage.preserveAspect = true;
+        foodImage.raycastTarget = false;
+        foodImage.color = Color.white;
+        return true;
+    }
+
+    private bool EnsureDesignerResultText(ref TMP_Text field, string objectName, Vector2 anchorMin, Vector2 anchorMax, float fontSize, TextAlignmentOptions alignment)
+    {
+        if (resultPanel == null)
+            return false;
+
+        if (field == null)
+        {
+            Transform existing = resultPanel.transform.Find(objectName);
+            if (existing != null)
+                field = existing.GetComponent<TMP_Text>();
+        }
+
+        if (field != null)
+            return false;
+
+        RectTransform textRect = CreateDesignerUiObject(objectName, resultPanel.transform, typeof(TextMeshProUGUI)).GetComponent<RectTransform>();
+        SetRelativeRect(textRect, anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+        field = textRect.GetComponent<TMP_Text>();
+        field.fontSize = fontSize;
+        field.alignment = alignment;
+        field.color = new Color32(246, 236, 218, 255);
+        field.raycastTarget = false;
+        return true;
+    }
+
+    private bool EnsureDesignerIngredientList()
+    {
+        if (kitchenPanel == null)
+            return false;
+
+        bool changed = false;
+        RectTransform scrollView = FindDirectRect(kitchenPanel.transform, "IngredientListScrollView");
+        if (scrollView == null)
+        {
+            GameObject scrollObject = CreateDesignerUiObject("IngredientListScrollView", kitchenPanel.transform, typeof(Image), typeof(ScrollRect));
+            scrollView = scrollObject.GetComponent<RectTransform>();
+            SetRelativeRect(scrollView, IngredientScrollAnchorMin, IngredientScrollAnchorMax, Vector2.zero, Vector2.zero);
+            changed = true;
+        }
+
+        Image scrollImage = scrollView.GetComponent<Image>();
+        if (scrollImage != null && changed)
+            scrollImage.color = new Color32(245, 232, 199, 70);
+
+        ScrollRect scrollRect = scrollView.GetComponent<ScrollRect>();
+        RectTransform viewport = FindDirectRect(scrollView, "Viewport");
+        if (viewport == null)
+        {
+            GameObject viewportObject = CreateDesignerUiObject("Viewport", scrollView, typeof(Image), typeof(RectMask2D));
+            viewport = viewportObject.GetComponent<RectTransform>();
+            SetRelativeRect(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            changed = true;
+        }
+
+        Image viewportImage = viewport.GetComponent<Image>();
+        if (viewportImage != null && changed)
+            viewportImage.color = new Color32(255, 255, 255, 1);
+
+        RectTransform content = FindDirectRect(viewport, "Content");
+        if (content == null)
+        {
+            GameObject contentObject = CreateDesignerUiObject("Content", viewport);
+            content = contentObject.GetComponent<RectTransform>();
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
+            changed = true;
+        }
+
+        if (scrollRect != null)
+        {
+            scrollRect.viewport = viewport;
+            scrollRect.content = content;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 32f;
+        }
+
+        const float buttonHeight = 92f;
+        const float gap = 12f;
+        const float topPadding = 12f;
+        content.sizeDelta = new Vector2(0f, topPadding + KitchenIngredientList.Length * buttonHeight + (KitchenIngredientList.Length - 1) * gap + 12f);
+
+        for (int i = 0; i < KitchenIngredientList.Length; i++)
+        {
+            string buttonName = "RuntimeIngredientSlot_" + i;
+            RectTransform buttonRect = FindDirectRect(content, buttonName);
+            if (buttonRect != null)
+                continue;
+
+            GameObject buttonObject = CreateDesignerUiObject(buttonName, content, typeof(Image), typeof(Button));
+            buttonRect = buttonObject.GetComponent<RectTransform>();
+            buttonRect.anchorMin = new Vector2(0f, 1f);
+            buttonRect.anchorMax = new Vector2(1f, 1f);
+            buttonRect.pivot = new Vector2(0.5f, 1f);
+            buttonRect.sizeDelta = new Vector2(0f, buttonHeight);
+            buttonRect.anchoredPosition = new Vector2(0f, -(topPadding + i * (buttonHeight + gap)));
+
+            Image buttonImage = buttonObject.GetComponent<Image>();
+            if (buttonImage != null)
+                buttonImage.sprite = ingredientItemSprite;
+
+            RectTransform iconRect = CreateDesignerUiObject("IngredientIcon", buttonRect, typeof(Image)).GetComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0.06f, 0.18f);
+            iconRect.anchorMax = new Vector2(0.27f, 0.82f);
+            iconRect.offsetMin = Vector2.zero;
+            iconRect.offsetMax = Vector2.zero;
+
+            RectTransform textRect = CreateDesignerUiObject("Name_Text", buttonRect, typeof(TextMeshProUGUI)).GetComponent<RectTransform>();
+            textRect.anchorMin = new Vector2(0.31f, 0f);
+            textRect.anchorMax = new Vector2(0.96f, 1f);
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            TMP_Text text = textRect.GetComponent<TMP_Text>();
+            if (text != null)
+            {
+                text.text = KitchenIngredientList[i];
+                text.alignment = TextAlignmentOptions.MidlineLeft;
+                text.fontSize = 15f;
+                text.fontStyle = FontStyles.Bold;
+            }
+
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private bool EnsureDesignerSelectedSlots()
+    {
+        if (kitchenPanel == null)
+            return false;
+
+        bool changed = false;
+        RectTransform panel = FindDirectRect(kitchenPanel.transform, "SelectedIngredientSlotPanel");
+        if (panel == null)
+        {
+            panel = CreateDesignerUiObject("SelectedIngredientSlotPanel", kitchenPanel.transform, typeof(Image)).GetComponent<RectTransform>();
+            SetRelativeRect(panel, new Vector2(0.240f, 0.005f), new Vector2(0.760f, 0.250f), Vector2.zero, Vector2.zero);
+            changed = true;
+        }
+
+        RectTransform layer = FindDirectRect(panel, "SelectedSlotInteractionLayer");
+        if (layer == null)
+        {
+            layer = CreateDesignerUiObject("SelectedSlotInteractionLayer", panel).GetComponent<RectTransform>();
+            SetRelativeRect(layer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            changed = true;
+        }
+
+        Vector2[] mins =
+        {
+            new Vector2(0.040f, 0.120f),
+            new Vector2(0.280f, 0.120f),
+            new Vector2(0.525f, 0.120f),
+            new Vector2(0.765f, 0.120f)
+        };
+        Vector2[] maxs =
+        {
+            new Vector2(0.235f, 0.870f),
+            new Vector2(0.475f, 0.870f),
+            new Vector2(0.720f, 0.870f),
+            new Vector2(0.960f, 0.870f)
+        };
+
+        for (int i = 0; i < MaxIngredientSlots; i++)
+        {
+            RectTransform slot = FindDirectRect(layer, "SelectedSlot_" + i);
+            if (slot != null)
+                continue;
+
+            slot = CreateDesignerUiObject("SelectedSlot_" + i, layer).GetComponent<RectTransform>();
+            SetRelativeRect(slot, mins[i], maxs[i], Vector2.zero, Vector2.zero);
+
+            RectTransform clickArea = CreateDesignerUiObject("ClickArea", slot, typeof(Image), typeof(Button)).GetComponent<RectTransform>();
+            SetRelativeRect(clickArea, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Image clickImage = clickArea.GetComponent<Image>();
+            if (clickImage != null)
+                clickImage.color = new Color(1f, 1f, 1f, 0f);
+
+            RectTransform icon = CreateDesignerUiObject("IngredientIcon", slot, typeof(Image)).GetComponent<RectTransform>();
+            icon.anchorMin = new Vector2(0.5f, 0.5f);
+            icon.anchorMax = new Vector2(0.5f, 0.5f);
+            icon.pivot = new Vector2(0.5f, 0.5f);
+            icon.anchoredPosition = Vector2.zero;
+            icon.sizeDelta = new Vector2(SelectedSlotIconSize, SelectedSlotIconSize);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private static RectTransform FindDirectRect(Transform parent, string childName)
+    {
+        if (parent == null)
+            return null;
+
+        Transform child = parent.Find(childName);
+        return child != null ? child.GetComponent<RectTransform>() : null;
+    }
+
+    private static GameObject CreateDesignerUiObject(string objectName, Transform parent, params Type[] extraComponents)
+    {
+        List<Type> components = new List<Type> { typeof(RectTransform), typeof(CanvasRenderer) };
+        if (extraComponents != null)
+            components.AddRange(extraComponents);
+
+        GameObject gameObject = new GameObject(objectName, components.ToArray());
+        gameObject.transform.SetParent(parent, false);
+        return gameObject;
     }
 #endif
 
@@ -865,18 +1362,47 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollContent == null)
             return;
 
-        if (!runtimeIngredientButtonsBuilt)
+        RegisterStaticIngredientListButtons();
+
+        if (!runtimeIngredientButtonsBuilt || ingredientListButtons.Count < KitchenIngredientList.Length)
         {
-            ingredientListButtons.Clear();
-            ingredientListButtonTexts.Clear();
+            if (ingredientListButtons.Count == 0)
+            {
+                ingredientListButtons.Clear();
+                ingredientListButtonTexts.Clear();
+            }
 
             for (int i = 0; i < KitchenIngredientList.Length; i++)
+            {
+                if (i < ingredientListButtons.Count && ingredientListButtons[i] != null)
+                    continue;
+
                 CreateRuntimeIngredientButton(i);
+            }
 
             runtimeIngredientButtonsBuilt = true;
         }
 
-        ApplyIngredientListButtonLayout();
+        if (!useStaticDesignerLayout || !Application.isPlaying)
+            ApplyIngredientListButtonLayout();
+    }
+
+    private void RegisterStaticIngredientListButtons()
+    {
+        if (runtimeIngredientButtonsBuilt && ingredientListButtons.Count >= KitchenIngredientList.Length)
+            return;
+
+        ingredientListButtons.Clear();
+        ingredientListButtonTexts.Clear();
+
+        Button[] buttons = ingredientScrollContent != null
+            ? ingredientScrollContent.GetComponentsInChildren<Button>(true)
+            : Array.Empty<Button>();
+
+        for (int i = 0; i < buttons.Length && i < KitchenIngredientList.Length; i++)
+            RegisterIngredientButton(buttons[i], buttons[i].GetComponentInChildren<TMP_Text>(true));
+
+        runtimeIngredientButtonsBuilt = ingredientListButtons.Count > 0;
     }
 
     private void HideLegacyIngredientButtons()
@@ -962,6 +1488,7 @@ public class DayUIManager : MonoBehaviour
         if (kitchenPanel == null)
             return;
 
+        bool created = false;
         if (ingredientScrollView == null)
         {
             Transform existing = kitchenPanel.transform.Find("IngredientListScrollView");
@@ -1011,9 +1538,11 @@ public class DayUIManager : MonoBehaviour
             ingredientScrollRect.movementType = ScrollRect.MovementType.Clamped;
             ingredientScrollRect.inertia = true;
             ingredientScrollRect.scrollSensitivity = 32f;
+            created = true;
         }
 
-        ApplyIngredientScrollViewRect();
+        if (!useStaticDesignerLayout || !Application.isPlaying || created)
+            ApplyIngredientScrollViewRect();
     }
 
     private void ApplyIngredientScrollViewRect()
@@ -1068,6 +1597,14 @@ public class DayUIManager : MonoBehaviour
         if (ingredientScrollContent == null)
             return;
 
+        if (useStaticDesignerLayout && Application.isPlaying)
+        {
+            for (int i = 0; i < ingredientListButtons.Count; i++)
+                ApplyIngredientItemStateOnly(ingredientListButtons[i], i);
+
+            return;
+        }
+
         const float buttonHeight = 92f;
         const float gap = 12f;
         const float topPadding = 12f;
@@ -1096,6 +1633,43 @@ public class DayUIManager : MonoBehaviour
 
             TMP_Text label = i < ingredientListButtonTexts.Count ? ingredientListButtonTexts[i] : null;
             SetTextAlignment(label, TextAlignmentOptions.MidlineLeft);
+        }
+    }
+
+    private void ApplyIngredientItemStateOnly(Button button, int index)
+    {
+        if (button == null)
+            return;
+
+        Image buttonImage = button.GetComponent<Image>();
+        if (buttonImage != null && ingredientItemSprite != null && buttonImage.sprite == null)
+        {
+            buttonImage.sprite = ingredientItemSprite;
+            buttonImage.type = Image.Type.Simple;
+        }
+
+        Transform iconTransform = button.transform.Find("IngredientIcon");
+        if (iconTransform == null)
+            iconTransform = button.transform.Find("Icon_Image");
+
+        Image iconImage = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
+        if (iconImage != null && ingredientSprites != null && index >= 0 && index < ingredientSprites.Length && iconImage.sprite == null)
+        {
+            iconImage.sprite = ingredientSprites[index];
+            iconImage.type = Image.Type.Simple;
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+        }
+
+        TMP_Text label = index < ingredientListButtonTexts.Count ? ingredientListButtonTexts[index] : button.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            TMP_FontAsset font = ResolveSceneFont();
+            if (font != null && label.font == null)
+                label.font = font;
+            label.enableAutoSizing = false;
+            label.overflowMode = TextOverflowModes.Ellipsis;
+            label.alignment = TextAlignmentOptions.MidlineLeft;
         }
     }
 
@@ -1145,7 +1719,7 @@ public class DayUIManager : MonoBehaviour
             new RecipeDefinition(
                 MenuId.SoondubuJjigae,
                 "순두부찌개",
-                "순두부와 적당한 고춧가루, 버섯을 넣고 조개로 감칠맛을 더해 따뜻하고 부드러운 국물 요리를 만든다.",
+                "순두부와 적당한 고춧가루, 버섯을 넣어 따뜻하고 부드러운 국물 요리를 만든다.",
                 new[] { "순두부", "고춧가루", "버섯", "조개" },
                 new[] { "순두부", "고춧가루", "버섯" },
                 new[] { "부드러움", "따뜻함", "담백함", "국물", "칼칼함" },
@@ -1889,7 +2463,7 @@ public class DayUIManager : MonoBehaviour
         SetPanelState(showCustomer: false, showKitchen: false, showResult: true);
         SetActive(menuBoardPanel, false);
 
-        if (resultPanel != null)
+        if (!useStaticDesignerLayout && resultPanel != null)
         {
             resultPanel.name = "resultui";
             resultPanel.transform.SetAsLastSibling();
@@ -1902,7 +2476,7 @@ public class DayUIManager : MonoBehaviour
             }
         }
 
-        if (nextDayButton != null)
+        if (!useStaticDesignerLayout && nextDayButton != null)
         {
             nextDayButton.name = "resultokui";
             nextDayButton.transform.SetAsLastSibling();
@@ -3028,6 +3602,12 @@ public class DayUIManager : MonoBehaviour
         if (kitchenPanel == null)
             return;
 
+        if (useStaticDesignerLayout)
+        {
+            ApplyStaticKitchenArtState();
+            return;
+        }
+
         ForceKitchenPanelFullscreen();
         StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
         HideKitchenTemporaryHeader();
@@ -3055,6 +3635,63 @@ public class DayUIManager : MonoBehaviour
         SetActive(backButton, false);
         UpdateIngredientSlots();
         ApplyKitchenTextReadability();
+    }
+
+    private void ApplyStaticKitchenArtState()
+    {
+        HideKitchenTemporaryHeader();
+        EnsureCookingPotDropZone();
+        EnsureIngredientListButtons();
+
+        Image background = kitchenPanel != null ? kitchenPanel.GetComponent<Image>() : null;
+        if (background != null && kitchenBackgroundSprite != null)
+        {
+            background.sprite = kitchenBackgroundSprite;
+            background.color = Color.white;
+            background.preserveAspect = false;
+            background.raycastTarget = false;
+        }
+
+        ApplyKitchenCameraBackground();
+        ApplyKitchenGraphicSpriteOnly("IngredientPanelGraphic", kitchenIngredientPanelSprite);
+        ApplyKitchenGraphicSpriteOnly("SelectedSlotPanelGraphic", kitchenSlotPanelSprite);
+
+        if (cookingPotImage != null && emptyCookingPotSprite != null)
+        {
+            cookingPotImage.sprite = emptyCookingPotSprite;
+            cookingPotImage.color = Color.white;
+            cookingPotImage.preserveAspect = true;
+            cookingPotImage.raycastTarget = true;
+        }
+
+        ApplyButtonSprite(recipeButton1, dayOptionButtonSprite);
+        ApplyButtonSprite(recipeButton2, dayMenuButtonSprite);
+        ApplyButtonSprite(recipeButton3, dayNoteButtonSprite);
+        ApplyButtonSprite(cookButton, cookButtonSprite);
+        StyleKitchenSideButtonLabels(recipeButton2, recipeButton2Text, "레시피");
+        StyleKitchenSideButtonLabels(recipeButton3, recipeButton3Text, "메모장");
+
+        SetActive(selectedRecipeText, false);
+        SetActive(selectedMenuImage, false);
+        SetActive(backButton, false);
+        UpdateIngredientSlots();
+        ApplyKitchenTextReadability();
+    }
+
+    private void ApplyKitchenGraphicSpriteOnly(string objectName, Sprite sprite)
+    {
+        if (kitchenPanel == null || sprite == null)
+            return;
+
+        Transform existing = kitchenPanel.transform.Find(objectName);
+        Image image = existing != null ? existing.GetComponent<Image>() : null;
+        if (image == null)
+            return;
+
+        image.sprite = sprite;
+        image.color = Color.white;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
     }
 
     private void ConfigureKitchenSeparatedGraphics()
@@ -3279,7 +3916,8 @@ public class DayUIManager : MonoBehaviour
         image.type = Image.Type.Simple;
         image.color = new Color(1f, 1f, 1f, 0f);
         image.raycastTarget = true;
-        panelObject.transform.SetAsLastSibling();
+        if (!useStaticDesignerLayout || !Application.isPlaying)
+            panelObject.transform.SetAsLastSibling();
         return rect;
     }
 
@@ -3304,8 +3942,11 @@ public class DayUIManager : MonoBehaviour
         layerObject.transform.SetParent(slotsPanel, false);
         selectedSlotInteractionLayer = layerObject.GetComponent<RectTransform>();
         DisableLayoutDrivenResize(layerObject);
-        SetRelativeRect(selectedSlotInteractionLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        layerObject.transform.SetAsLastSibling();
+        if (!useStaticDesignerLayout || !Application.isPlaying)
+        {
+            SetRelativeRect(selectedSlotInteractionLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            layerObject.transform.SetAsLastSibling();
+        }
 
         for (int i = 0; i < MaxIngredientSlots; i++)
             EnsureFixedSelectedSlot(i);
@@ -3574,6 +4215,12 @@ public class DayUIManager : MonoBehaviour
         if (resultPanel == null)
             return;
 
+        if (useStaticDesignerLayout)
+        {
+            ApplyStaticResultArtState(result);
+            return;
+        }
+
         StretchPanel(resultPanel, Vector2.zero, Vector2.one);
         HideResultTemporaryChrome();
 
@@ -3591,11 +4238,11 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(clueText, new Vector2(0.525f, 0.355f), new Vector2(0.855f, 0.530f), Vector2.zero, Vector2.zero);
         SetRelativeRect(nextDayButton, new Vector2(0.425f, 0.090f), new Vector2(0.575f, 0.165f), Vector2.zero, Vector2.zero);
 
-        bool hasResultSprite = result != null && result.ResultSprite != null && result.ResultSprite != emptyCookingPotSprite;
+        bool artHasResultSprite = result != null && result.ResultSprite != null && result.ResultSprite != emptyCookingPotSprite;
         if (foodImage != null)
         {
             SetRelativeRect(foodImage, new Vector2(0.430f, 0.520f), new Vector2(0.570f, 0.625f), Vector2.zero, Vector2.zero);
-            foodImage.gameObject.SetActive(hasResultSprite);
+            foodImage.gameObject.SetActive(artHasResultSprite);
             foodImage.color = Color.white;
             foodImage.preserveAspect = true;
             foodImage.raycastTarget = false;
@@ -3613,6 +4260,91 @@ public class DayUIManager : MonoBehaviour
 
         if (nextDayButton != null)
             nextDayButton.transform.SetAsLastSibling();
+    }
+
+    private void ApplyStaticResultArtState(CookingResultData result)
+    {
+        StretchPanel(resultPanel, Vector2.zero, Vector2.one);
+
+        Image panelImage = resultPanel.GetComponent<Image>();
+        if (panelImage != null)
+        {
+            if (resultUiSprite != null)
+                panelImage.sprite = resultUiSprite;
+            panelImage.color = Color.white;
+            panelImage.preserveAspect = false;
+            panelImage.raycastTarget = false;
+        }
+
+        HideResultTemporaryChrome();
+        DisableOpaqueLegacyResultImages();
+        EnsureStaticResultPanelVisible("ResultReactionPanel");
+        EnsureStaticResultPanelVisible("ResultPlayerPanel");
+        EnsureStaticResultPanelVisible("ResultUnlockPanel");
+
+        bool staticHasResultSprite = result != null && result.ResultSprite != null && result.ResultSprite != emptyCookingPotSprite;
+        if (foodImage != null)
+        {
+            foodImage.gameObject.SetActive(staticHasResultSprite);
+            foodImage.color = Color.white;
+            foodImage.preserveAspect = true;
+            foodImage.raycastTarget = false;
+        }
+
+        StyleResultText(resultText, 34f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
+        StyleResultText(reactionText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
+        StyleResultText(clueText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
+        StyleResultText(unlockTitleText, 20f, FontStyles.Bold, new Color32(226, 116, 103, 255), TextAlignmentOptions.TopLeft);
+        StyleResultText(unlockMenuText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
+
+        TMP_Text buttonText = nextDayButton != null ? nextDayButton.GetComponentInChildren<TMP_Text>(true) : null;
+        StyleResultText(buttonText, 18f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
+
+        ApplyButtonSprite(nextDayButton, resultOkUiSprite);
+        if (nextDayButton != null)
+            nextDayButton.transform.SetAsLastSibling();
+    }
+
+    private void EnsureStaticResultPanelVisible(string objectName)
+    {
+        Transform target = resultPanel != null ? resultPanel.transform.Find(objectName) : null;
+        if (target == null)
+            return;
+
+        target.gameObject.SetActive(true);
+        Image image = target.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = new Color32(31, 42, 67, 145);
+            image.raycastTarget = false;
+        }
+    }
+
+    private void DisableOpaqueLegacyResultImages()
+    {
+        if (resultPanel == null)
+            return;
+
+        Image rootImage = resultPanel.GetComponent<Image>();
+        Image[] images = resultPanel.GetComponentsInChildren<Image>(true);
+        foreach (Image image in images)
+        {
+            if (image == null || image == rootImage)
+                continue;
+
+            Transform imageTransform = image.transform;
+            if (foodImage != null && (imageTransform == foodImage.transform || imageTransform.IsChildOf(foodImage.transform)))
+                continue;
+
+            if (nextDayButton != null && (imageTransform == nextDayButton.transform || imageTransform.IsChildOf(nextDayButton.transform)))
+                continue;
+
+            if (imageTransform.name == "ResultReactionPanel" || imageTransform.name == "ResultPlayerPanel" || imageTransform.name == "ResultUnlockPanel")
+                continue;
+
+            if (image.color.a > 0.85f && image.sprite == null)
+                image.gameObject.SetActive(false);
+        }
     }
 
     private void HideResultExtraImages()
@@ -4900,6 +5632,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
                 ForceKitchenPanelFullscreen();
                 StretchPanel(kitchenPanel, Vector2.zero, Vector2.one);
             }
+
+            if (showResult)
+                StretchPanel(resultPanel, Vector2.zero, Vector2.one);
 
             return;
         }

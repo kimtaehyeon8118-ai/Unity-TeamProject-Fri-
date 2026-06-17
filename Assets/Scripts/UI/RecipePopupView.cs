@@ -28,6 +28,7 @@ public sealed class RecipePopupView : MonoBehaviour
 
     private void Awake()
     {
+        NormalizeRecipeEntries();
         BindButtonEvents();
         ApplyLayout();
         ValidateReferences();
@@ -35,6 +36,7 @@ public sealed class RecipePopupView : MonoBehaviour
 
     private void OnEnable()
     {
+        NormalizeRecipeEntries();
         ApplyLayout();
         Open(currentDay);
     }
@@ -57,6 +59,7 @@ public sealed class RecipePopupView : MonoBehaviour
     public void SetRecipes(int day, RecipePopupEntry[] recipes)
     {
         recipeEntries = recipes;
+        NormalizeRecipeEntries();
         Open(day);
     }
 
@@ -213,7 +216,23 @@ public sealed class RecipePopupView : MonoBehaviour
 
     private bool IsUnlocked(RecipePopupEntry entry)
     {
-        return entry != null && currentDay >= entry.unlockDay;
+        if (entry == null)
+            return false;
+
+        if (entry.recipeName == "순두부찌개")
+            return true;
+
+        return currentDay >= entry.unlockDay;
+    }
+
+    private void NormalizeRecipeEntries()
+    {
+        recipeEntries = new[]
+        {
+            new RecipePopupEntry { recipeName = "김치찌개", unlockDay = 1, recipeContent = "- 김치\n- 돼지고기\n- 버섯" },
+            new RecipePopupEntry { recipeName = "된장찌개", unlockDay = 1, recipeContent = "- 된장\n- 두부\n- 버섯" },
+            new RecipePopupEntry { recipeName = "순두부찌개", unlockDay = 1, recipeContent = "- 순두부\n- 고춧가루\n- 버섯" }
+        };
     }
 
     private void ValidateReferences()
