@@ -6,7 +6,8 @@ using UnityEngine;
 public class Day2StageBuilder : MonoBehaviour
 {
     private const float StageStartX = 0.8f;
-    private const float StageEndX = 136f;
+    private const float Day2StageEndX = 136f;
+    private const float Day3StageEndX = 138f;
 
     private struct PlatformSpec
     {
@@ -81,6 +82,73 @@ public class Day2StageBuilder : MonoBehaviour
         new Vector2(91f, 1.6f)
     };
 
+    private static readonly PlatformSpec[] Stage3Platforms =
+    {
+        // Reference 1: split upper and lower routes joined by steep ramps.
+        new PlatformSpec(3f, -3.2f, 5.2f, 0),
+        new PlatformSpec(8.2f, -2.35f, 5.2f, 1, 25f),
+        new PlatformSpec(15f, -1.75f, 8.2f, 2),
+        new PlatformSpec(21.3f, -3.05f, 3.4f, 3, -66f),
+        new PlatformSpec(27f, -3.65f, 7.2f, 4),
+        new PlatformSpec(34f, -2.55f, 7.6f, 5, 29f),
+        new PlatformSpec(41f, -1.45f, 7.0f, 0),
+        new PlatformSpec(9.5f, 2.55f, 5.6f, 1),
+        new PlatformSpec(19f, 2.0f, 5.2f, 2),
+        new PlatformSpec(24f, 0.65f, 5.2f, 3, 36f),
+        new PlatformSpec(35f, 0.15f, 3.2f, 4),
+        new PlatformSpec(39.5f, 1.55f, 4.6f, 5),
+
+        // Reference 2: alternating ramps with deliberate dash gaps.
+        new PlatformSpec(47f, -3.45f, 5.2f, 0),
+        new PlatformSpec(53f, -2.55f, 5.4f, 1, 29f),
+        new PlatformSpec(60.5f, -1.75f, 7.4f, 2),
+        new PlatformSpec(66.5f, -0.05f, 3.4f, 3, 58f),
+        new PlatformSpec(72f, -0.25f, 4.8f, 4),
+        new PlatformSpec(80f, 1.4f, 7.0f, 5),
+        new PlatformSpec(88f, -0.35f, 4.2f, 0),
+        new PlatformSpec(92f, -2.65f, 3.2f, 1),
+
+        // Reference 3: long descending entry, central climb, terminal finish.
+        new PlatformSpec(96f, -3.25f, 5.4f, 2),
+        new PlatformSpec(102f, -2.45f, 5.4f, 3, 24f),
+        new PlatformSpec(109f, -1.65f, 7.0f, 4),
+        new PlatformSpec(115f, -0.55f, 5.2f, 5, 24f),
+        new PlatformSpec(120.5f, -0.2f, 3.2f, 0),
+        new PlatformSpec(126f, 1.15f, 5.0f, 1, 34f),
+        new PlatformSpec(133.5f, 1.85f, 7.0f, 2)
+    };
+
+    private static readonly Vector2[] Day3WirePoints =
+    {
+        new Vector2(11f, 0.8f),
+        new Vector2(22.5f, 3.1f),
+        new Vector2(37f, 2.6f),
+        new Vector2(55f, 1.0f),
+        new Vector2(68f, 3.0f),
+        new Vector2(82f, 3.6f),
+        new Vector2(106f, 1.3f),
+        new Vector2(123f, 3.0f)
+    };
+
+    private static readonly Vector2[] Day3GroundHazards =
+    {
+        new Vector2(8f, 12f),
+        new Vector2(23f, 16f),
+        new Vector2(40f, 14f),
+        new Vector2(56f, 16f),
+        new Vector2(73f, 16f),
+        new Vector2(90f, 15f),
+        new Vector2(106f, 16f),
+        new Vector2(123f, 17f),
+        new Vector2(135f, 5f)
+    };
+
+    private static readonly Vector2[] Day3Checkpoints =
+    {
+        new Vector2(41f, -0.4f),
+        new Vector2(88f, 0.65f)
+    };
+
     private readonly List<Sprite> platformSprites = new List<Sprite>();
     private static readonly float[] PlatformSurfaceOffsets =
     {
@@ -94,6 +162,9 @@ public class Day2StageBuilder : MonoBehaviour
 
     private Sprite solidSprite;
     private bool stageBuilt;
+    private bool isDayThree;
+
+    private float StageEndX => isDayThree ? Day3StageEndX : Day2StageEndX;
 
     private void Awake()
     {
@@ -107,17 +178,19 @@ public class Day2StageBuilder : MonoBehaviour
 
     private void EnsureStageBuilt()
     {
-        if (stageBuilt || GameObject.Find("Day2Ground") != null)
+        if (stageBuilt || GameObject.Find("NightStageGround") != null)
         {
             stageBuilt = true;
             return;
         }
 
-        if (gameObject.scene.name != "Stage02_1")
+        string sceneName = gameObject.scene.name;
+        if (sceneName != "Stage02_1" && sceneName != "Stage03_1")
         {
             return;
         }
 
+        isDayThree = sceneName == "Stage03_1";
         stageBuilt = true;
         StageArtApplier artApplier = GetComponent<StageArtApplier>();
         if (artApplier != null)
@@ -180,29 +253,35 @@ public class Day2StageBuilder : MonoBehaviour
         Transform stageRoot = new GameObject("Day2StageGeometry").transform;
         CreateGround(stageRoot);
 
-        for (int index = 0; index < Stage2Platforms.Length; index++)
+        PlatformSpec[] platforms = isDayThree ? Stage3Platforms : Stage2Platforms;
+        for (int index = 0; index < platforms.Length; index++)
         {
-            CreatePlatform(stageRoot, Stage2Platforms[index], index);
+            CreatePlatform(stageRoot, platforms[index], index);
         }
 
         Transform hazardRoot = new GameObject("Day2Hazards").transform;
-        for (int index = 0; index < GroundHazards.Length; index++)
+        Vector2[] hazards = isDayThree ? Day3GroundHazards : GroundHazards;
+        for (int index = 0; index < hazards.Length; index++)
         {
-            CreateBarbedWire(hazardRoot, GroundHazards[index], index);
+            CreateBarbedWire(hazardRoot, hazards[index], index);
         }
 
         Transform markerRoot = new GameObject("Day2GameplayMarkers").transform;
-        for (int index = 0; index < WirePoints.Length; index++)
+        Vector2[] wirePoints = isDayThree ? Day3WirePoints : WirePoints;
+        for (int index = 0; index < wirePoints.Length; index++)
         {
-            CreateInvisibleWirePoint(markerRoot, WirePoints[index], index);
+            CreateInvisibleWirePoint(markerRoot, wirePoints[index], index);
         }
 
-        for (int index = 0; index < Checkpoints.Length; index++)
+        Vector2[] checkpoints = isDayThree ? Day3Checkpoints : Checkpoints;
+        for (int index = 0; index < checkpoints.Length; index++)
         {
-            CreateCheckpoint(markerRoot, Checkpoints[index], index);
+            CreateCheckpoint(markerRoot, checkpoints[index], index);
         }
 
-        CreateGoal(markerRoot, new Vector2(133f, -1.78f));
+        CreateGoal(
+            markerRoot,
+            isDayThree ? new Vector2(133.5f, 2.85f) : new Vector2(133f, -1.78f));
         CreateBoundary(stageRoot, new Vector2(-1.5f, 0f));
         CreateBoundary(stageRoot, new Vector2(StageEndX + 1.5f, 0f));
         CreateStageLabel();
@@ -341,7 +420,7 @@ public class Day2StageBuilder : MonoBehaviour
 
     private void CreateGround(Transform parent)
     {
-        GameObject ground = new GameObject("Day2Ground", typeof(BoxCollider2D));
+        GameObject ground = new GameObject("NightStageGround", typeof(BoxCollider2D));
         ground.transform.SetParent(parent, false);
         ground.layer = ResolveGroundLayer();
         ground.transform.position = new Vector3(StageEndX * 0.5f, -5.35f, 0f);
@@ -433,21 +512,30 @@ public class Day2StageBuilder : MonoBehaviour
 
     private void CreateGoal(Transform parent, Vector2 position)
     {
-        GameObject goal = new GameObject("Day2FoodCrate", typeof(BoxCollider2D), typeof(StageClear));
+        GameObject goal = new GameObject(
+            isDayThree ? "Day3ClearTerminal" : "Day2FoodCrate",
+            typeof(BoxCollider2D),
+            typeof(StageClear));
         goal.transform.SetParent(parent, false);
         goal.transform.position = position;
 
         GameObject visual = new GameObject("Visual", typeof(SpriteRenderer));
         visual.transform.SetParent(goal.transform, false);
         SpriteRenderer renderer = visual.GetComponent<SpriteRenderer>();
-        Sprite sprite = Resources.Load<Sprite>("Graphics/Goal/day2_food_crate");
+        Sprite sprite = Resources.Load<Sprite>(
+            isDayThree
+                ? "Graphics/Goal/clear_terminal_gate"
+                : "Graphics/Goal/day2_food_crate");
         renderer.sprite = sprite != null ? sprite : GetSolidSprite();
         renderer.color = sprite != null ? Color.white : new Color32(158, 133, 76, 255);
         renderer.sortingOrder = 10;
 
         if (sprite != null)
         {
-            ScaleSprite(visual.transform, sprite, new Vector2(2.8f, 2.8f));
+            ScaleSprite(
+                visual.transform,
+                sprite,
+                isDayThree ? new Vector2(3.1f, 2.0f) : new Vector2(2.8f, 2.8f));
         }
         else
         {
@@ -456,8 +544,12 @@ public class Day2StageBuilder : MonoBehaviour
 
         BoxCollider2D collider = goal.GetComponent<BoxCollider2D>();
         collider.isTrigger = true;
-        collider.size = new Vector2(1.15f, 0.95f);
-        collider.offset = new Vector2(0f, -0.05f);
+        collider.size = isDayThree
+            ? new Vector2(1.15f, 1.55f)
+            : new Vector2(1.15f, 0.95f);
+        collider.offset = isDayThree
+            ? new Vector2(-0.7f, 0f)
+            : new Vector2(0f, -0.05f);
     }
 
     private void CreateBarbedWire(Transform parent, Vector2 spec, int index)
@@ -535,7 +627,7 @@ public class Day2StageBuilder : MonoBehaviour
         label.transform.SetParent(hud.transform, false);
 
         UnityEngine.UI.Text text = label.GetComponent<UnityEngine.UI.Text>();
-        text.text = "DAY 2  /  STAGE 2";
+        text.text = isDayThree ? "DAY 3  /  STAGE 3" : "DAY 2  /  STAGE 2";
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = 18;
         text.fontStyle = FontStyle.Bold;

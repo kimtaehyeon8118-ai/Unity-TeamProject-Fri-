@@ -224,6 +224,8 @@ public class GameManager : MonoBehaviour
         string currentSceneName = SceneManager.GetActiveScene().name;
         bool isDayTwoFinal = currentSceneName == "Stage02_1"
             && GameFlowState.RequestedNightDay == 2;
+        bool isDayThreeFinal = currentSceneName == "Stage03_1"
+            && GameFlowState.RequestedNightDay >= 3;
         string reward = string.Empty;
 
         if (currentSceneName == "Stage01_CyberStreet")
@@ -231,6 +233,10 @@ public class GameManager : MonoBehaviour
             reward = GameProgression.GrantNightReward("순두부");
         }
         else if (isDayTwoFinal)
+        {
+            reward = GameProgression.GrantNightReward();
+        }
+        else if (isDayThreeFinal)
         {
             reward = GameProgression.GrantNightReward();
         }
