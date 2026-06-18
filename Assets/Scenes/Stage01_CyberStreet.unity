@@ -209,7 +209,7 @@ BoxCollider2D:
     border: {x: 0.049999997, y: 0.049999997, z: 0.049999997, w: 0.049999997}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 0.16, y: 0.16}
-    newSize: {x: 44, y: 0.5}
+    newSize: {x: 34, y: 0.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 1
     adaptiveTiling: 0
@@ -1254,7 +1254,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 5f49718e3561e2e44b6f560c2318f7a8, type: 3}
     m_FontSize: 34
     m_FontStyle: 0
     m_BestFit: 0
@@ -1380,7 +1380,7 @@ BoxCollider2D:
     border: {x: 0.049999997, y: 0.049999997, z: 0.049999997, w: 0.049999997}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 0.16, y: 0.16}
-    newSize: {x: 56, y: 0.5}
+    newSize: {x: 20, y: 0.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 1
     adaptiveTiling: 0
@@ -1936,7 +1936,7 @@ BoxCollider2D:
     border: {x: 0.049999997, y: 0.049999997, z: 0.049999997, w: 0.049999997}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 0.16, y: 0.16}
-    newSize: {x: 58, y: 0.5}
+    newSize: {x: 32, y: 0.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 1
     adaptiveTiling: 0
@@ -6656,7 +6656,7 @@ BoxCollider2D:
     border: {x: 0.049999997, y: 0.049999997, z: 0.049999997, w: 0.049999997}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 0.16, y: 0.16}
-    newSize: {x: 70, y: 0.5}
+    newSize: {x: 30, y: 0.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 1
     adaptiveTiling: 0
@@ -9488,7 +9488,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 5f49718e3561e2e44b6f560c2318f7a8, type: 3}
     m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
@@ -10327,20 +10327,8 @@ MonoBehaviour:
   respawnPoint: {fileID: 1022344367}
   clearDelay: 0.75
   titleSceneName: TitleScene
+  daySceneName: DayScene
   stageTimeLimitSeconds: 120
---- !u!114 &1678276748
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1678276745}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c8c13bb38154a54bd7306dc35f11b9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Platformer.Runtime::StageArtApplier
-  applyInEditMode: 1
 --- !u!4 &1678276747
 Transform:
   m_ObjectHideFlags: 0
@@ -10356,6 +10344,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1678276748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1678276745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c8c13bb38154a54bd7306dc35f11b9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Platformer.Runtime::StageArtApplier
+  applyInEditMode: 1
 --- !u!1 &1737370064
 GameObject:
   m_ObjectHideFlags: 0
@@ -11206,7 +11207,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 5f49718e3561e2e44b6f560c2318f7a8, type: 3}
     m_FontSize: 34
     m_FontStyle: 0
     m_BestFit: 0
@@ -11916,7 +11917,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 5f49718e3561e2e44b6f560c2318f7a8, type: 3}
     m_FontSize: 33
     m_FontStyle: 0
     m_BestFit: 0
@@ -12102,7 +12103,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 5f49718e3561e2e44b6f560c2318f7a8, type: 3}
     m_FontSize: 34
     m_FontStyle: 0
     m_BestFit: 0

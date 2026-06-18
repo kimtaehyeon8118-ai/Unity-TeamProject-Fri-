@@ -1,0 +1,741 @@
+fileFormatVersion: 2
+guid: 937c27ea6691fd442a376d01693413ba
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2500480427189032490
+    second: daykitchen_Text_0
+  - first:
+      213: 1478499602690880603
+    second: daykitchen_Text_1
+  - first:
+      213: -6396869439594055126
+    second: daykitchen_Text_2
+  - first:
+      213: -3361498993341008922
+    second: daykitchen_Text_3
+  - first:
+      213: -4460238184411009040
+    second: daykitchen_Text_4
+  - first:
+      213: 5827693993600676303
+    second: daykitchen_Text_5
+  - first:
+      213: 7189642937385722215
+    second: daykitchen_Text_6
+  - first:
+      213: -417930046202995607
+    second: daykitchen_Text_7
+  - first:
+      213: -6393336796302744356
+    second: daykitchen_Text_8
+  - first:
+      213: 3494972164976376220
+    second: daykitchen_Text_9
+  - first:
+      213: 5359696732004969334
+    second: daykitchen_Text_10
+  - first:
+      213: -7156193556768162241
+    second: daykitchen_Text_11
+  - first:
+      213: 6014940815980854465
+    second: daykitchen_Text_12
+  - first:
+      213: -1143566646493534344
+    second: daykitchen_Text_13
+  - first:
+      213: -7212122563628679190
+    second: daykitchen_Text_14
+  - first:
+      213: 5112921221909935232
+    second: daykitchen_Text_15
+  - first:
+      213: 3564196464485262404
+    second: daykitchen_Text_16
+  - first:
+      213: -8685308552010133875
+    second: daykitchen_Text_17
+  - first:
+      213: 1298128833083334830
+    second: daykitchen_Text_18
+  - first:
+      213: 6159492795193436671
+    second: daykitchen_Text_19
+  - first:
+      213: 8973870800321346868
+    second: daykitchen_Text_20
+  - first:
+      213: 5041608222048505867
+    second: daykitchen_Text_21
+  - first:
+      213: -6357197767084214225
+    second: daykitchen_Text_22
+  - first:
+      213: -8030505428897555196
+    second: daykitchen_Text_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: daykitchen_Text_0
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 201
+        width: 401
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d9a491bc428c4dd0800000000000000
+      internalID: -2500480427189032490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_1
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 216
+        width: 71
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5432f22e8fa48410800000000000000
+      internalID: 1478499602690880603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_2
+      rect:
+        serializedVersion: 2
+        x: 551
+        y: 253
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2ab1720321c937a0800000000000000
+      internalID: -6396869439594055126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_3
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 201
+        width: 73
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e3731db97e8951d0800000000000000
+      internalID: -3361498993341008922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_4
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 216
+        width: 71
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ff6c8ca00d0a12c0800000000000000
+      internalID: -4460238184411009040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_5
+      rect:
+        serializedVersion: 2
+        x: 866
+        y: 210
+        width: 52
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc1fe3c8fc020e050800000000000000
+      internalID: 5827693993600676303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_6
+      rect:
+        serializedVersion: 2
+        x: 922
+        y: 210
+        width: 9
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 761a5c0c82eb6c360800000000000000
+      internalID: 7189642937385722215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_7
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 216
+        width: 46
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96c9b1756d6333af0800000000000000
+      internalID: -417930046202995607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_8
+      rect:
+        serializedVersion: 2
+        x: 997
+        y: 210
+        width: 9
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd4e0fe9e0e4647a0800000000000000
+      internalID: -6393336796302744356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_9
+      rect:
+        serializedVersion: 2
+        x: 1016
+        y: 216
+        width: 46
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c997b49baa2a08030800000000000000
+      internalID: 3494972164976376220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_10
+      rect:
+        serializedVersion: 2
+        x: 1072
+        y: 210
+        width: 9
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67b6af6e7c7716a40800000000000000
+      internalID: 5359696732004969334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_11
+      rect:
+        serializedVersion: 2
+        x: 1091
+        y: 247
+        width: 71
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3ef4e010e710bc90800000000000000
+      internalID: -7156193556768162241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_12
+      rect:
+        serializedVersion: 2
+        x: 1197
+        y: 210
+        width: 65
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cc7989bdcc597350800000000000000
+      internalID: 6014940815980854465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_13
+      rect:
+        serializedVersion: 2
+        x: 1278
+        y: 253
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 877a4c2a13c3120f0800000000000000
+      internalID: -1143566646493534344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_14
+      rect:
+        serializedVersion: 2
+        x: 1347
+        y: 210
+        width: 52
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aef35566db469eb90800000000000000
+      internalID: -7212122563628679190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_15
+      rect:
+        serializedVersion: 2
+        x: 1403
+        y: 210
+        width: 9
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0847f7c03ceb4f640800000000000000
+      internalID: 5112921221909935232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_16
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 216
+        width: 71
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 444e85fecc1967130800000000000000
+      internalID: 3564196464485262404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_17
+      rect:
+        serializedVersion: 2
+        x: 1503
+        y: 228
+        width: 9
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8e06c083e5977780800000000000000
+      internalID: -8685308552010133875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_18
+      rect:
+        serializedVersion: 2
+        x: 545
+        y: 241
+        width: 71
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea0ef90cb41e30210800000000000000
+      internalID: 1298128833083334830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_19
+      rect:
+        serializedVersion: 2
+        x: 1097
+        y: 210
+        width: 59
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff92516101aea7550800000000000000
+      internalID: 6159492795193436671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_20
+      rect:
+        serializedVersion: 2
+        x: 1272
+        y: 210
+        width: 71
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43d776182f7998c70800000000000000
+      internalID: 8973870800321346868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_21
+      rect:
+        serializedVersion: 2
+        x: 551
+        y: 210
+        width: 59
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b00d3e367f367f540800000000000000
+      internalID: 5041608222048505867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_22
+      rect:
+        serializedVersion: 2
+        x: 1503
+        y: 210
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f28f90e0052b6c7a0800000000000000
+      internalID: -6357197767084214225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Text_23
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 42
+        width: 1424
+        height: 119
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40d17bf1cd9ed8090800000000000000
+      internalID: -8030505428897555196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      daykitchen_Text_0: -2500480427189032490
+      daykitchen_Text_1: 1478499602690880603
+      daykitchen_Text_10: 5359696732004969334
+      daykitchen_Text_11: -7156193556768162241
+      daykitchen_Text_12: 6014940815980854465
+      daykitchen_Text_13: -1143566646493534344
+      daykitchen_Text_14: -7212122563628679190
+      daykitchen_Text_15: 5112921221909935232
+      daykitchen_Text_16: 3564196464485262404
+      daykitchen_Text_17: -8685308552010133875
+      daykitchen_Text_18: 1298128833083334830
+      daykitchen_Text_19: 6159492795193436671
+      daykitchen_Text_2: -6396869439594055126
+      daykitchen_Text_20: 8973870800321346868
+      daykitchen_Text_21: 5041608222048505867
+      daykitchen_Text_22: -6357197767084214225
+      daykitchen_Text_23: -8030505428897555196
+      daykitchen_Text_3: -3361498993341008922
+      daykitchen_Text_4: -4460238184411009040
+      daykitchen_Text_5: 5827693993600676303
+      daykitchen_Text_6: 7189642937385722215
+      daykitchen_Text_7: -417930046202995607
+      daykitchen_Text_8: -6393336796302744356
+      daykitchen_Text_9: 3494972164976376220
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

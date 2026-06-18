@@ -94,7 +94,7 @@ public static class DayPartSceneExtractor
 
     private static void BakeDesignerUiObjects(GameObject customerPanel, GameObject kitchenPanel, GameObject resultPanel)
     {
-        TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts/Korean_Full_TMP");
+        TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/GALMURI11_TMP.asset");
 
         EnsurePaperFrame(customerPanel.transform, "오늘의 한식", new Color32(165, 49, 35, 255), font);
         EnsurePaperFrame(kitchenPanel.transform, "주방 조리대", new Color32(128, 70, 34, 255), font);

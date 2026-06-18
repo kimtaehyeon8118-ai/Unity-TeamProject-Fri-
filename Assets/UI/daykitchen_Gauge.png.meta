@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: fb8c5db8b47540044adf866c88a22e8c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6958890204229407493
+    second: daykitchen_Gauge_0
+  - first:
+      213: 2913893539231461626
+    second: daykitchen_Gauge_1
+  - first:
+      213: 2058778337008005172
+    second: daykitchen_Gauge_2
+  - first:
+      213: -5416763022957942071
+    second: daykitchen_Gauge_3
+  - first:
+      213: -3760049059014614641
+    second: daykitchen_Gauge_4
+  - first:
+      213: 5002885151719063444
+    second: daykitchen_Gauge_5
+  - first:
+      213: -4555112749035226103
+    second: daykitchen_Gauge_6
+  - first:
+      213: -1468751473156518936
+    second: daykitchen_Gauge_7
+  - first:
+      213: -2109962628119633600
+    second: daykitchen_Gauge_8
+  - first:
+      213: 2013516331015907918
+    second: daykitchen_Gauge_9
+  - first:
+      213: 58952445982889433
+    second: daykitchen_Gauge_10
+  - first:
+      213: 4234274390760105124
+    second: daykitchen_Gauge_11
+  - first:
+      213: -5002155662638183500
+    second: daykitchen_Gauge_12
+  - first:
+      213: -6672811283384896163
+    second: daykitchen_Gauge_13
+  - first:
+      213: -7395754599553332222
+    second: daykitchen_Gauge_14
+  - first:
+      213: -512606310886286603
+    second: daykitchen_Gauge_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: daykitchen_Gauge_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 97
+        width: 1590
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5031a0e55c1f29060800000000000000
+      internalID: 6958890204229407493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_1
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 50
+        width: 59
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af072374cba307820800000000000000
+      internalID: 2913893539231461626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_2
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 44
+        width: 71
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 430b1a85dff329c10800000000000000
+      internalID: 2058778337008005172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_3
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 56
+        width: 59
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9caee18dabac3d4b0800000000000000
+      internalID: -5416763022957942071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_4
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 44
+        width: 46
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f81646b6d4f91dbc0800000000000000
+      internalID: -3760049059014614641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_5
+      rect:
+        serializedVersion: 2
+        x: 1003
+        y: 44
+        width: 22
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49f7a400a81dd6540800000000000000
+      internalID: 5002885151719063444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_6
+      rect:
+        serializedVersion: 2
+        x: 1035
+        y: 44
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90cf6e9b61df8c0c0800000000000000
+      internalID: -4555112749035226103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_7
+      rect:
+        serializedVersion: 2
+        x: 1091
+        y: 44
+        width: 15
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8eb8c232152fd9be0800000000000000
+      internalID: -1468751473156518936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_8
+      rect:
+        serializedVersion: 2
+        x: 1313
+        y: 44
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04164953b28e7b2e0800000000000000
+      internalID: -2109962628119633600
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_9
+      rect:
+        serializedVersion: 2
+        x: 1313
+        y: 25
+        width: 52
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4aa6ab5f6271fb10800000000000000
+      internalID: 2013516331015907918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_10
+      rect:
+        serializedVersion: 2
+        x: 1369
+        y: 13
+        width: 15
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d55371ffe071d000800000000000000
+      internalID: 58952445982889433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_11
+      rect:
+        serializedVersion: 2
+        x: 1388
+        y: 13
+        width: 65
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a42acecf1a23ca30800000000000000
+      internalID: 4234274390760105124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_12
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 13
+        width: 71
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bb0e396de5c49ab0800000000000000
+      internalID: -5002155662638183500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_13
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 13
+        width: 59
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d55ff98ed796563a0800000000000000
+      internalID: -6672811283384896163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_14
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 13
+        width: 59
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20c89a740600d5990800000000000000
+      internalID: -7395754599553332222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: daykitchen_Gauge_15
+      rect:
+        serializedVersion: 2
+        x: 1041
+        y: 13
+        width: 59
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fadff1b64bd2e8f0800000000000000
+      internalID: -512606310886286603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      daykitchen_Gauge_0: 6958890204229407493
+      daykitchen_Gauge_1: 2913893539231461626
+      daykitchen_Gauge_10: 58952445982889433
+      daykitchen_Gauge_11: 4234274390760105124
+      daykitchen_Gauge_12: -5002155662638183500
+      daykitchen_Gauge_13: -6672811283384896163
+      daykitchen_Gauge_14: -7395754599553332222
+      daykitchen_Gauge_15: -512606310886286603
+      daykitchen_Gauge_2: 2058778337008005172
+      daykitchen_Gauge_3: -5416763022957942071
+      daykitchen_Gauge_4: -3760049059014614641
+      daykitchen_Gauge_5: 5002885151719063444
+      daykitchen_Gauge_6: -4555112749035226103
+      daykitchen_Gauge_7: -1468751473156518936
+      daykitchen_Gauge_8: -2109962628119633600
+      daykitchen_Gauge_9: 2013516331015907918
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

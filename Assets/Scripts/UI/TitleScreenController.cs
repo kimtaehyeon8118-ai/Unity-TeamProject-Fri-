@@ -41,6 +41,7 @@ public class TitleScreenController : MonoBehaviour
 
     public void LoadGameplay()
     {
+        GameProgression.ResetProgress();
         int buildIndex = SceneFlowUtility.FindSceneIndexByName(gameplaySceneName);
         SceneManager.LoadScene(buildIndex >= 0 ? buildIndex : 0);
     }
