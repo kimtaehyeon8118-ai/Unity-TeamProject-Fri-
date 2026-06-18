@@ -185,6 +185,7 @@ public class DayUIManager : MonoBehaviour
     public GameObject customerPanel;
     public GameObject kitchenPanel;
     public GameObject resultPanel;
+    private GameObject resultDimOverlay;
 
     [Header("Customer UI")]
     public Image portraitImage;
@@ -248,6 +249,7 @@ public class DayUIManager : MonoBehaviour
     public RectTransform cookingPotDropZone;
     public Image cookingPotImage;
     public TMP_Text cookingPotHintText;
+    [SerializeField] private ButtonMashingGauge buttonMashingGauge;
 
     [Header("Result UI")]
     public Image foodImage;
@@ -257,8 +259,6 @@ public class DayUIManager : MonoBehaviour
     public Button nextDayButton;
 
     public TMP_Text unlockTitleText;
-    public TMP_Text unlockMenuText;
-
     [Header("Scene Flow")]
     [SerializeField] private string nightSceneName = "Stage01_CyberStreet";
 
@@ -596,9 +596,6 @@ public class DayUIManager : MonoBehaviour
     private bool lastCookingGaugeSuccess = true;
     private CookingGaugeResult lastCookingGaugeResult = CookingGaugeResult.Good;
     private float cookingGaugeValue;
-    private const float CookingGaugeSpeed = 0.45f;
-    private const float CookingGaugeGoodMin = 0.38f;
-    private const float CookingGaugeGoodMax = 0.82f;
     private static readonly string[] KitchenIngredientList =
     {
         "고춧가루",
@@ -641,6 +638,8 @@ public class DayUIManager : MonoBehaviour
     {
         rootCanvas = GetComponentInParent<Canvas>();
         BindDayResponseArtView();
+        ResolveKitchenSideButtonReferences();
+        RemoveDeletedResultUiObjects();
         InitUI();
         if (!useStaticDesignerLayout)
         {
@@ -745,6 +744,7 @@ public class DayUIManager : MonoBehaviour
         selectedIngredients.Add("버섯");
         selectedIngredients.Add("두부");
         selectedRecipeId = MenuId.KimchiJjigae;
+        StopCookingGaugeUi();
         cookingGaugeActive = false;
         lastCookingGaugeSuccess = true;
         cookingGaugeValue = 0f;
@@ -767,7 +767,6 @@ public class DayUIManager : MonoBehaviour
         SetText(reactionText, previewResult.Comment);
         SetText(clueText, previewResult.StewName);
         SetText(unlockTitleText, "해금 기록");
-        SetText(unlockMenuText, "미리보기");
         SetButtonLabel(nextDayButton, "다음으로");
         ApplyStaticResultArtState(previewResult);
     }
@@ -917,31 +916,45 @@ public class DayUIManager : MonoBehaviour
         return true;
     }
 
+    private void RemoveDeletedResultUiObjects()
+    {
+        Transform root = resultPanel != null ? resultPanel.transform : null;
+        if (root == null)
+            return;
+
+        RemoveDeletedResultUiObject(root, "UnlockMenuText");
+        RemoveDeletedResultUiObject(root, "ResultUnlockPanel");
+        RemoveDeletedResultUiObject(root, "ResultPlayerPanel");
+        RemoveDeletedResultUiObject(root, "ResultReactionPanel");
+    }
+
+    private static void RemoveDeletedResultUiObject(Transform root, string objectName)
+    {
+        Transform target = FindChildRecursive(root, objectName);
+        if (target == null)
+            return;
+
+        if (Application.isPlaying)
+            Destroy(target.gameObject);
+        else
+            DestroyImmediate(target.gameObject);
+    }
+
     private bool EnsureDesignerResultChrome()
     {
         if (resultPanel == null)
             return false;
 
+        RemoveDeletedResultUiObjects();
         bool changed = false;
         Image background = resultPanel.GetComponent<Image>();
-        if (background != null && background.sprite == null && resultUiSprite != null)
-        {
-            background.sprite = resultUiSprite;
-            background.color = Color.white;
-            background.preserveAspect = false;
+        if (background != null)
             background.raycastTarget = false;
-            changed = true;
-        }
-
-        changed |= EnsureDesignerResultPanel("ResultReactionPanel", new Vector2(0.120f, 0.245f), new Vector2(0.505f, 0.540f));
-        changed |= EnsureDesignerResultPanel("ResultPlayerPanel", new Vector2(0.525f, 0.365f), new Vector2(0.870f, 0.540f));
-        changed |= EnsureDesignerResultPanel("ResultUnlockPanel", new Vector2(0.525f, 0.175f), new Vector2(0.870f, 0.330f));
 
         changed |= EnsureDesignerResultText(ref resultText, "ResultText", new Vector2(0.355f, 0.620f), new Vector2(0.645f, 0.735f), 34f, TextAlignmentOptions.Center);
         changed |= EnsureDesignerResultText(ref reactionText, "ReactionText", new Vector2(0.140f, 0.270f), new Vector2(0.485f, 0.505f), 18f, TextAlignmentOptions.TopLeft);
         changed |= EnsureDesignerResultText(ref clueText, "ClueText", new Vector2(0.545f, 0.395f), new Vector2(0.850f, 0.500f), 18f, TextAlignmentOptions.TopLeft);
         changed |= EnsureDesignerResultText(ref unlockTitleText, "UnlockTitleText", new Vector2(0.545f, 0.245f), new Vector2(0.850f, 0.300f), 20f, TextAlignmentOptions.TopLeft);
-        changed |= EnsureDesignerResultText(ref unlockMenuText, "UnlockMenuText", new Vector2(0.545f, 0.195f), new Vector2(0.850f, 0.240f), 18f, TextAlignmentOptions.TopLeft);
         changed |= EnsureDesignerResultFoodImage();
         return changed;
     }
@@ -1257,17 +1270,6 @@ public class DayUIManager : MonoBehaviour
 
     private void Update()
     {
-        if (!cookingGaugeActive)
-            return;
-
-        cookingGaugeValue += Time.deltaTime * CookingGaugeSpeed;
-        if (cookingGaugeValue >= 1f)
-            cookingGaugeValue -= 1f;
-
-        UpdateCookingGaugeView();
-
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            FinishCookingGauge();
     }
 
     private void InitUI()
@@ -1277,6 +1279,18 @@ public class DayUIManager : MonoBehaviour
         SetActive(menuBoardPanel, false);
         SetActive(goKitchenButton, false);
         SetInteractable(cookButton, false);
+    }
+
+    private void ResolveKitchenSideButtonReferences()
+    {
+        if (recipeButton1 == null)
+            recipeButton1 = FindNamedButton("ChoiceButtonA");
+
+        if (recipeButton2 == null)
+            recipeButton2 = FindNamedButton("ChoiceButtonB");
+
+        if (recipeButton3 == null)
+            recipeButton3 = FindNamedButton("ChoiceButtonC");
     }
 
     private void BindButtons()
@@ -2074,8 +2088,16 @@ public class DayUIManager : MonoBehaviour
         PopupRootController popupRoot = FindAnyObjectByType<PopupRootController>();
         if (popupRoot != null)
         {
+            SetActive(popupRoot, true);
             popupRoot.transform.SetAsLastSibling();
             popupRoot.ShowRecipe();
+            return;
+        }
+
+        if (dayResponseArtView != null && dayResponseArtView.recipePopup != null)
+        {
+            SetActive(dayResponseArtView.recipePopup, true);
+            dayResponseArtView.recipePopup.transform.SetAsLastSibling();
             return;
         }
 
@@ -2159,6 +2181,7 @@ public class DayUIManager : MonoBehaviour
     {
         PopulateKitchenIngredientOptions();
 
+        StopCookingGaugeUi();
         cookingGaugeActive = false;
         lastCookingGaugeSuccess = true;
         cookingGaugeValue = 0f;
@@ -2397,13 +2420,14 @@ public class DayUIManager : MonoBehaviour
 
     private void UpdateCookButtonState()
     {
-        SetInteractable(cookButton, cookingGaugeActive || selectedIngredients.Count >= MinIngredientSlots);
+        SetInteractable(cookButton, !cookingGaugeActive && selectedIngredients.Count >= MinIngredientSlots);
     }
 
     private void ResetKitchenIngredientUI()
     {
         PopulateKitchenIngredientOptions();
         selectedIngredients.Clear();
+        StopCookingGaugeUi();
         cookingGaugeActive = false;
         lastCookingGaugeSuccess = true;
         cookingGaugeValue = 0f;
@@ -2436,10 +2460,7 @@ public class DayUIManager : MonoBehaviour
     private void CookSelectedRecipe()
     {
         if (cookingGaugeActive)
-        {
-            FinishCookingGauge();
             return;
-        }
 
         if (selectedIngredients.Count < MinIngredientSlots)
             return;
@@ -2449,45 +2470,44 @@ public class DayUIManager : MonoBehaviour
 
     private void StartCookingGauge()
     {
+        ButtonMashingGauge gauge = EnsureButtonMashingGauge();
+        if (gauge == null)
+        {
+            lastCookingGaugeResult = CookingGaugeResult.Good;
+            FinishCookSelectedRecipe();
+            return;
+        }
+
         cookingGaugeActive = true;
         lastCookingGaugeSuccess = false;
         cookingGaugeValue = 0f;
-        SetButtonLabel(cookButton, "멈추기");
+        SetActive(cookingPotHintText, false);
         UpdateCookButtonState();
-        UpdateCookingGaugeView();
+        gauge.StartGauge();
     }
 
-    private void UpdateCookingGaugeView()
+    private void HandleCookingGaugeFinished(ButtonMashingGauge.GaugeResult result)
     {
-        int marker = Mathf.Clamp(Mathf.RoundToInt(cookingGaugeValue * 10f), 0, 10);
-        string bar = new string('■', marker) + new string('□', 10 - marker);
-        string state = cookingGaugeValue >= CookingGaugeGoodMin && cookingGaugeValue <= CookingGaugeGoodMax
-            ? "적당!"
-            : cookingGaugeValue > CookingGaugeGoodMax
-                ? "과열"
-                : "조금 더";
-
-        ShowPotHint("조리 게이지\n" + bar + "\n현재: " + state + "\nSPACE / 클릭");
-    }
-
-    private void FinishCookingGauge()
-    {
-        if (!cookingGaugeActive)
-            return;
-
         cookingGaugeActive = false;
-        lastCookingGaugeResult = GetCookingGaugeResult(cookingGaugeValue);
+        lastCookingGaugeResult = ConvertGaugeResult(result);
         lastCookingGaugeSuccess = lastCookingGaugeResult == CookingGaugeResult.Good;
-        SetButtonLabel(cookButton, "조리하기");
+        cookingGaugeValue = buttonMashingGauge != null ? buttonMashingGauge.CurrentValue : 0f;
+        SetActive(cookingPotHintText, true);
+        UpdateCookButtonState();
         FinishCookSelectedRecipe();
     }
 
-    private CookingGaugeResult GetCookingGaugeResult(float value)
+    private CookingGaugeResult ConvertGaugeResult(ButtonMashingGauge.GaugeResult result)
     {
-        if (value < CookingGaugeGoodMin)
-            return CookingGaugeResult.Low;
-
-        return value <= CookingGaugeGoodMax ? CookingGaugeResult.Good : CookingGaugeResult.Overheated;
+        switch (result)
+        {
+            case ButtonMashingGauge.GaugeResult.Good:
+                return CookingGaugeResult.Good;
+            case ButtonMashingGauge.GaugeResult.Overheat:
+                return CookingGaugeResult.Overheated;
+            default:
+                return CookingGaugeResult.Low;
+        }
     }
 
     private void FinishCookSelectedRecipe()
@@ -2500,7 +2520,7 @@ public class DayUIManager : MonoBehaviour
         Debug.Log("조리하기: " + string.Join(", ", selectedIngredients));
         lastCookingSucceeded = result.Grade >= EvaluationGrade.Good;
 
-        SetPanelState(showCustomer: false, showKitchen: false, showResult: true);
+        SetPanelState(showCustomer: false, showKitchen: true, showResult: true);
         SetActive(menuBoardPanel, false);
 
         if (!useStaticDesignerLayout && resultPanel != null)
@@ -2508,12 +2528,8 @@ public class DayUIManager : MonoBehaviour
             resultPanel.name = "resultui";
             resultPanel.transform.SetAsLastSibling();
             Image resultPanelImage = resultPanel.GetComponent<Image>();
-            if (resultPanelImage != null && resultUiSprite != null)
-            {
-                resultPanelImage.sprite = resultUiSprite;
-                resultPanelImage.color = Color.white;
-                resultPanelImage.type = Image.Type.Simple;
-            }
+            if (resultPanelImage != null)
+                resultPanelImage.raycastTarget = false;
         }
 
         if (!useStaticDesignerLayout && nextDayButton != null)
@@ -2535,9 +2551,7 @@ public class DayUIManager : MonoBehaviour
         SetText(reactionText, result.Comment);
         SetText(clueText, result.StewName);
         SetText(unlockTitleText, string.Empty);
-        SetText(unlockMenuText, string.Empty);
         SetActive(unlockTitleText, false);
-        SetActive(unlockMenuText, false);
         SetResultClueLabel("완성된 찌개");
         SetButtonLabel(nextDayButton, "다음으로");
         Bind(nextDayButton, OnClickResultOk);
@@ -3511,12 +3525,10 @@ public class DayUIManager : MonoBehaviour
         if (newlyUnlocked.Length > 0)
         {
             SetText(unlockTitleText, "밤에서 추가된 재료");
-            SetText(unlockMenuText, string.Join(", ", newlyUnlocked));
             return;
         }
 
         SetText(unlockTitleText, "새로 해금된 재료");
-        SetText(unlockMenuText, "해금 없음");
     }
 
     private void ApplyLayoutPreset()
@@ -4235,7 +4247,6 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(reactionText, new Vector2(0.12f, 0.225f), new Vector2(0.88f, 0.365f), Vector2.zero, Vector2.zero);
         SetRelativeRect(clueText, new Vector2(0.18f, 0.475f), new Vector2(0.82f, 0.525f), Vector2.zero, Vector2.zero);
         SetRelativeRect(unlockTitleText, new Vector2(0.20f, 0.17f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.20f, 0.13f), new Vector2(0.80f, 0.17f), Vector2.zero, Vector2.zero);
         SetRelativeRect(nextDayButton, new Vector2(0.36f, 0.055f), new Vector2(0.64f, 0.145f), Vector2.zero, Vector2.zero);
 
         ApplyPanelTint(foodImage != null ? foodImage.gameObject : null, new Color32(255, 248, 228, 255));
@@ -4246,7 +4257,6 @@ public class DayUIManager : MonoBehaviour
         SetTextAlignment(reactionText, TextAlignmentOptions.Midline);
         SetTextAlignment(clueText, TextAlignmentOptions.Midline);
         SetTextAlignment(unlockTitleText, TextAlignmentOptions.Midline);
-        SetTextAlignment(unlockMenuText, TextAlignmentOptions.Midline);
         ApplyButtonLabelPadding(nextDayButton);
     }
 
@@ -4296,7 +4306,6 @@ public class DayUIManager : MonoBehaviour
         StyleResultText(buttonText, 18f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
 
         SetActive(unlockTitleText, false);
-        SetActive(unlockMenuText, false);
 
         if (nextDayButton != null)
             nextDayButton.transform.SetAsLastSibling();
@@ -4305,23 +4314,14 @@ public class DayUIManager : MonoBehaviour
     private void ApplyStaticResultArtState(CookingResultData result)
     {
         StretchPanel(resultPanel, Vector2.zero, Vector2.one);
+        RemoveDeletedResultUiObjects();
 
         Image panelImage = resultPanel.GetComponent<Image>();
         if (panelImage != null)
-        {
-            if (resultUiSprite != null)
-                panelImage.sprite = resultUiSprite;
-            panelImage.color = Color.white;
-            panelImage.preserveAspect = false;
             panelImage.raycastTarget = false;
-        }
 
         HideResultTemporaryChrome();
         DisableOpaqueLegacyResultImages();
-        EnsureStaticResultPanelVisible("ResultReactionPanel");
-        EnsureStaticResultPanelVisible("ResultPlayerPanel");
-        EnsureStaticResultPanelVisible("ResultUnlockPanel");
-
         bool staticHasResultSprite = result != null && result.ResultSprite != null && result.ResultSprite != emptyCookingPotSprite;
         if (foodImage != null)
         {
@@ -4335,7 +4335,6 @@ public class DayUIManager : MonoBehaviour
         StyleResultText(reactionText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
         StyleResultText(clueText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
         StyleResultText(unlockTitleText, 20f, FontStyles.Bold, new Color32(226, 116, 103, 255), TextAlignmentOptions.TopLeft);
-        StyleResultText(unlockMenuText, 18f, FontStyles.Normal, new Color32(246, 236, 218, 255), TextAlignmentOptions.TopLeft);
 
         TMP_Text buttonText = nextDayButton != null ? nextDayButton.GetComponentInChildren<TMP_Text>(true) : null;
         StyleResultText(buttonText, 18f, FontStyles.Bold, new Color32(246, 236, 218, 255), TextAlignmentOptions.Center);
@@ -4377,9 +4376,6 @@ public class DayUIManager : MonoBehaviour
                 continue;
 
             if (nextDayButton != null && (imageTransform == nextDayButton.transform || imageTransform.IsChildOf(nextDayButton.transform)))
-                continue;
-
-            if (imageTransform.name == "ResultReactionPanel" || imageTransform.name == "ResultPlayerPanel" || imageTransform.name == "ResultUnlockPanel")
                 continue;
 
             if (image.color.a > 0.85f && image.sprite == null)
@@ -4428,6 +4424,12 @@ public class DayUIManager : MonoBehaviour
     {
         if (text == null)
             return;
+
+        if (ShouldPreserveInspectorResultText(text))
+        {
+            text.gameObject.SetActive(true);
+            return;
+        }
 
         TMP_FontAsset font = ResolveSceneFont();
         if (font != null)
@@ -4545,7 +4547,6 @@ public class DayUIManager : MonoBehaviour
 
         ApplyTextBlockBackdrop(reactionText);
         ApplyTextBlockBackdrop(clueText);
-        ApplyTextBlockBackdrop(unlockMenuText);
     }
 
     private void ApplyTextPlacementPolish()
@@ -4590,14 +4591,12 @@ public class DayUIManager : MonoBehaviour
         SetRelativeRect(reactionText, new Vector2(0.12f, 0.225f), new Vector2(0.88f, 0.365f), Vector2.zero, Vector2.zero);
         SetRelativeRect(clueText, new Vector2(0.18f, 0.475f), new Vector2(0.82f, 0.525f), Vector2.zero, Vector2.zero);
         SetRelativeRect(unlockTitleText, new Vector2(0.20f, 0.17f), new Vector2(0.80f, 0.21f), Vector2.zero, Vector2.zero);
-        SetRelativeRect(unlockMenuText, new Vector2(0.20f, 0.13f), new Vector2(0.80f, 0.17f), Vector2.zero, Vector2.zero);
         ApplyTextBoxPadding(reactionText, new Vector4(10f, 6f, 10f, 6f));
         ApplyTextBoxPadding(clueText, new Vector4(10f, 6f, 10f, 6f));
         SetTextAlignment(resultText, TextAlignmentOptions.Midline);
         SetTextAlignment(reactionText, TextAlignmentOptions.Midline);
         SetTextAlignment(clueText, TextAlignmentOptions.Midline);
         SetTextAlignment(unlockTitleText, TextAlignmentOptions.Midline);
-        SetTextAlignment(unlockMenuText, TextAlignmentOptions.Midline);
     }
 
     private void ApplyDayArtSceneLayout()
@@ -4886,7 +4885,6 @@ public class DayUIManager : MonoBehaviour
         ApplyTextStyle(reactionText, bodyFont, 17f, FontStyles.Normal, SecondaryTextTint);
         ApplyTextStyle(clueText, bodyFont, 16f, FontStyles.Normal, MutedTextTint);
         ApplyTextStyle(unlockTitleText, bodyFont, 24f, FontStyles.Bold, WarningTextTint);
-        ApplyTextStyle(unlockMenuText, bodyFont, 20f, FontStyles.Normal, PrimaryTextTint);
 
         ApplyButtonTextStyle(choiceButtonAText, bodyFont, 20f, FontStyles.Bold);
         ApplyButtonTextStyle(choiceButtonBText, bodyFont, 20f, FontStyles.Bold);
@@ -4967,6 +4965,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (target == null)
             return;
 
+        if (ShouldPreserveInspectorResultText(target))
+            return;
+
         if (font != null)
             target.font = font;
 
@@ -4991,6 +4992,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
             if (label == null)
                 continue;
 
+            if (ShouldPreserveInspectorResultText(label))
+                continue;
+
             if (font != null)
                 label.font = font;
 
@@ -5003,6 +5007,15 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
             if (label.gameObject.name != "PaperFrameHeaderText" && IsNearWhite(label.color))
                 label.color = PrimaryTextTint;
         }
+    }
+
+    private static bool ShouldPreserveInspectorResultText(TMP_Text target)
+    {
+        if (!Application.isPlaying || target == null)
+            return false;
+
+        string objectName = target.gameObject.name;
+        return objectName == "ReactionText" || objectName == "ClueText";
     }
 
     private static bool IsNearWhite(Color color)
@@ -5031,6 +5044,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (target == null)
             return;
 
+        if (ShouldPreserveInspectorResultText(target as TMP_Text))
+            return;
+
         SetRelativeRect(target.transform, anchorMin, anchorMax, offsetMin, offsetMax);
     }
 
@@ -5045,6 +5061,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     private static void SetRelativeRect(Transform target, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
     {
         if (target == null)
+            return;
+
+        if (ShouldPreserveInspectorResultText(target.GetComponent<TMP_Text>()))
             return;
 
         RectTransform rect = target.GetComponent<RectTransform>();
@@ -5065,6 +5084,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (target == null)
             return;
 
+        if (ShouldPreserveInspectorResultText(target))
+            return;
+
         target.margin = margin;
         target.alignment = TextAlignmentOptions.MidlineLeft;
         target.overflowMode = TextOverflowModes.Ellipsis;
@@ -5074,6 +5096,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     private static void ApplyTextRhythm(TMP_Text target, float characterSpacing, float lineSpacing, float paragraphSpacing)
     {
         if (target == null)
+            return;
+
+        if (ShouldPreserveInspectorResultText(target))
             return;
 
         target.characterSpacing = characterSpacing;
@@ -5168,6 +5193,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         if (target == null)
             return;
 
+        if (ShouldPreserveInspectorResultText(target))
+            return;
+
         Shadow shadow = target.GetComponent<Shadow>();
         if (shadow == null)
             shadow = target.gameObject.AddComponent<Shadow>();
@@ -5180,6 +5208,9 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     private static void SetTextAlignment(TMP_Text target, TextAlignmentOptions alignment)
     {
         if (target == null)
+            return;
+
+        if (ShouldPreserveInspectorResultText(target))
             return;
 
         target.alignment = alignment;
@@ -5296,7 +5327,6 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     {
         ApplySpriteOverride(customerPanel, customerPanelSpriteOverride, preserveAspect: false);
         ApplySpriteOverride(kitchenPanel, kitchenPanelSpriteOverride, preserveAspect: false);
-        ApplySpriteOverride(resultPanel, resultPanelSpriteOverride, preserveAspect: false);
         ApplySpriteOverride(menuBoardPanel, menuBoardPanelSpriteOverride, preserveAspect: false);
 
         ApplySpriteOverride(FindChildRecursive(customerPanel != null ? customerPanel.transform : null, "CustomerPortraitPanel"), portraitPanelSpriteOverride, preserveAspect: false);
@@ -5699,15 +5729,72 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
 
     private void SetPanelState(bool showCustomer, bool showKitchen, bool showResult)
     {
+        GameObject dimOverlay = EnsureResultDimOverlay();
+        bool showResultOverKitchen = showKitchen && showResult;
+
         SetActive(customerPanel, showCustomer);
         SetActive(kitchenPanel, showKitchen);
+        SetActive(dimOverlay, showResultOverKitchen);
         SetActive(resultPanel, showResult);
         if (dayResponseArtView != null)
             dayResponseArtView.gameObject.SetActive(showCustomer);
         ApplyActivePanelLayout(showCustomer, showKitchen, showResult);
+        ApplyResultOverlayLayering(showResultOverKitchen);
         if (showCustomer)
             ApplyStaticCustomerNpcPlacement();
         ApplyDesignerSpriteOverrides();
+    }
+
+    private GameObject EnsureResultDimOverlay()
+    {
+        if (resultDimOverlay != null)
+            return resultDimOverlay;
+
+        Transform parent = resultPanel != null ? resultPanel.transform.parent : null;
+        if (parent == null && kitchenPanel != null)
+            parent = kitchenPanel.transform.parent;
+        if (parent == null)
+            return null;
+
+        Transform existing = parent.Find("ResultDimOverlay");
+        resultDimOverlay = existing != null
+            ? existing.gameObject
+            : new GameObject("ResultDimOverlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        resultDimOverlay.transform.SetParent(parent, false);
+
+        RectTransform rect = resultDimOverlay.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.localScale = Vector3.one;
+        }
+
+        Image image = resultDimOverlay.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = new Color(0f, 0f, 0f, 0.55f);
+            image.raycastTarget = true;
+        }
+
+        resultDimOverlay.SetActive(false);
+        return resultDimOverlay;
+    }
+
+    private void ApplyResultOverlayLayering(bool showResultOverKitchen)
+    {
+        GameObject dimOverlay = EnsureResultDimOverlay();
+        if (!showResultOverKitchen || dimOverlay == null || resultPanel == null || kitchenPanel == null)
+            return;
+
+        if (kitchenPanel.transform.parent == dimOverlay.transform.parent)
+            dimOverlay.transform.SetSiblingIndex(kitchenPanel.transform.GetSiblingIndex() + 1);
+
+        if (resultPanel.transform.parent == dimOverlay.transform.parent)
+            resultPanel.transform.SetAsLastSibling();
     }
 
     private void ForceKitchenPanelFullscreen()
@@ -5736,6 +5823,44 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
         }
     }
 
+    private ButtonMashingGauge EnsureButtonMashingGauge()
+    {
+        if (buttonMashingGauge == null)
+        {
+            Transform existing = FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, "ButtonMashingGauge");
+            buttonMashingGauge = existing != null ? existing.GetComponent<ButtonMashingGauge>() : null;
+        }
+
+        if (buttonMashingGauge == null)
+        {
+            ButtonMashingGauge[] sceneGauges = Resources.FindObjectsOfTypeAll<ButtonMashingGauge>();
+            for (int i = 0; i < sceneGauges.Length; i++)
+            {
+                if (sceneGauges[i] != null && sceneGauges[i].gameObject.scene.IsValid())
+                {
+                    buttonMashingGauge = sceneGauges[i];
+                    break;
+                }
+            }
+        }
+
+        if (buttonMashingGauge == null)
+            return null;
+
+        buttonMashingGauge.OnGaugeFinished -= HandleCookingGaugeFinished;
+        buttonMashingGauge.OnGaugeFinished += HandleCookingGaugeFinished;
+        buttonMashingGauge.StopGauge();
+        return buttonMashingGauge;
+    }
+
+    private void StopCookingGaugeUi()
+    {
+        if (buttonMashingGauge != null)
+            buttonMashingGauge.StopGauge();
+        SetActive(cookingPotHintText, true);
+    }
+
+
     private void ClearIngredientOptions()
     {
         for (int i = 0; i < currentIngredientOptions.Length; i++)
@@ -5761,6 +5886,15 @@ private static TMP_FontAsset LoadFontAsset(string assetName)
     {
         SetText(cookingPotHintText, message);
         ApplyReadableKitchenLabel(cookingPotHintText);
+    }
+
+    private Button FindNamedButton(string objectName)
+    {
+        Transform target = FindChildRecursive(kitchenPanel != null ? kitchenPanel.transform : null, objectName);
+        if (target == null)
+            target = FindChildRecursive(customerPanel != null ? customerPanel.transform : null, objectName);
+
+        return target != null ? target.GetComponent<Button>() : null;
     }
 
     private static void Bind(Button button, UnityEngine.Events.UnityAction action)
